@@ -1,0 +1,3627 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Nombre que sale en la pestañita del navegador -->
+<title>My Money</title>
+
+<!-- ============ CSS = LA PINTURA (colores, tamaños) ============ -->
+<style>
+  body {
+    margin: 0;
+    font-family: system-ui, Arial, sans-serif;
+    background: #f2f4f8;
+    color: #1d2433;
+  }
+  .app { max-width: 480px; margin: 0 auto; }
+
+  /* ---- 1. BARRA DE ARRIBA ---- */
+  .barra {
+    display: flex; align-items: center; justify-content: space-between;
+    background: #1e3a8a; color: white;
+    padding: 12px 14px;
+    position: sticky; top: 0; z-index: 5;
+  }
+  .barra button {
+    background: none; border: none; color: white;
+    font-size: 24px; cursor: pointer; padding: 4px 8px;
+  }
+  .mes { display: flex; align-items: center; gap: 6px; font-weight: bold; font-size: 18px; }
+  .mes button { font-size: 18px; }
+
+  /* Menú que sale de la izquierda (pestaña desglosable) */
+  .menu-lateral {
+    position: fixed; top: 0; left: -270px; width: 250px; height: 100%;
+    background: white; box-shadow: 2px 0 10px rgba(0,0,0,.2);
+    transition: left .25s; z-index: 20; padding-top: 10px;
+  }
+  .menu-lateral.abierto { left: 0; }
+  .menu-lateral h2 { margin: 10px 18px 16px; color: #1e3a8a; }
+  .menu-lateral a {
+    display: block; padding: 14px 18px; color: #1d2433;
+    text-decoration: none; border-bottom: 1px solid #eee;
+  }
+  .sombra {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 15;
+  }
+  .sombra.visible { display: block; }
+
+  /* Menú de los tres puntitos */
+  .menu-puntos {
+    display: none; position: absolute; right: 10px; top: 52px;
+    background: white; border-radius: 8px; box-shadow: 0 4px 14px rgba(0,0,0,.2);
+    z-index: 10; min-width: 190px; overflow: hidden;
+  }
+  .menu-puntos.abierto { display: block; }
+  .menu-puntos a { display: block; padding: 12px 16px; color: #1d2433; text-decoration: none; }
+  .menu-puntos a:hover { background: #f2f4f8; }
+
+  /* ---- 2. GRÁFICO DEL SALDO ---- */
+  .tarjeta {
+    background: white; margin: 12px; border-radius: 14px;
+    padding: 14px; box-shadow: 0 1px 4px rgba(0,0,0,.08);
+  }
+  .tres-datos { display: flex; justify-content: space-between; text-align: center; }
+  .tres-datos div { flex: 1; }
+  .tres-datos small { display: block; color: #6b7280; font-size: 12px; }
+  .tres-datos b { font-size: 16px; }
+  .tres-datos .saldo b { color: #2563eb; font-size: 19px; }
+  svg { width: 100%; height: 110px; display: block; margin-top: 8px; }
+
+  /* ---- 3. LAS 4 CASILLAS ---- */
+  .casillas { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 12px 12px; }
+  .casilla { border-radius: 14px; padding: 12px; color: #1d2433; }
+  .casilla .titulo { display: flex; align-items: center; gap: 8px; font-weight: bold; font-size: 14px; }
+  .casilla .icono {
+    width: 30px; height: 30px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 18px; font-weight: bold;
+  }
+  /* Cada moneda en su propia fila, del mismo tamaño */
+  .fila {
+    display: flex; justify-content: space-between; align-items: baseline;
+    background: rgba(255,255,255,.6); border-radius: 8px;
+    padding: 6px 8px; margin-top: 8px;
+  }
+  .fila span { font-size: 12px; color: #4b5563; margin-right: 6px; }
+  .fila b { font-size: 15px; white-space: nowrap; }   /* el monto nunca se parte en dos líneas */
+
+  .verde    { background: #dcfce7; } .verde .icono    { background: #16a34a; }
+  .roja     { background: #fee2e2; } .roja .icono     { background: #dc2626; }
+  .amarilla { background: #fef9c3; } .amarilla .icono { background: #ca8a04; }
+  .azul     { background: #dbeafe; } .azul .icono     { background: #2563eb; font-size: 16px; }
+
+  /* ---- LÍMITE DE USO PERSONAL ---- */
+  .limite-cab { display: flex; justify-content: space-between; align-items: center; }
+  .limite-cab button {
+    background: #eef2ff; color: #1e3a8a; border: none; border-radius: 8px;
+    padding: 6px 10px; font-size: 13px; cursor: pointer;
+  }
+  .limite-datos { display: flex; justify-content: space-between; text-align: center; margin-top: 8px; }
+  .limite-datos div { flex: 1; }
+  .limite-datos small { display: block; color: #6b7280; font-size: 12px; }
+  .limite-datos b { font-size: 16px; }
+  .barrita { height: 12px; background: #e5e7eb; border-radius: 6px; overflow: hidden; margin-top: 10px; }
+  .barrita div { height: 100%; width: 0%; background: #16a34a; transition: width .3s; }
+  .aviso { font-size: 12px; color: #6b7280; margin-top: 6px; text-align: center; }
+  .editar { display: none; gap: 8px; margin-top: 10px; }
+  .editar.abierto { display: flex; }
+  .editar input { flex: 1; padding: 8px; font-size: 16px; border: 1px solid #d1d5db; border-radius: 8px; }
+  .editar button { padding: 8px 14px; border: none; border-radius: 8px; background: #1e3a8a; color: white; font-size: 15px; }
+
+  /* ---- 4. MIS CUENTAS ---- */
+  .tarjeta h3 { margin: 0 0 8px; font-size: 16px; color: #1e3a8a; }
+  .cuenta {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 2px; border-bottom: 1px solid #eef0f4;
+  }
+  .cuenta:last-child { border-bottom: none; }
+  .cuenta .ico {
+    width: 36px; height: 36px; border-radius: 10px; background: #eef2ff;
+    border: 1px solid #d1d5db;   /* bordecito para que el blanco se note */
+    display: flex; align-items: center; justify-content: center; font-size: 18px;
+  }
+  .cuenta .nombre { flex: 1; font-size: 15px; }
+  .cuenta .nombre small { display: block; color: #6b7280; font-size: 11px; }
+  .cuenta b { font-size: 15px; }
+  .totales {
+    display: flex; justify-content: space-between;
+    background: #1e3a8a; color: white; border-radius: 10px;
+    padding: 10px 12px; margin-top: 10px; font-size: 14px;
+  }
+
+  .cuenta { cursor: pointer; }
+  .cuenta:active { background: #f5f7fb; }
+  .flechita { color: #9ca3af; font-size: 18px; }
+
+  /* ---- BOTÓN + (flotante, abajo a la derecha) ---- */
+  .fab {
+    position: fixed; right: 20px; bottom: 20px; z-index: 40;
+    width: 60px; height: 60px; border-radius: 50%; border: none;
+    background: #2563eb; color: white; font-size: 34px; line-height: 1;
+    box-shadow: 0 4px 12px rgba(37,99,235,.45); cursor: pointer;
+  }
+
+  /* ---- PANTALLA DE UNA CUENTA ---- */
+  .pantalla {
+    display: none; position: fixed; inset: 0; z-index: 30;
+    background: #f2f4f8; overflow-y: auto; padding-bottom: 90px;
+  }
+  .pantalla.abierta { display: block; }
+  .pantalla .contenido { max-width: 480px; margin: 0 auto; }
+  .saldo-cuenta { text-align: center; }
+  .saldo-cuenta small { color: #6b7280; }
+  .saldo-cuenta div { font-size: 28px; font-weight: bold; margin-top: 4px; }
+  .dia { font-size: 12px; font-weight: bold; color: #6b7280; margin: 14px 4px 4px; text-transform: uppercase; }
+  .mov { display: flex; align-items: center; gap: 10px; padding: 10px 2px; border-bottom: 1px solid #eef0f4; }
+  .mov .ic {
+    width: 32px; height: 32px; border-radius: 50%; color: white; font-weight: bold;
+    display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0;
+  }
+  .mov .txt { flex: 1; font-size: 14px; }
+  .mov .txt small { display: block; color: #6b7280; font-size: 12px; }
+  .mov b { font-size: 15px; white-space: nowrap; }
+  .mov .borrar { background: none; border: none; font-size: 16px; cursor: pointer; opacity: .5; }
+  .vacio { text-align: center; color: #9ca3af; padding: 30px 0; }
+
+  /* ---- FORMULARIO PARA AGREGAR ---- */
+  .modal {
+    display: none; position: fixed; inset: 0; z-index: 50;
+    background: rgba(0,0,0,.4); align-items: flex-end; justify-content: center;
+  }
+  .modal.abierto { display: flex; }
+  .hoja {
+    background: white; width: 100%; max-width: 480px; max-height: 92vh; overflow-y: auto;
+    border-radius: 18px 18px 0 0; padding: 18px; box-sizing: border-box;
+  }
+  .hoja h3 { margin: 0 0 12px; color: #1e3a8a; }
+  .tipos { display: flex; gap: 6px; margin-bottom: 12px; }
+  .tipos button {
+    flex: 1; padding: 10px 4px; border-radius: 10px; border: 2px solid #e5e7eb;
+    background: white; font-size: 14px; font-weight: bold; cursor: pointer; color: #1d2433;
+  }
+  .tipos button.on-ingreso       { border-color: #16a34a; background: #dcfce7; }
+  .tipos button.on-gasto         { border-color: #dc2626; background: #fee2e2; }
+  .tipos button.on-transferencia { border-color: #ca8a04; background: #fef9c3; }
+  .campo { margin-bottom: 10px; }
+  .campo label { display: block; font-size: 13px; color: #4b5563; margin-bottom: 4px; }
+  .campo input, .campo select {
+    width: 100%; box-sizing: border-box; padding: 10px; font-size: 16px;
+    border: 1px solid #d1d5db; border-radius: 10px; background: white;
+  }
+  .campo input[type=color] { height: 46px; padding: 4px; cursor: pointer; }
+  .campo input.calculado { background: #e0f2fe; border-color: #38bdf8; }   /* lo calculó la app */
+  .check { display: flex; align-items: center; gap: 8px; font-size: 15px; margin: 6px 0 12px; }
+  .check input { width: 20px; height: 20px; }
+  .error { color: #dc2626; font-size: 13px; min-height: 18px; }
+  .botones { display: flex; gap: 8px; }
+  .botones button { flex: 1; padding: 12px; font-size: 16px; border-radius: 10px; border: none; cursor: pointer; }
+  .btn-guardar  { background: #2563eb; color: white; font-weight: bold; }
+  .btn-cancelar { background: #e5e7eb; color: #1d2433; }
+  .botones .btn-eliminar { flex: 0 0 52px; background: #fee2e2; color: #dc2626; display: none; }
+  .mov { cursor: pointer; }
+  .mov:active { background: #f5f7fb; }
+  .mov .editar-ic { color: #9ca3af; font-size: 14px; }
+
+  /* ---- MENÚ DE CADA CUENTA Y SUS PANTALLAS ---- */
+  .pantalla .menu-puntos { top: 56px; }
+  .pantalla .barra .mes { font-size: 17px; }
+  .periodos { display: flex; background: #eef2ff; border-radius: 10px; padding: 3px; margin-bottom: 10px; }
+  .periodos button {
+    flex: 1; padding: 8px; border: none; background: none; border-radius: 8px;
+    font-size: 14px; color: #1e3a8a; cursor: pointer;
+  }
+  .periodos button.on { background: #1e3a8a; color: white; font-weight: bold; }
+  svg.graf { height: auto; margin-top: 12px; }
+  .tabla { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .tabla th { text-align: right; color: #1e3a8a; padding: 6px 4px; border-bottom: 2px solid #e5e7eb; }
+  .tabla td { padding: 8px 4px; border-bottom: 1px solid #f0f1f4; text-align: right; white-space: nowrap; }
+  .tabla td:first-child { text-align: left; white-space: normal; color: #374151; }
+  .tabla tr.total td { font-weight: bold; border-top: 2px solid #1e3a8a; border-bottom: none; color: #1e3a8a; }
+  .rank { margin-bottom: 12px; }
+  .dos-campos { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .clasif { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #eef0f4; }
+  .clasif:last-child { border-bottom: none; }
+  .clasif .ico { width: 36px; height: 36px; border-radius: 10px; background: #eef2ff; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .clasif .nombre { flex: 1; font-size: 15px; }
+  .clasif .nombre small { display: block; color: #6b7280; font-size: 12px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .clasif .chips { margin-top: 6px; }
+  .clasif.editable { cursor: pointer; }
+  .clasif.editable:active { background: #f5f7fb; }
+  .fila-sub { display: flex; gap: 6px; margin: 6px 0; }
+  .fila-sub input { flex: 1; padding: 9px; font-size: 15px; border: 1px solid #d1d5db; border-radius: 8px; }
+  .fila-sub button { width: 40px; border: none; border-radius: 8px; background: #fee2e2; color: #dc2626; font-size: 16px; cursor: pointer; }
+  .clasif .chips span { font-size: 12px; padding: 3px 8px; }
+  .chips span { background: #eef2ff; color: #1e3a8a; border-radius: 14px; padding: 5px 10px; font-size: 13px; }
+  /* Calculadora */
+  .monto-fila { display: flex; gap: 8px; }
+  .monto-fila input { flex: 1; }
+  .btn-calc { width: 48px; border: 1px solid #d1d5db; border-radius: 10px; background: #eef2ff; font-size: 22px; cursor: pointer; }
+  .calc { display: none; margin-top: 8px; background: #f1f5f9; border-radius: 12px; padding: 10px; }
+  .calc.abierta { display: block; }
+  .calc-pantalla { background: white; border-radius: 8px; padding: 8px 12px; text-align: right; margin-bottom: 8px; min-height: 48px; }
+  #calcOperacion { font-size: 20px; font-weight: bold; word-break: break-all; }
+  #calcResultado { font-size: 13px; color: #6b7280; min-height: 16px; }
+  .calc-teclas { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .calc-teclas button { height: 46px; border: none; border-radius: 10px; background: white; font-size: 20px; cursor: pointer; color: #1d2433; }
+  .calc-teclas button:active { filter: brightness(.9); }
+  .calc-teclas .op { background: #dbeafe; color: #1e3a8a; font-weight: bold; }
+  .calc-teclas .gris { background: #e5e7eb; }
+  .calc-teclas .usar { height: auto; background: #16a34a; color: white; font-weight: bold; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .calc-teclas .usar small { font-size: 12px; }
+  .oscuro .calc { background: #0f172a; }
+  .oscuro .calc-pantalla, .oscuro .calc-teclas button { background: #1e293b; color: #e5e7eb; }
+  .oscuro .calc-teclas .op { background: #1e3a8a; color: #bfdbfe; }
+  .oscuro .calc-teclas .gris { background: #334155; }
+  .oscuro .calc-teclas .usar { background: #16a34a; color: white; }
+  .oscuro .btn-calc { background: #334155; border-color: #334155; }
+  /* Reportes */
+  .subs-rep { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 4px; font-size: 12px; color: #6b7280; }
+  .leyenda-mini { display: flex; flex-wrap: wrap; gap: 6px 14px; justify-content: center; font-size: 13px; margin-top: 6px; }
+  .leyenda-mini i { display: inline-block; width: 12px; height: 4px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+  .oscuro .subs-rep { color: #94a3b8; }
+  /* Ajustes */
+  .fila-ajuste { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid #eef0f4; font-size: 14px; }
+  .fila-ajuste:last-child { border-bottom: none; }
+  .num-pct { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+  .num-pct input { width: 64px; padding: 8px; font-size: 15px; border: 1px solid #d1d5db; border-radius: 8px; text-align: center; }
+  .btn-peligro { width: 100%; padding: 12px; border: none; border-radius: 10px; background: #dc2626; color: white; font-size: 16px; font-weight: bold; cursor: pointer; }
+  .toast {
+    position: fixed; left: 50%; bottom: 30px; transform: translateX(-50%) translateY(20px);
+    background: #16a34a; color: white; padding: 10px 18px; border-radius: 20px; font-size: 14px;
+    opacity: 0; transition: .25s; z-index: 70; pointer-events: none;
+  }
+  .toast.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+  /* Bloqueo con PIN */
+  .bloqueo { display: none; position: fixed; inset: 0; z-index: 100; background: #1e3a8a; color: white; align-items: center; justify-content: center; }
+  .bloqueo.abierto { display: flex; }
+  .bloqueo-caja { text-align: center; }
+  .bloqueo h2 { margin: 6px 0 4px; }
+  .bloqueo p { margin: 0 0 16px; opacity: .8; }
+  .puntos { display: flex; gap: 14px; justify-content: center; margin-bottom: 6px; }
+  .puntos span { width: 16px; height: 16px; border-radius: 50%; border: 2px solid white; }
+  .puntos span.lleno { background: white; }
+  .teclado { display: grid; grid-template-columns: repeat(3, 72px); gap: 14px; margin-top: 14px; }
+  .teclado button { height: 72px; border-radius: 50%; border: none; background: rgba(255,255,255,.15); color: white; font-size: 26px; cursor: pointer; }
+  .teclado button:active { background: rgba(255,255,255,.35); }
+  .bloqueo .error { color: #fecaca; }
+
+  /* ===== MODO OSCURO ===== */
+  body.oscuro { background: #0f172a; color: #e5e7eb; }
+  .oscuro .pantalla { background: #0f172a; }
+  .oscuro .barra { background: #172554; }
+  .oscuro .tarjeta, .oscuro .hoja, .oscuro .menu-lateral, .oscuro .menu-puntos { background: #1e293b; color: #e5e7eb; }
+  .oscuro .tarjeta h3, .oscuro .hoja h3, .oscuro .menu-lateral h2 { color: #93c5fd; }
+  .oscuro .menu-lateral a, .oscuro .menu-puntos a { color: #e5e7eb; border-color: #334155; }
+  .oscuro .menu-puntos a:hover { background: #334155; }
+  .oscuro .campo input, .oscuro .campo select, .oscuro .fila-sub input, .oscuro .editar input, .oscuro .num-pct input {
+    background: #0f172a; color: #e5e7eb; border-color: #334155; }
+  .oscuro .campo label, .oscuro .aviso, .oscuro small { color: #94a3b8 !important; }
+  .oscuro .campo input.calculado { background: #0c4a6e; }
+  .oscuro .casilla { color: #e5e7eb; }
+  .oscuro .verde { background: rgba(22,163,74,.18); }
+  .oscuro .roja { background: rgba(220,38,38,.18); }
+  .oscuro .amarilla { background: rgba(202,138,4,.18); }
+  .oscuro .azul { background: rgba(37,99,235,.18); }
+  .oscuro .fila { background: rgba(255,255,255,.06); }
+  .oscuro .fila span { color: #cbd5e1; }
+  .oscuro .cuenta, .oscuro .mov, .oscuro .clasif, .oscuro .admin-cuenta, .oscuro .leyenda div, .oscuro .fila-ajuste,
+  .oscuro .tabla td, .oscuro .tabla th, .oscuro .resumen-movs { border-color: #334155; }
+  .oscuro .tabla td:first-child { color: #cbd5e1; }
+  .oscuro .tabla th, .oscuro .tabla tr.total td { color: #93c5fd; }
+  .oscuro .tabla tr.total td { border-top-color: #93c5fd; }
+  .oscuro [style*="color:#1d2433"] { color: #e5e7eb !important; }
+  .oscuro svg text[fill="#1d2433"] { fill: #e5e7eb; }
+  .oscuro .clasif .ico, .oscuro .chips span, .oscuro .limite-cab button, .oscuro .flechas button { background: #334155; color: #bfdbfe; }
+  .oscuro .periodos { background: #0f172a; }
+  .oscuro .periodos button { color: #93c5fd; }
+  .oscuro .periodos button.on { background: #2563eb; color: white; }
+  .oscuro .tipos button { background: #0f172a; color: #e5e7eb; border-color: #334155; }
+  .oscuro .tipos button.on-ingreso { background: rgba(22,163,74,.25); }
+  .oscuro .tipos button.on-gasto { background: rgba(220,38,38,.25); }
+  .oscuro .tipos button.on-transferencia { background: rgba(202,138,4,.25); }
+  .oscuro .btn-cancelar { background: #334155; color: #e5e7eb; }
+  .oscuro .btn-grande { background: #172554; color: #bfdbfe; border-color: #1e40af; }
+  .oscuro .barrita { background: #334155; }
+  .oscuro .msj { color: #e5e7eb; }
+  .oscuro .msj-alerta { background: rgba(220,38,38,.18); }
+  .oscuro .msj-cuidado { background: rgba(202,138,4,.18); }
+  .oscuro .msj-bien { background: rgba(22,163,74,.18); }
+  .oscuro .cuenta:active, .oscuro .mov:active, .oscuro .clasif.editable:active { background: #334155; }
+
+  /* Pantalla de movimientos */
+  .resumen-movs { margin-top: 12px; padding-top: 10px; border-top: 1px solid #eef0f4; }
+  .resumen-movs b { font-size: 14px; }
+  .resumen-movs small small, .resumen-movs b small { display: inline; font-size: 12px; }
+  #filtrosMovs button { font-size: 12px; padding: 8px 2px; }
+  /* Administrar cuentas */
+  .apagada { opacity: .5; }
+  .admin-cuenta.apagada { opacity: 1; }
+  .admin-cuenta.apagada .ico, .admin-cuenta.apagada .nombre { opacity: .45; }
+  .admin-cuenta { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #eef0f4; }
+  .admin-cuenta .ico {
+    width: 36px; height: 36px; border-radius: 10px; border: 1px solid #d1d5db;
+    display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
+  }
+  .admin-cuenta .nombre { flex: 1; font-size: 15px; }
+  .admin-cuenta .nombre small { display: block; color: #6b7280; font-size: 11px; }
+  .admin-cuenta .borrar { background: none; border: none; font-size: 18px; cursor: pointer; }
+  .flechas { display: flex; flex-direction: column; gap: 2px; }
+  .flechas button {
+    border: none; background: #eef2ff; color: #1e3a8a; border-radius: 6px;
+    width: 30px; height: 22px; font-size: 11px; cursor: pointer;
+  }
+  .flechas button:disabled { opacity: .3; cursor: default; }
+  /* Interruptor (switch) */
+  .switch { position: relative; width: 44px; height: 26px; flex-shrink: 0; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch span { position: absolute; inset: 0; background: #d1d5db; border-radius: 13px; transition: .2s; cursor: pointer; }
+  .switch span:before {
+    content: ""; position: absolute; width: 20px; height: 20px; left: 3px; top: 3px;
+    background: white; border-radius: 50%; transition: .2s;
+  }
+  .switch input:checked + span { background: #16a34a; }
+  .switch input:checked + span:before { transform: translateX(18px); }
+  .btn-grande { width: 100%; padding: 12px; font-size: 16px; border: 2px dashed #93c5fd; background: #eff6ff; color: #1e3a8a; border-radius: 12px; cursor: pointer; font-weight: bold; }
+  /* Dona */
+  .dona svg { width: 200px; height: 200px; display: block; margin: 0 auto 8px; }
+  .leyenda div { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px solid #f0f1f4; font-size: 14px; }
+  .leyenda div:last-child { border-bottom: none; }
+  .leyenda .punto { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+  .leyenda .cat { flex: 1; }
+  .leyenda small { color: #6b7280; width: 36px; text-align: right; }
+  /* Mensajes de alerta y motivación */
+  .msj { padding: 10px 12px; border-radius: 10px; margin-bottom: 8px; font-size: 14px; line-height: 1.4; border-left: 4px solid; }
+  .msj-alerta  { background: #fee2e2; border-color: #dc2626; }
+  .msj-cuidado { background: #fef9c3; border-color: #ca8a04; }
+  .msj-bien    { background: #dcfce7; border-color: #16a34a; }
+  .rank-txt { display: flex; justify-content: space-between; font-size: 14px; gap: 8px; }
+  .rank-txt small { color: #6b7280; font-weight: normal; }
+  .rank .barrita { height: 8px; margin-top: 4px; }
+</style>
+</head>
+
+<body>
+<div class="app">
+
+  <!-- ============ HTML = LAS PAREDES ============ -->
+
+  <!-- 1. BARRA DE ARRIBA: menú | mes | tres puntitos -->
+  <div class="barra">
+    <button onclick="abrirMenu()">☰</button>
+    <div class="mes">
+      <button onclick="cambiarMes(-1)">‹</button>
+      <span id="textoMes">NOV 2026</span>
+      <button onclick="cambiarMes(1)">›</button>
+    </div>
+    <button onclick="abrirPuntos()">⋮</button>
+  </div>
+
+  <!-- Menú lateral (se esconde y aparece) -->
+  <div class="sombra" id="sombra" onclick="cerrarTodo()"></div>
+  <nav class="menu-lateral" id="menuLateral">
+    <h2>💰 My Money</h2>
+    <a href="#">🏠 Inicio</a>
+    <a href="#" onclick="abrirMovimientos(); return false;">📋 Movimientos</a>
+    <a href="#" onclick="abrirCategorias(); return false;">🏷️ Categorías</a>
+    <a href="#" onclick="abrirAdminCuentas(); return false;">💳 Cuentas</a>
+    <a href="#" onclick="abrirReportes(); return false;">📊 Reportes</a>
+    <a href="#" onclick="abrirAjustes(); return false;">⚙️ Ajustes</a>
+  </nav>
+
+  <!-- Menú de los tres puntitos -->
+  <div class="menu-puntos" id="menuPuntos">
+    <a href="#" onclick="exportarExcel(); return false;">📤 Exportar a Excel</a>
+    <a href="#">💾 Hacer respaldo</a>
+    <a href="#">💱 Tipo de cambio</a>
+    <a href="#">ℹ️ Acerca de</a>
+  </div>
+
+  <!-- 2. GRÁFICO: Inicial - Saldo - Previsto -->
+  <div class="tarjeta" data-seccion="grafico">
+    <div class="tres-datos">
+      <div><small>Inicial</small><b id="inicial">S/ 0</b></div>
+      <div class="saldo"><small>Saldo</small><b id="saldo">S/ 0</b></div>
+      <div><small>Previsto</small><b id="previsto">S/ 0</b></div>
+    </div>
+    <svg id="grafico" viewBox="0 0 300 110" preserveAspectRatio="none"></svg>
+  </div>
+
+  <!-- 3. LAS 4 CASILLAS -->
+  <div class="casillas" data-seccion="casillas">
+    <div class="casilla verde">
+      <div class="titulo"><span class="icono">+</span> Ingresos</div>
+      <div class="fila"><span>🇵🇪 Soles</span><b id="ingSoles">S/ 0.00</b></div>
+      <div class="fila"><span>🇺🇸 Dólares</span><b id="ingDolares">$ 0.00</b></div>
+    </div>
+    <div class="casilla roja">
+      <div class="titulo"><span class="icono">−</span> Gastos</div>
+      <div class="fila"><span>🇵🇪 Soles</span><b id="gasSoles">S/ 0.00</b></div>
+      <div class="fila"><span>🇺🇸 Dólares</span><b id="gasDolares">$ 0.00</b></div>
+    </div>
+    <div class="casilla amarilla">
+      <div class="titulo"><span class="icono">⇄</span> Transferencias</div>
+      <div class="fila"><span>🇵🇪 Soles</span><b id="traSoles">S/ 0.00</b></div>
+      <div class="fila"><span>🇺🇸 Dólares</span><b id="traDolares">$ 0.00</b></div>
+    </div>
+    <div class="casilla azul">
+      <div class="titulo"><span class="icono">🐷</span> Economía mensual</div>
+      <div class="fila"><span>🇵🇪 Soles</span><b id="ecoSoles">S/ 0.00</b></div>
+      <div class="fila"><span>🇺🇸 Dólares</span><b id="ecoDolares">$ 0.00</b></div>
+    </div>
+  </div>
+
+  <!-- LÍMITE DE USO PERSONAL -->
+  <div class="tarjeta" data-seccion="limite">
+    <div class="limite-cab">
+      <h3 style="margin:0">🙋 Límite de uso personal</h3>
+      <button onclick="abrirEditarLimite()">✏️ Asignar</button>
+    </div>
+    <!-- Cajita para escribir el nuevo monto (se esconde y aparece) -->
+    <div class="editar" id="editarLimite">
+      <input type="number" id="nuevoLimite" placeholder="Monto en S/" min="0" step="10">
+      <button onclick="guardarLimite()">Guardar</button>
+    </div>
+    <div class="limite-datos">
+      <div><small>Límite</small><b id="limMonto">S/ 0.00</b></div>
+      <div><small>Llevo gastado</small><b id="limGastado" style="color:#dc2626">S/ 0.00</b></div>
+      <div><small>Me queda</small><b id="limQueda" style="color:#16a34a">S/ 0.00</b></div>
+    </div>
+    <div class="barrita"><div id="limBarra"></div></div>
+    <div class="aviso" id="limAviso"></div>
+  </div>
+
+  <!-- 4. MIS CUENTAS (la lista la llena JavaScript) -->
+  <div class="tarjeta" id="cuentas" data-seccion="cuentas">
+    <h3>💳 Mis cuentas</h3>
+    <div id="listaCuentas"></div>
+    <div class="totales">
+      <span>Total 🇺🇸 <b id="totalDolares">$ 0.00</b></span>
+      <span>Total 🇵🇪 <b id="totalSoles">S/ 0.00</b></span>
+    </div>
+  </div>
+
+  <!-- 5. FLUJO DE CAJA (todas las cuentas) -->
+  <div class="tarjeta" data-seccion="flujo">
+    <h3>💧 Flujo de caja</h3>
+    <div id="flujoGeneral"></div>
+  </div>
+
+  <!-- 6. ECONOMÍA MENSUAL -->
+  <div class="tarjeta" data-seccion="economia">
+    <h3>🐷 Economía mensual</h3>
+    <div id="economiaGeneral"></div>
+  </div>
+
+  <!-- INGRESOS, GASTOS Y SALDO EN CURVAS -->
+  <div class="tarjeta" data-seccion="curvas">
+    <h3>📈 Ingresos, gastos y saldo</h3>
+    <div id="curvasGeneral"></div>
+  </div>
+
+  <!-- DONA DE GASTOS POR CATEGORÍA -->
+  <div class="tarjeta" data-seccion="dona">
+    <h3>🍩 Gastos por categoría</h3>
+    <div id="donaGeneral"></div>
+  </div>
+
+  <!-- 7. MENSAJES: alertas y motivación -->
+  <div class="tarjeta" data-seccion="alertas">
+    <h3>💬 Mis alertas y consejos</h3>
+    <div id="mensajes"></div>
+  </div>
+
+  <div style="height:80px"></div>  <!-- espacio para que el botón + no tape nada -->
+</div>
+
+<!-- BOTÓN + -->
+<button class="fab" onclick="abrirFormulario()">+</button>
+
+<!-- PANTALLA DE UNA CUENTA (aparece al tocar una cuenta) -->
+<div class="pantalla" id="pantallaCuenta">
+  <div class="barra">
+    <button onclick="cerrarCuenta()">←</button>
+    <div class="mes" id="tituloCuenta">Cuenta</div>
+    <button onclick="abrirPuntosCuenta()">⋮</button>
+  </div>
+  <!-- Menú de los tres puntitos de la cuenta -->
+  <div class="menu-puntos" id="menuCuenta">
+    <a href="#" onclick="abrirDetalle('editar'); return false;">✏️ Editar</a>
+    <a href="#" onclick="abrirDetalle('ajustar'); return false;">⚖️ Ajustar saldo actual</a>
+    <a href="#" onclick="abrirDetalle('detalles'); return false;">📄 Detalles</a>
+  </div>
+  <div class="contenido">
+    <div class="tarjeta saldo-cuenta">
+      <small>Saldo actual</small>
+      <div id="saldoCuentaTexto">S/ 0.00</div>
+    </div>
+    <div class="tarjeta">
+      <h3>📋 Movimientos</h3>
+      <div id="listaMovs"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PANTALLA DE CATEGORÍAS -->
+<div class="pantalla" id="pantallaCategorias">
+  <div class="barra">
+    <button onclick="cerrarCategorias()">←</button>
+    <div class="mes">🏷️ Categorías</div>
+    <span style="width:40px"></span>
+  </div>
+  <div class="contenido" id="contenidoCategorias"></div>
+</div>
+
+<!-- PANTALLA DE REPORTES -->
+<div class="pantalla" id="pantallaReportes">
+  <div class="barra">
+    <button onclick="cerrarReportes()">←</button>
+    <div class="mes">
+      <button onclick="cambiarMes(-1); mostrarReportes()">‹</button>
+      <span>📊 Reportes</span>
+      <button onclick="cambiarMes(1); mostrarReportes()">›</button>
+    </div>
+    <span style="width:40px"></span>
+  </div>
+  <div class="contenido" id="contenidoReportes"></div>
+</div>
+
+<!-- PANTALLA DE AJUSTES -->
+<div class="pantalla" id="pantallaAjustes">
+  <div class="barra">
+    <button onclick="cerrarAjustes()">←</button>
+    <div class="mes">⚙️ Ajustes</div>
+    <span style="width:40px"></span>
+  </div>
+  <div class="contenido" id="contenidoAjustes"></div>
+</div>
+
+<!-- PANTALLA DE BLOQUEO (PIN) -->
+<div class="bloqueo" id="bloqueo">
+  <div class="bloqueo-caja">
+    <div style="font-size:42px">💰</div>
+    <h2>My Money</h2>
+    <p>Escribe tu PIN</p>
+    <div class="puntos" id="puntosPin"></div>
+    <div class="error" id="pinMal" style="text-align:center"></div>
+    <div class="teclado" id="teclado"></div>
+  </div>
+</div>
+
+<!-- Mensajito "Guardado" -->
+<div class="toast" id="toast">✓ Guardado</div>
+
+<!-- EDITOR DE UNA CATEGORÍA -->
+<div class="modal" id="editorCategoria" style="z-index:55">
+  <div class="hoja">
+    <h3 id="tituloEditorCat">✏️ Editar categoría</h3>
+    <div class="dos-campos" style="grid-template-columns: 1fr 90px">
+      <div class="campo"><label>Nombre</label><input id="ecNombre"></div>
+      <div class="campo"><label>Emoji</label><input id="ecIcono"></div>
+    </div>
+    <label style="font-size:13px;color:#4b5563">Subcategorías</label>
+    <div id="ecSubs"></div>
+    <button class="btn-grande" style="margin:6px 0 12px;padding:8px" onclick="agregarFilaSub('')">➕ Agregar subcategoría</button>
+    <div class="error" id="ecError"></div>
+    <div class="botones">
+      <button class="btn-eliminar" id="btnEliminarCat" onclick="eliminarCategoria()">🗑️</button>
+      <button class="btn-cancelar" onclick="cerrarEditorCategoria()">Cancelar</button>
+      <button class="btn-guardar" onclick="guardarCategoria()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- PANTALLA DE MOVIMIENTOS DEL MES -->
+<div class="pantalla" id="pantallaMovs">
+  <div class="barra">
+    <button onclick="cerrarMovimientos()">←</button>
+    <div class="mes">
+      <button onclick="cambiarMes(-1)">‹</button>
+      <span id="textoMesMovs">NOV 2026</span>
+      <button onclick="cambiarMes(1)">›</button>
+    </div>
+    <span style="width:40px"></span>
+  </div>
+  <div class="contenido">
+    <div class="tarjeta">
+      <h3>🧾 Extracto del mes</h3>
+      <div id="extractoMovs"></div>
+    </div>
+    <div class="tarjeta">
+      <h3>📋 Movimientos</h3>
+      <div class="periodos" id="filtrosMovs"></div>
+      <div id="listaMovsMes"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PANTALLA PARA ADMINISTRAR CUENTAS -->
+<div class="pantalla" id="pantallaCuentas" style="z-index:32">
+  <div class="barra">
+    <button onclick="cerrarAdminCuentas()">←</button>
+    <div class="mes">💳 Mis cuentas</div>
+    <span style="width:40px"></span>
+  </div>
+  <div class="contenido">
+    <div class="tarjeta">
+      <div class="aviso" style="text-align:left;margin:0 0 6px">
+        ▲▼ cambia el orden · 🟢 interruptor = se suma al total · 🗑️ elimina la cuenta
+      </div>
+      <div id="listaAdmin"></div>
+    </div>
+
+    <div class="tarjeta">
+      <button class="btn-grande" id="btnNuevaCuenta" onclick="abrirNuevaCuenta()">➕ Agregar cuenta</button>
+      <div id="formNuevaCuenta" style="display:none">
+        <h3>➕ Nueva cuenta</h3>
+        <div class="campo"><label>Nombre</label><input id="nNombre" placeholder="Ej: BCP, Caja Piura..."></div>
+        <div class="campo"><label>Ícono (un emoji)</label><input id="nIcono" value="🏦"></div>
+        <div class="campo"><label>Moneda</label>
+          <select id="nMoneda"><option value="PEN">🇵🇪 Soles (S/)</option><option value="USD">🇺🇸 Dólares ($)</option></select></div>
+        <div class="campo"><label>Color</label><input type="color" id="nColor1" value="#2563eb"></div>
+        <label class="check"><input type="checkbox" id="nDos"> Usar dos colores</label>
+        <div class="campo"><label>Segundo color</label><input type="color" id="nColor2" value="#ffffff"></div>
+        <label class="check"><input type="checkbox" id="nEnTotal" checked> Sumar al total</label>
+        <div class="error" id="nError"></div>
+        <div class="botones">
+          <button class="btn-cancelar" onclick="cerrarNuevaCuenta()">Cancelar</button>
+          <button class="btn-guardar" onclick="guardarNuevaCuenta()">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PANTALLA DE CADA OPCIÓN DE LOS TRES PUNTITOS -->
+<div class="pantalla" id="pantallaDetalle" style="z-index:35">
+  <div class="barra">
+    <button onclick="cerrarDetalle()">←</button>
+    <div class="mes" id="tituloDetalle">Detalle</div>
+    <span style="width:40px"></span>
+  </div>
+  <div class="contenido" id="contenidoDetalle"></div>
+</div>
+
+<!-- FORMULARIO PARA AGREGAR UN MOVIMIENTO -->
+<div class="modal" id="formulario">
+  <div class="hoja">
+    <h3 id="tituloFormulario">➕ Nuevo movimiento</h3>
+
+    <!-- ¿Qué es? -->
+    <div class="tipos">
+      <button id="btn-ingreso"       onclick="elegirTipo('ingreso')">+ Ingreso</button>
+      <button id="btn-gasto"         onclick="elegirTipo('gasto')">− Gasto</button>
+      <button id="btn-transferencia" onclick="elegirTipo('transferencia')">⇄ Transf.</button>
+    </div>
+
+    <div class="campo">
+      <label id="etiquetaMonto">Monto</label>
+      <div class="monto-fila">
+        <input type="number" id="fMonto" inputmode="decimal" step="0.01" min="0" placeholder="0.00" oninput="editado('sale'); precioGalon()">
+        <button type="button" class="btn-calc" onclick="abrirCalculadora()" title="Calculadora">🧮</button>
+      </div>
+      <!-- CALCULADORA (aparece al tocar 🧮) -->
+      <div class="calc" id="calculadora">
+        <div class="calc-pantalla">
+          <div id="calcOperacion">0</div>
+          <div id="calcResultado"></div>
+        </div>
+        <div class="calc-teclas">
+          <button onclick="calcTecla('C')" class="gris">C</button>
+          <button onclick="calcTecla('⌫')" class="gris">⌫</button>
+          <button onclick="calcTecla('÷')" class="op">÷</button>
+          <button onclick="calcTecla('×')" class="op">×</button>
+          <button onclick="calcTecla('7')">7</button>
+          <button onclick="calcTecla('8')">8</button>
+          <button onclick="calcTecla('9')">9</button>
+          <button onclick="calcTecla('−')" class="op">−</button>
+          <button onclick="calcTecla('4')">4</button>
+          <button onclick="calcTecla('5')">5</button>
+          <button onclick="calcTecla('6')">6</button>
+          <button onclick="calcTecla('+')" class="op">+</button>
+          <button onclick="calcTecla('1')">1</button>
+          <button onclick="calcTecla('2')">2</button>
+          <button onclick="calcTecla('3')">3</button>
+          <button onclick="usarCalculadora()" class="usar" style="grid-row: span 2">✓<small>Usar</small></button>
+          <button onclick="calcTecla('0')" style="grid-column: span 2">0</button>
+          <button onclick="calcTecla('.')">.</button>
+        </div>
+      </div>
+    </div>
+    <div class="campo">
+      <label id="etiquetaCuenta">Cuenta</label>
+      <select id="fCuenta" onchange="revisarMonedas()"></select>
+    </div>
+
+    <!-- Solo para transferencias -->
+    <div class="campo" id="cajaDestino">
+      <label>¿A qué cuenta va?</label>
+      <select id="fDestino" onchange="revisarMonedas()"></select>
+    </div>
+    <!-- Solo si una cuenta es en soles y la otra en dólares -->
+    <div id="cajaMontoDestino" class="cambio">
+      <div class="aviso" style="text-align:left;margin:0 0 8px">✨ Llena 2 datos (sale, tipo de cambio o llega) y la app calcula el tercero.</div>
+      <div class="campo">
+        <label>💱 Tipo de cambio (S/ por cada $1)</label>
+        <input type="number" id="fTipoCambio" inputmode="decimal" step="0.001" min="0" oninput="editado('tc')">
+      </div>
+      <div class="campo">
+        <label id="etiquetaMontoDestino">Monto que llega</label>
+        <input type="number" id="fMontoDestino" inputmode="decimal" step="0.01" min="0" placeholder="0.00" oninput="editado('llega')">
+      </div>
+      <div class="aviso" id="textoCambio" style="text-align:left;margin:-4px 0 10px"></div>
+    </div>
+
+    <!-- Solo para ingresos y gastos -->
+    <div class="campo" id="cajaCategoria">
+      <label>Categoría</label>
+      <select id="fCategoria" onchange="actualizarSubcategorias()"></select>
+    </div>
+    <!-- Solo si la categoría tiene subcategorías -->
+    <div class="campo" id="cajaSub">
+      <label>Subcategoría</label>
+      <select id="fSub" onchange="mostrarCombustible()"></select>
+    </div>
+
+    <!-- Solo para Moto › Combustible -->
+    <div id="cajaCombustible" class="combustible">
+      <div class="dos-campos">
+        <div class="campo">
+          <label>⛽ Galones</label>
+          <input type="number" id="fGalones" inputmode="decimal" step="0.001" min="0" placeholder="0.000" oninput="precioGalon()">
+        </div>
+        <div class="campo">
+          <label>🧭 Odómetro (km)</label>
+          <input type="number" id="fOdometro" inputmode="numeric" step="1" min="0" placeholder="0">
+        </div>
+      </div>
+      <div class="aviso" id="textoCombustible" style="text-align:left;margin:-4px 0 10px"></div>
+    </div>
+
+    <div class="campo">
+      <label>Fecha</label>
+      <input type="date" id="fFecha">
+    </div>
+    <div class="campo">
+      <label>Nota (opcional)</label>
+      <input type="text" id="fNota" placeholder="Ej: almuerzo, pasaje...">
+    </div>
+
+    <!-- Solo para gastos -->
+    <div id="cajaPersonal" class="dos-campos">
+      <div class="campo">
+        <label>Ámbito</label>
+        <select id="fAmbito"></select>
+      </div>
+      <div class="campo">
+        <label>Tipo</label>
+        <select id="fTipoGasto"></select>
+      </div>
+    </div>
+
+    <div class="error" id="fError"></div>
+    <div class="botones">
+      <button class="btn-eliminar" id="btnEliminarMov" onclick="eliminarDesdeFormulario()">🗑️</button>
+      <button class="btn-cancelar" onclick="cerrarFormulario()">Cancelar</button>
+      <button class="btn-guardar" onclick="guardarMovimiento()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ JAVASCRIPT = LA ELECTRICIDAD ============ -->
+<script>
+  // =========================================================
+  //  1. LOS DATOS (lo que la app recuerda)
+  // =========================================================
+
+  // --- Tus cuentas ---
+  // Para agregar una cuenta, copia una línea y cambia el nombre.
+  // moneda: "PEN" = soles   "USD" = dólares
+  var cuentas = [
+    // color: uno o dos colores para el cuadrito del ícono
+    { nombre: "Billetera",          icono: "👛", moneda: "PEN", color: ["#f97316"] },
+    { nombre: "Dólares",            icono: "💵", moneda: "USD", color: ["#16a34a"] },
+    { nombre: "Banco de la Nación", icono: "🏦", moneda: "PEN", color: ["#dc2626", "#ffffff"] },
+    { nombre: "Sip",                icono: "🏦", moneda: "PEN", color: ["#1d4ed8"] },
+    { nombre: "Sip Ahorros",        icono: "🐖", moneda: "PEN", color: ["#38bdf8"] },
+    { nombre: "Interbank",          icono: "🏦", moneda: "PEN", color: ["#16a34a", "#ffffff"] },
+    { nombre: "Interbank AFP",      icono: "🧓", moneda: "PEN", color: ["#16a34a", "#dc2626"] },
+    { nombre: "OSEMPE",             icono: "🏛️", moneda: "PEN", color: ["#1d4ed8", "#ffffff"] },
+    { nombre: "AFP Hábitat",        icono: "🧓", moneda: "PEN", color: ["#dc2626"] },
+    { nombre: "La Positiva",        icono: "🛡️", moneda: "PEN", color: ["#f97316"] }
+  ];
+
+  // Si editaste tus cuentas, la app usa la versión guardada
+  try {
+    var gc = localStorage.getItem("mymoney_cuentas");
+    if (gc) cuentas = JSON.parse(gc);
+  } catch (e) {}
+  function guardarCuentas() {
+    try { localStorage.setItem("mymoney_cuentas", JSON.stringify(cuentas)); } catch (e) {}
+  }
+
+  // --- Tus movimientos ---
+  // Cada movimiento se ve así:
+  // { id, fecha: "2026-11-05", tipo: "gasto", monto: 15, cuenta: "Billetera",
+  //   categoria: "Comida", nota: "almuerzo", personal: true }
+  // Las transferencias además tienen:  destino: "Interbank", montoDestino: 15
+  var movimientos = [];
+  try {
+    var g = localStorage.getItem("mymoney_movimientos");
+    if (g) movimientos = JSON.parse(g);
+  } catch (e) {}
+
+  function guardarTodo() {
+    try { localStorage.setItem("mymoney_movimientos", JSON.stringify(movimientos)); } catch (e) {}
+  }
+
+  // --- Límite de uso personal (se guarda en tu navegador) ---
+  var limitePersonal = 500;
+  try {
+    var gl = localStorage.getItem("mymoney_limite");
+    if (gl !== null) limitePersonal = Number(gl);
+  } catch (e) {}
+
+  var tipoCambio = 3.75;     // 1 dólar = 3.75 soles (la app recuerda el último que uses)
+  try {
+    var gtc = localStorage.getItem("mymoney_tc");
+    if (gtc) tipoCambio = Number(gtc);
+  } catch (e) {}
+
+  // --- Ajustes (se cambian en ☰ → Ajustes) ---
+  var ajustes = {
+    metaTipo: "%",        // "%" = porcentaje de ingresos, "S/" = monto fijo
+    metaValor: 20,        // meta de ahorro (0 = sin meta)
+    alertaLimite: 80,     // avisar al usar este % del límite personal
+    alertaRitmo: 20,      // alertar si gastas este % más rápido que tu promedio
+    alertaCategoria: 40,  // avisar si una categoría pasa este % de tus gastos
+    pin: "",              // PIN de 4 números ("" = sin PIN)
+    oscuro: false,        // modo oscuro
+    ocultas: []           // secciones escondidas de la vista general
+  };
+  try {
+    var gaj = localStorage.getItem("mymoney_ajustes");
+    if (gaj) { gaj = JSON.parse(gaj); for (var k in gaj) ajustes[k] = gaj[k]; }
+  } catch (e) {}
+
+  // --- Categorías para elegir en el formulario ---
+  // --- Ámbitos y tipos de gasto ---
+  var ambitos = [
+    { nombre: "General",  icono: "🏠", detalle: "Gastos de la casa y la familia" },
+    { nombre: "Personal", icono: "🙋", detalle: "Lo que gastas en ti (cuenta para tu límite personal)" }
+  ];
+  var tiposGasto = [
+    { nombre: "Cotidiana", icono: "🏡", detalle: "El día a día" },
+    { nombre: "Viajes",    icono: "✈️", detalle: "Gastos cuando estás de viaje" }
+  ];
+  // Para movimientos antiguos que no tenían ámbito ni tipo
+  function ambitoDe(m) { return m.ambito || (m.personal ? "Personal" : "General"); }
+  function tipoDe(m)   { return m.tipoGasto || "Cotidiana"; }
+
+  // --- Categorías de GASTO con sus subcategorías ---
+  // Para agregar una: copia una línea y cambia el nombre, el emoji y las subcategorías.
+  // Si no tiene subcategorías, deja los corchetes vacíos: []
+  var categoriasGasto = [
+    { nombre: "Alimentación",        icono: "🍽️", subs: ["Casa", "Trabajo", "Calle", "Víveres"] },
+    { nombre: "Aseo personal",       icono: "🧴", subs: ["Útiles de aseo", "Corte de pelo"] },
+    { nombre: "Servicios",           icono: "💡", subs: ["Luz", "Agua", "Internet", "Cable", "Teléfono personal", "Otros"] },
+    { nombre: "Gastos bancarios",    icono: "🏦", subs: ["Comisiones"] },
+    { nombre: "Compras",             icono: "🛍️", subs: ["Internet", "Souvenirs", "Obsequios", "Otros"] },
+    { nombre: "Créditos a terceros", icono: "🤝", subs: [] },
+    { nombre: "Créditos personales", icono: "💳", subs: ["Capital", "Interés"] },
+    { nombre: "Ropa",                icono: "👕", subs: ["Polos/Camisas", "Pantalones", "Interiores", "Accesorios"] },
+    { nombre: "Calzado",             icono: "👟", subs: ["Zapatillas", "Zapatos", "Sandalias", "Accesorios"] },
+    { nombre: "Educación",           icono: "🎓", subs: ["Maestría", "Trámites", "Otros"] },
+    { nombre: "Mascotas",            icono: "🐾", subs: ["Alimentos"] },
+    { nombre: "Transporte",          icono: "🚌", subs: ["Colectivo", "Taxi", "Mototaxi", "Bus", "Avión"] },
+    { nombre: "Salud",               icono: "🩺", subs: ["Consultas", "Medicina", "Ortodoncia"] },
+    { nombre: "Hogar",               icono: "🏠", subs: ["Pensión"] },
+    { nombre: "Aves",                icono: "🐔", subs: ["Alimento", "Medicina", "Flete"] },
+    { nombre: "Moto",                icono: "🏍️", subs: ["Combustible", "Mantenimiento", "Repuestos", "Reparación", "Accesorios"] },
+    { nombre: "DEL",                 icono: "📌", subs: ["HOT", "PRE"] },
+    { nombre: "Alcohol",             icono: "🍺", subs: [] },
+    { nombre: "Trabajo",             icono: "💼", subs: ["Donaciones"] },
+    { nombre: "Otros",               icono: "📦", subs: [] }
+  ];
+
+  // --- Categorías de INGRESO (también pueden tener subcategorías) ---
+  var categoriasIngreso = [
+    { nombre: "Salario",      icono: "💼", subs: [] },
+    { nombre: "Convenios",    icono: "🤝", subs: [] },
+    { nombre: "Ventas",       icono: "🛒", subs: [] },
+    { nombre: "Devoluciones", icono: "↩️", subs: [] }
+  ];
+
+  // Si editaste las categorías desde la app, se usa la versión guardada
+  try {
+    var gcat = localStorage.getItem("mymoney_categorias");
+    if (gcat) {
+      gcat = JSON.parse(gcat);
+      categoriasGasto = gcat.gasto;
+      categoriasIngreso = gcat.ingreso;
+    }
+  } catch (e) {}
+  function guardarCategorias() {
+    try {
+      localStorage.setItem("mymoney_categorias", JSON.stringify({ gasto: categoriasGasto, ingreso: categoriasIngreso }));
+    } catch (e) {}
+  }
+
+  // Busca una categoría por su nombre (si no dices el tipo, busca en gastos y luego en ingresos)
+  function buscarCategoria(nombre, tipo) {
+    var listas = tipo === "ingreso" ? [categoriasIngreso] : tipo === "gasto" ? [categoriasGasto] : [categoriasGasto, categoriasIngreso];
+    for (var k = 0; k < listas.length; k++)
+      for (var i = 0; i < listas[k].length; i++) if (listas[k][i].nombre === nombre) return listas[k][i];
+    return null;
+  }
+  // "Alimentación › Calle"
+  function nombreCategoria(m) {
+    var c = buscarCategoria(m.categoria, m.tipo);
+    return (c ? c.icono + " " : "") + m.categoria + (m.subcategoria ? " › " + m.subcategoria : "");
+  }
+
+  // --- El mes que estás mirando (empieza en el mes de hoy) ---
+  var meses = ["ENE","FEB","MAR","ABR","MAY","JUN","JUL","AGO","SEP","OCT","NOV","DIC"];
+  var mesActual  = new Date().getMonth();     // 0 = enero ... 11 = diciembre
+  var anioActual = new Date().getFullYear();
+
+  var cuentaAbierta = null;   // la cuenta que estás mirando (o null si ninguna)
+  var tipoElegido = "gasto";  // lo que está marcado en el formulario
+
+
+  // =========================================================
+  //  2. AYUDANTES (pequeñas funciones que se usan mucho)
+  // =========================================================
+
+  // 1234.5 -> "1,234.50"
+  function plata(n) {
+    return n.toLocaleString("es-PE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  // "S/ " o "$ " según la moneda
+  function simbolo(moneda) { return moneda === "USD" ? "$ " : "S/ "; }
+
+  // Busca una cuenta por su nombre
+  function buscarCuenta(nombre) {
+    for (var i = 0; i < cuentas.length; i++) if (cuentas[i].nombre === nombre) return cuentas[i];
+    return null;
+  }
+  function monedaDe(nombre) { var c = buscarCuenta(nombre); return c ? c.moneda : "PEN"; }
+
+  // Pasa cualquier monto a soles (para el gráfico)
+  function enSoles(monto, moneda) { return moneda === "USD" ? monto * tipoCambio : monto; }
+
+  // Fecha de hoy en formato "2026-11-05"
+  function hoyTexto() {
+    var d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+  // "2026-11" del mes que estás mirando
+  function mesTexto() { return anioActual + "-" + String(mesActual + 1).padStart(2, "0"); }
+
+  // "2026-11-05" -> "jueves 05 nov 2026"
+  function fechaBonita(f) {
+    var d = new Date(f + "T12:00:00");
+    return d.toLocaleDateString("es-PE", { weekday: "long", day: "2-digit", month: "short", year: "numeric" });
+  }
+
+  // Evita que una nota con símbolos raros rompa la página
+  function limpio(t) {
+    return String(t || "").replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  // Pinta el cuadrito: un color = todo de ese color; dos colores = mitad y mitad en diagonal
+  function fondo(color) {
+    if (color.length === 1) return "background:" + color[0];
+    return "background:linear-gradient(135deg," + color[0] + " 50%," + color[1] + " 50%)";
+  }
+
+  // ¿Cuánto cambia esta cuenta con este movimiento? (+ entra, − sale)
+  function efecto(m, nombre) {
+    if (m.tipo === "ingreso" && m.cuenta === nombre) return m.monto;
+    if (m.tipo === "gasto"   && m.cuenta === nombre) return -m.monto;
+    if (m.tipo === "ajuste"  && m.cuenta === nombre) return m.monto;   // puede ser + o −
+    if (m.tipo === "transferencia") {
+      if (m.cuenta === nombre)  return -m.monto;
+      if (m.destino === nombre) return m.montoDestino;
+    }
+    return 0;
+  }
+
+  // Saldo de una cuenta (si das "hasta", solo cuenta movimientos hasta esa fecha)
+  function saldoDe(nombre, hasta) {
+    var total = 0;
+    movimientos.forEach(function (m) {
+      if (hasta && m.fecha > hasta) return;
+      total += efecto(m, nombre);
+    });
+    return total;
+  }
+
+  // Todo tu dinero junto, en soles, hasta una fecha
+  function totalEnSoles(hasta) {
+    var total = 0;
+    cuentas.forEach(function (c) {
+      if (sumaAlTotal(c)) total += enSoles(saldoDe(c.nombre, hasta), c.moneda);
+    });
+    return total;
+  }
+
+
+  // =========================================================
+  //  3. MENÚS Y MES
+  // =========================================================
+  function abrirMenu() {
+    document.getElementById("menuLateral").classList.add("abierto");
+    document.getElementById("sombra").classList.add("visible");
+  }
+  function abrirPuntos() {
+    document.getElementById("menuPuntos").classList.toggle("abierto");
+  }
+  function cerrarTodo() {
+    document.getElementById("menuLateral").classList.remove("abierto");
+    document.getElementById("sombra").classList.remove("visible");
+    document.getElementById("menuPuntos").classList.remove("abierto");
+  }
+
+  var extracto = { inicial: 0, saldo: 0, previsto: 0 };
+
+  function cambiarMes(paso) {
+    mesActual = mesActual + paso;
+    if (mesActual > 11) { mesActual = 0;  anioActual++; }
+    if (mesActual < 0)  { mesActual = 11; anioActual--; }
+    refrescar();
+  }
+
+
+  // =========================================================
+  //  4. VISTA GENERAL
+  // =========================================================
+
+  // ---- Las 4 casillas (solo el mes que estás mirando) ----
+  function calcular() {
+    document.getElementById("textoMes").textContent = meses[mesActual] + " " + anioActual;
+
+    var t = { ingreso: {PEN:0, USD:0}, gasto: {PEN:0, USD:0}, transferencia: {PEN:0, USD:0} };
+    movimientos.forEach(function (m) {
+      if (m.fecha.slice(0, 7) !== mesTexto()) return;   // otro mes: no cuenta
+      if (!t[m.tipo]) return;                            // los ajustes no van en las casillas
+      t[m.tipo][monedaDe(m.cuenta)] += m.monto;
+    });
+
+    document.getElementById("ingSoles").textContent   = "S/ " + plata(t.ingreso.PEN);
+    document.getElementById("ingDolares").textContent = "$ "  + plata(t.ingreso.USD);
+    document.getElementById("gasSoles").textContent   = "S/ " + plata(t.gasto.PEN);
+    document.getElementById("gasDolares").textContent = "$ "  + plata(t.gasto.USD);
+    document.getElementById("traSoles").textContent   = "S/ " + plata(t.transferencia.PEN);
+    document.getElementById("traDolares").textContent = "$ "  + plata(t.transferencia.USD);
+
+    // Economía del mes = lo que entró menos lo que salió
+    document.getElementById("ecoSoles").textContent   = "S/ " + plata(t.ingreso.PEN - t.gasto.PEN);
+    document.getElementById("ecoDolares").textContent = "$ "  + plata(t.ingreso.USD - t.gasto.USD);
+
+    dibujarGrafico();
+  }
+
+  // ---- La curva azul del saldo (todo convertido a soles) ----
+  function dibujarGrafico() {
+    var diasDelMes = new Date(anioActual, mesActual + 1, 0).getDate();
+    var hoy = new Date();
+
+    // ¿Hasta qué día dibujamos? Mes actual: hasta hoy. Mes pasado: todo. Mes futuro: nada.
+    var hasta;
+    if (anioActual === hoy.getFullYear() && mesActual === hoy.getMonth()) hasta = hoy.getDate();
+    else if (mesTexto() < hoyTexto().slice(0, 7)) hasta = diasDelMes;
+    else hasta = 0;
+
+    // Inicial = lo que tenías el último día del mes anterior
+    var inicial = totalEnSoles(mesTexto() + "-00");
+
+    var puntos = [], gastado = 0;
+    for (var d = 1; d <= hasta; d++) {
+      puntos.push(totalEnSoles(mesTexto() + "-" + String(d).padStart(2, "0")));
+    }
+    movimientos.forEach(function (m) {
+      if (m.tipo === "gasto" && m.fecha.slice(0, 7) === mesTexto())
+        gastado += enSoles(m.monto, monedaDe(m.cuenta));
+    });
+    var saldo = puntos.length ? puntos[puntos.length - 1] : inicial;
+
+    // Previsto: si sigues GASTANDO igual hasta fin de mes
+    var gastoPorDia = hasta > 0 ? gastado / hasta : 0;
+    var previsto = saldo - gastoPorDia * (diasDelMes - hasta);
+    extracto = { inicial: inicial, saldo: saldo, previsto: previsto };   // lo usa la pantalla de Movimientos
+
+    document.getElementById("inicial").textContent  = "S/ " + Math.round(inicial).toLocaleString("es-PE");
+    document.getElementById("saldo").textContent    = "S/ " + Math.round(saldo).toLocaleString("es-PE");
+    document.getElementById("previsto").textContent = "S/ " + Math.round(previsto).toLocaleString("es-PE");
+
+    // Convertir saldos en posiciones del dibujo
+    var todos = [inicial].concat(puntos, [previsto]);
+    var max = Math.max.apply(null, todos), min = Math.min.apply(null, todos);
+    function x(dia)  { return (dia / diasDelMes) * 300; }
+    function y(valor){ return 100 - ((valor - min) / ((max - min) || 1)) * 85; }
+
+    var linea = "M 0 " + y(inicial);
+    puntos.forEach(function (v, i) { linea += " L " + x(i + 1) + " " + y(v); });
+
+    var svg = '';
+    svg += '<path d="' + linea + ' L ' + x(hasta) + ' 110 L 0 110 Z" fill="#2563eb" opacity="0.12"/>';
+    svg += '<path d="' + linea + '" fill="none" stroke="#2563eb" stroke-width="3" stroke-linejoin="round"/>';
+    svg += '<path d="M ' + x(hasta) + ' ' + y(saldo) + ' L 300 ' + y(previsto) + '" stroke="#2563eb" stroke-width="2" stroke-dasharray="5 5" fill="none" opacity="0.6"/>';
+    svg += '<circle cx="' + x(hasta) + '" cy="' + y(saldo) + '" r="5" fill="#2563eb"/>';
+    document.getElementById("grafico").innerHTML = svg;
+  }
+
+  // ---- Límite de uso personal (solo el mes que estás mirando) ----
+  function mostrarLimite() {
+    var gastado = 0;
+    movimientos.forEach(function (m) {
+      if (m.tipo === "gasto" && m.personal && m.fecha.slice(0, 7) === mesTexto())
+        gastado += enSoles(m.monto, monedaDe(m.cuenta));
+    });
+    var queda = limitePersonal - gastado;
+    var porcentaje = limitePersonal > 0 ? (gastado / limitePersonal) * 100 : 0;
+
+    document.getElementById("limMonto").textContent   = "S/ " + plata(limitePersonal);
+    document.getElementById("limGastado").textContent = "S/ " + plata(gastado);
+    document.getElementById("limQueda").textContent   = "S/ " + plata(queda);
+
+    // La barrita: verde = bien, amarilla = cuidado, roja = te pasaste
+    var barra = document.getElementById("limBarra");
+    barra.style.width = Math.min(porcentaje, 100) + "%";
+    var aviso = document.getElementById("limAviso");
+    if (porcentaje >= 100)     { barra.style.background = "#dc2626"; aviso.textContent = "⚠️ Te pasaste del límite"; }
+    else if (porcentaje >= ajustes.alertaLimite) { barra.style.background = "#eab308"; aviso.textContent = "👀 Cuidado, ya usaste el " + Math.round(porcentaje) + "%"; }
+    else                       { barra.style.background = "#16a34a"; aviso.textContent = "Has usado el " + Math.round(porcentaje) + "% de tu límite"; }
+    document.getElementById("limQueda").style.color = queda < 0 ? "#dc2626" : "#16a34a";
+  }
+
+  function abrirEditarLimite() {
+    document.getElementById("editarLimite").classList.toggle("abierto");
+    document.getElementById("nuevoLimite").value = limitePersonal;
+  }
+  function guardarLimite() {
+    var valor = Number(document.getElementById("nuevoLimite").value);
+    if (isNaN(valor) || valor < 0) return;
+    limitePersonal = valor;
+    try { localStorage.setItem("mymoney_limite", valor); } catch (e) {}
+    document.getElementById("editarLimite").classList.remove("abierto");
+    mostrarLimite();
+  }
+
+  // ---- Lista de cuentas con su saldo de hoy ----
+  function mostrarCuentas() {
+    var html = "", totalPEN = 0, totalUSD = 0;
+    cuentas.forEach(function (c, i) {
+      var saldo = saldoDe(c.nombre);
+      var texto = c.moneda === "USD" ? "Dólares" : "Soles";
+      html += '<div class="cuenta' + (sumaAlTotal(c) ? '' : ' apagada') + '" onclick="abrirCuenta(' + i + ')">' +
+                '<div class="ico" style="' + fondo(c.color) + '">' + c.icono + '</div>' +
+                '<div class="nombre">' + c.nombre + '<small>' + texto + (sumaAlTotal(c) ? '' : ' · no suma al total') + '</small></div>' +
+                '<b style="color:' + (saldo < 0 ? '#dc2626' : '#1d2433') + '">' + simbolo(c.moneda) + plata(saldo) + '</b>' +
+                '<span class="flechita">›</span>' +
+              '</div>';
+      if (!sumaAlTotal(c)) return;          // esta cuenta no se suma
+      if (c.moneda === "USD") totalUSD += saldo; else totalPEN += saldo;
+    });
+    document.getElementById("listaCuentas").innerHTML = html;
+    document.getElementById("totalSoles").textContent   = "S/ " + plata(totalPEN);
+    document.getElementById("totalDolares").textContent = "$ "  + plata(totalUSD);
+  }
+
+
+  // =========================================================
+  //  5. PANTALLA DE UNA CUENTA (al tocarla)
+  // =========================================================
+  function abrirCuenta(i) {
+    cuentaAbierta = cuentas[i].nombre;
+    mostrarCuentaAbierta();
+    document.getElementById("pantallaCuenta").classList.add("abierta");
+    document.getElementById("pantallaCuenta").scrollTop = 0;
+  }
+  function cerrarCuenta() {
+    cuentaAbierta = null;
+    document.getElementById("menuCuenta").classList.remove("abierto");
+    document.getElementById("pantallaCuenta").classList.remove("abierta");
+  }
+
+  function mostrarCuentaAbierta() {
+    var c = buscarCuenta(cuentaAbierta);
+    document.getElementById("tituloCuenta").textContent = c.icono + " " + c.nombre;
+    document.getElementById("saldoCuentaTexto").textContent = simbolo(c.moneda) + plata(saldoDe(c.nombre));
+
+    // Solo los movimientos de esta cuenta, del más nuevo al más antiguo
+    var lista = movimientos.filter(function (m) { return m.cuenta === c.nombre || m.destino === c.nombre; });
+    lista.sort(function (a, b) {
+      if (a.fecha !== b.fecha) return a.fecha < b.fecha ? 1 : -1;
+      return b.id - a.id;
+    });
+
+    if (lista.length === 0) {
+      document.getElementById("listaMovs").innerHTML =
+        '<div class="vacio">Todavía no hay movimientos.<br>Toca el botón <b>+</b> para agregar uno.</div>';
+      return;
+    }
+
+    var html = "", diaAnterior = "";
+    lista.forEach(function (m) {
+      // Un titulito cada vez que cambia el día
+      if (m.fecha !== diaAnterior) {
+        html += '<div class="dia">' + fechaBonita(m.fecha) + '</div>';
+        diaAnterior = m.fecha;
+      }
+      var cambio = efecto(m, c.nombre);
+      var color, signo, titulo, detalle;
+      if (m.tipo === "ingreso") { color = "#16a34a"; signo = "+"; titulo = m.categoria; }
+      if (m.tipo === "gasto")   { color = "#dc2626"; signo = "−"; titulo = nombreCategoria(m) + (m.personal ? " 🙋" : ""); }
+      if (m.tipo === "transferencia") {
+        color = "#ca8a04"; signo = "⇄";
+        titulo = m.cuenta === c.nombre ? "Transferencia a " + m.destino : "Transferencia de " + m.cuenta;
+      }
+      // Ajuste: si sumó dinero es "positivo" (verde), si restó es "negativo" (rojo)
+      if (m.tipo === "ajuste" && m.monto >= 0) { color = "#15803d"; signo = "⚖"; titulo = "Ajuste positivo"; }
+      if (m.tipo === "ajuste" && m.monto <  0) { color = "#b91c1c"; signo = "⚖"; titulo = "Ajuste negativo"; }
+      detalle = m.nota ? '<small>' + limpio(m.nota) + '</small>' : '';
+      if (infoCombustible(m)) detalle += '<small>' + infoCombustible(m) + '</small>';
+      if (m.tipoCambio) {
+        // Muestra lo que salió de la otra cuenta y el tipo de cambio usado
+        var otro = m.cuenta === c.nombre ? simbolo(monedaDe(m.destino)) + plata(m.montoDestino)
+                                         : simbolo(monedaDe(m.cuenta)) + plata(m.monto);
+        detalle += '<small>💱 ' + (m.cuenta === c.nombre ? "Llegaron " : "Salieron ") + otro + ' · TC ' + m.tipoCambio + '</small>';
+      }
+      html += '<div class="mov" onclick="editarMovimiento(' + m.id + ')">' +
+                '<div class="ic" style="background:' + color + '">' + signo + '</div>' +
+                '<div class="txt">' + limpio(titulo) + detalle + '</div>' +
+                '<b style="color:' + (cambio < 0 ? '#dc2626' : '#16a34a') + '">' +
+                  (cambio < 0 ? "− " : "+ ") + simbolo(c.moneda) + plata(Math.abs(cambio)) + '</b>' +
+                (m.tipo === "ajuste" ? '' : '<span class="editar-ic">✏️</span>') +
+                '<button class="borrar" onclick="event.stopPropagation(); borrarMovimiento(' + m.id + ')" title="Borrar">🗑️</button>' +
+              '</div>';
+    });
+    document.getElementById("listaMovs").innerHTML = html;
+  }
+
+  function borrarMovimiento(id) {
+    if (!confirm("¿Seguro que quieres borrar este movimiento?")) return;
+    movimientos = movimientos.filter(function (m) { return m.id !== id; });
+    guardarTodo();
+    refrescar();
+  }
+
+
+  // =========================================================
+  //  6. FORMULARIO (botón +)
+  // =========================================================
+  function abrirFormulario() {
+    // Llenar las listas de cuentas
+    var opciones = cuentas.map(function (c) {
+      return '<option value="' + c.nombre + '">' + c.icono + ' ' + c.nombre + ' (' + simbolo(c.moneda).trim() + ')</option>';
+    }).join("");
+    document.getElementById("fCuenta").innerHTML  = opciones;
+    document.getElementById("fDestino").innerHTML = opciones;
+
+    // Si estás dentro de una cuenta, ya viene elegida
+    if (cuentaAbierta) document.getElementById("fCuenta").value = cuentaAbierta;
+    document.getElementById("fDestino").selectedIndex = 1;
+
+    // Limpiar todo
+    document.getElementById("fMonto").value = "";
+    document.getElementById("calculadora").classList.remove("abierta");
+    document.getElementById("fMontoDestino").value = "";
+    document.getElementById("fTipoCambio").value = tipoCambio;
+    ultimas = ["tc"];
+    document.getElementById("fNota").value = "";
+    document.getElementById("fGalones").value = "";
+    document.getElementById("fOdometro").value = "";
+    // Llenar ámbitos y tipos (empiezan en General y Cotidiana)
+    document.getElementById("fAmbito").innerHTML = ambitos.map(function (a) {
+      return '<option value="' + a.nombre + '">' + a.icono + ' ' + a.nombre + '</option>';
+    }).join("");
+    document.getElementById("fTipoGasto").innerHTML = tiposGasto.map(function (t) {
+      return '<option value="' + t.nombre + '">' + t.icono + ' ' + t.nombre + '</option>';
+    }).join("");
+    document.getElementById("fFecha").value = hoyTexto();
+    document.getElementById("fError").textContent = "";
+
+    // Modo "nuevo"
+    editandoId = null;
+    document.getElementById("tituloFormulario").textContent = "➕ Nuevo movimiento";
+    document.getElementById("btnEliminarMov").style.display = "none";
+
+    elegirTipo("gasto");
+    document.getElementById("formulario").classList.add("abierto");
+    document.getElementById("fMonto").focus();
+  }
+
+  // ---- EDITAR: abre el mismo formulario con los datos del movimiento ----
+  var editandoId = null;   // id del movimiento que estás editando (null = uno nuevo)
+
+  function editarMovimiento(id) {
+    var m = movimientos.filter(function (x) { return x.id === id; })[0];
+    if (!m) return;
+    if (m.tipo === "ajuste") return;   // los ajustes no se editan: se borran con 🗑️ y se vuelve a ajustar
+    abrirFormulario();
+    editandoId = id;
+    document.getElementById("tituloFormulario").textContent = "✏️ Editar movimiento";
+    document.getElementById("btnEliminarMov").style.display = "block";
+
+    elegirTipo(m.tipo);
+    document.getElementById("fMonto").value = m.monto;
+    document.getElementById("fCuenta").value = m.cuenta;
+    document.getElementById("fFecha").value = m.fecha;
+    document.getElementById("fNota").value = m.nota || "";
+
+    if (m.tipo === "transferencia") {
+      document.getElementById("fDestino").value = m.destino;
+      revisarMonedas();
+      if (m.tipoCambio) {
+        document.getElementById("fTipoCambio").value = m.tipoCambio;
+        document.getElementById("fMontoDestino").value = m.montoDestino;
+        ultimas = ["sale", "llega"];
+        explicarCambio();
+      }
+    } else {
+      var sel = document.getElementById("fCategoria");
+      // Si la categoría ya no existe en la lista (una antigua), la agregamos para no perderla
+      if (!Array.prototype.some.call(sel.options, function (o) { return o.value === m.categoria; }))
+        sel.innerHTML += '<option value="' + limpio(m.categoria) + '">' + limpio(m.categoria) + '</option>';
+      sel.value = m.categoria;
+      actualizarSubcategorias();
+      if (m.subcategoria) document.getElementById("fSub").value = m.subcategoria;
+      if (m.tipo === "gasto") {
+        document.getElementById("fAmbito").value = ambitoDe(m);
+        document.getElementById("fTipoGasto").value = tipoDe(m);
+      }
+      mostrarCombustible();
+      if (m.galones)  document.getElementById("fGalones").value = m.galones;
+      if (m.odometro) document.getElementById("fOdometro").value = m.odometro;
+      precioGalon();
+    }
+  }
+
+  function eliminarDesdeFormulario() {
+    var antes = movimientos.length;
+    borrarMovimiento(editandoId);
+    if (movimientos.length < antes) cerrarFormulario();
+  }
+  function cerrarFormulario() {
+    document.getElementById("formulario").classList.remove("abierto");
+  }
+
+  // Mostrar u ocultar partes del formulario según el tipo
+  function elegirTipo(tipo) {
+    tipoElegido = tipo;
+    ["ingreso", "gasto", "transferencia"].forEach(function (t) {
+      document.getElementById("btn-" + t).className = (t === tipo) ? "on-" + t : "";
+    });
+    var esTransf = tipo === "transferencia";
+    document.getElementById("cajaDestino").style.display   = esTransf ? "block" : "none";
+    document.getElementById("cajaCategoria").style.display = esTransf ? "none" : "block";
+    document.getElementById("cajaPersonal").style.display  = tipo === "gasto" ? "grid" : "none";
+    document.getElementById("etiquetaCuenta").textContent  = esTransf ? "¿De qué cuenta sale?" : "Cuenta";
+
+    if (!esTransf) {
+      var lista = tipo === "gasto" ? categoriasGasto : categoriasIngreso;
+      document.getElementById("fCategoria").innerHTML = lista.map(function (c) {
+        return '<option value="' + limpio(c.nombre) + '">' + c.icono + ' ' + limpio(c.nombre) + '</option>';
+      }).join("");
+    }
+    actualizarSubcategorias();
+    revisarMonedas();
+  }
+
+  // Llena la lista de subcategorías según la categoría elegida
+  function actualizarSubcategorias() {
+    var caja = document.getElementById("cajaSub");
+    var cat = tipoElegido !== "transferencia" ? buscarCategoria(document.getElementById("fCategoria").value, tipoElegido) : null;
+    if (!cat || !cat.subs.length) { caja.style.display = "none"; mostrarCombustible(); return; }
+    document.getElementById("fSub").innerHTML = cat.subs.map(function (s) {
+      return '<option value="' + s + '">' + s + '</option>';
+    }).join("");
+    caja.style.display = "block";
+    mostrarCombustible();
+  }
+
+  // ---- COMBUSTIBLE: galones y odómetro ----
+  function esCombustible() {
+    return tipoElegido === "gasto" &&
+           document.getElementById("fCategoria").value === "Moto" &&
+           document.getElementById("cajaSub").style.display !== "none" &&
+           document.getElementById("fSub").value === "Combustible";
+  }
+  function mostrarCombustible() {
+    var ver = esCombustible();
+    document.getElementById("cajaCombustible").style.display = ver ? "block" : "none";
+    if (ver) {
+      var ult = ultimoOdometro();
+      document.getElementById("fOdometro").placeholder = ult ? "Último: " + ult.toLocaleString("es-PE") : "0";
+      precioGalon();
+    }
+  }
+  // Muestra cuánto costó cada galón mientras escribes
+  function precioGalon() {
+    var monto = Number(document.getElementById("fMonto").value);
+    var gal = Number(document.getElementById("fGalones").value);
+    document.getElementById("textoCombustible").textContent =
+      (monto > 0 && gal > 0) ? "💲 Precio por galón: S/ " + plata(monto / gal) : "";
+  }
+  // El odómetro más alto que registraste
+  function ultimoOdometro() {
+    var max = 0;
+    movimientos.forEach(function (m) { if (m.odometro > max) max = m.odometro; });
+    return max;
+  }
+  // Texto para la lista: "⛽ 1.500 gal · 🧭 12,345 km · S/ 16.00/gal · 🚀 45.2 km/gal"
+  function infoCombustible(m) {
+    if (!m.galones && !m.odometro) return "";
+    var partes = [];
+    if (m.galones)  partes.push("⛽ " + m.galones + " gal");
+    if (m.odometro) partes.push("🧭 " + m.odometro.toLocaleString("es-PE") + " km");
+    if (m.galones)  partes.push("S/ " + plata(enSoles(m.monto, monedaDe(m.cuenta)) / m.galones) + "/gal");
+    // Rendimiento: km desde la carga anterior ÷ galones de esta carga
+    if (m.galones && m.odometro) {
+      var anterior = 0;
+      movimientos.forEach(function (x) {
+        if (x.odometro && x.odometro < m.odometro && x.odometro > anterior) anterior = x.odometro;
+      });
+      if (anterior) partes.push("🚀 " + ((m.odometro - anterior) / m.galones).toFixed(1) + " km/gal");
+    }
+    return partes.join(" · ");
+  }
+
+  // Si transfieres de dólares a soles (o al revés), pide cuánto llega
+  function revisarMonedas() {
+    var origen  = monedaDe(document.getElementById("fCuenta").value);
+    var destino = monedaDe(document.getElementById("fDestino").value);
+    var distinta = tipoElegido === "transferencia" && origen !== destino;
+    document.getElementById("cajaMontoDestino").style.display = distinta ? "block" : "none";
+    document.getElementById("etiquetaMontoDestino").textContent = "Monto que llega (" + simbolo(destino).trim() + ")";
+    document.getElementById("etiquetaMonto").textContent = "Monto que sale (" + simbolo(origen).trim() + ")";
+    if (!distinta) document.getElementById("etiquetaMonto").textContent = "Monto (" + simbolo(origen).trim() + ")";
+    if (distinta && !document.getElementById("fTipoCambio").value)
+      document.getElementById("fTipoCambio").value = tipoCambio;
+    ultimas = ["tc"];   // el último que usaste
+    recalcular();
+  }
+
+  // ---- Cálculo automático en los 3 sentidos ----
+  // Tienes 3 cajitas: SALE, TIPO DE CAMBIO y LLEGA.
+  // La app recuerda las 2 últimas que escribiste y calcula sola la tercera.
+  //   Ej: escribes "sale 10" y "llega 2"      → calcula el tipo de cambio (5)
+  //   Ej: escribes "llega 10" y "TC 3.30"     → calcula lo que salió (33)
+  //   Ej: escribes "sale 375" (TC ya puesto)  → calcula lo que llega (100)
+  var ultimas = ["tc"];   // al inicio solo está el tipo de cambio guardado
+
+  var cajitasCambio = { sale: "fMonto", tc: "fTipoCambio", llega: "fMontoDestino" };
+
+  function editado(cual) {
+    ultimas = ultimas.filter(function (x) { return x !== cual; });
+    ultimas.unshift(cual);              // la que escribiste pasa al primer lugar
+    ultimas = ultimas.slice(0, 2);      // solo importan las 2 últimas
+    recalcular();
+  }
+
+  function recalcular() {
+    var caja = document.getElementById("cajaMontoDestino");
+    // Quitar el color de "calculado" a todas
+    ["sale", "tc", "llega"].forEach(function (k) {
+      document.getElementById(cajitasCambio[k]).classList.remove("calculado");
+    });
+    if (caja.style.display === "none") { explicarCambio(); return; }
+
+    // ¿Cuál falta? La que NO está entre las 2 últimas
+    var falta = ["llega", "sale", "tc"].filter(function (k) { return ultimas.indexOf(k) === -1; })[0];
+
+    var deSoles = monedaDe(document.getElementById("fCuenta").value) === "PEN";
+    var sale  = Number(document.getElementById("fMonto").value);
+    var tc    = Number(document.getElementById("fTipoCambio").value);
+    var llega = Number(document.getElementById("fMontoDestino").value);
+    var resultado = "";
+
+    // Siempre: soles = dólares × tipo de cambio
+    if (falta === "llega" && sale > 0 && tc > 0)
+      resultado = (deSoles ? sale / tc : sale * tc).toFixed(2);
+    if (falta === "sale" && llega > 0 && tc > 0)
+      resultado = (deSoles ? llega * tc : llega / tc).toFixed(2);
+    if (falta === "tc" && sale > 0 && llega > 0)
+      resultado = (deSoles ? sale / llega : llega / sale).toFixed(3);
+
+    var input = document.getElementById(cajitasCambio[falta]);
+    input.value = resultado;
+    input.classList.add("calculado");   // se pinta celeste para que sepas que lo calculó la app
+    explicarCambio();
+  }
+
+  // Frase de ayuda: "Salen S/ 375.00 → llegan $ 100.00"
+  function explicarCambio() {
+    var origen  = monedaDe(document.getElementById("fCuenta").value);
+    var destino = monedaDe(document.getElementById("fDestino").value);
+    var monto = Number(document.getElementById("fMonto").value);
+    var llega = Number(document.getElementById("fMontoDestino").value);
+    document.getElementById("textoCambio").textContent = (monto > 0 && llega > 0)
+      ? "Salen " + simbolo(origen) + plata(monto) + "  →  llegan " + simbolo(destino) + plata(llega)
+      : "";
+  }
+
+  function guardarMovimiento() {
+    var error = document.getElementById("fError");
+    var monto = Number(document.getElementById("fMonto").value);
+    var fecha = document.getElementById("fFecha").value;
+    if (!(monto > 0)) { error.textContent = "Escribe un monto mayor a cero."; return; }
+    if (!fecha)       { error.textContent = "Elige una fecha."; return; }
+
+    var m = {
+      id: editandoId || Date.now(),   // si estás editando, conserva su número
+      fecha: fecha,
+      tipo: tipoElegido,
+      monto: monto,
+      cuenta: document.getElementById("fCuenta").value,
+      nota: document.getElementById("fNota").value.trim()
+    };
+
+    if (tipoElegido === "transferencia") {
+      m.destino = document.getElementById("fDestino").value;
+      if (m.destino === m.cuenta) { error.textContent = "La cuenta de origen y destino no pueden ser la misma."; return; }
+      if (monedaDe(m.cuenta) !== monedaDe(m.destino)) {
+        m.montoDestino = Number(document.getElementById("fMontoDestino").value);
+        if (!(m.montoDestino > 0)) { error.textContent = "Escribe el tipo de cambio."; return; }
+        m.tipoCambio = Number(document.getElementById("fTipoCambio").value);
+        // Recordar este tipo de cambio para la próxima vez
+        tipoCambio = m.tipoCambio;
+        try { localStorage.setItem("mymoney_tc", tipoCambio); } catch (e) {}
+      } else {
+        m.montoDestino = monto;
+      }
+    } else {
+      m.categoria = document.getElementById("fCategoria").value;
+      if (document.getElementById("cajaSub").style.display !== "none")
+        m.subcategoria = document.getElementById("fSub").value;
+      if (esCombustible()) {
+        var gal = Number(document.getElementById("fGalones").value);
+        var odo = Number(document.getElementById("fOdometro").value);
+        if (gal > 0) m.galones = gal;
+        if (odo > 0) m.odometro = odo;
+      }
+      if (tipoElegido === "gasto") {
+        m.ambito    = document.getElementById("fAmbito").value;      // General o Personal
+        m.tipoGasto = document.getElementById("fTipoGasto").value;   // Cotidiana o Viajes
+        m.personal  = m.ambito === "Personal";                       // para el límite de uso personal
+      }
+    }
+
+    if (editandoId) {
+      // Reemplazar el movimiento viejo por el corregido (en el mismo lugar)
+      movimientos = movimientos.map(function (x) { return x.id === editandoId ? m : x; });
+    } else {
+      movimientos.push(m);
+    }
+    guardarTodo();
+    cerrarFormulario();
+    refrescar();
+  }
+
+
+  // =========================================================
+  //  7. LOS TRES PUNTITOS DE CADA CUENTA
+  // =========================================================
+  var vistaDetalle = null;   // qué opción del menú estás mirando
+  var periodo = "mes";       // "mes", "anio" o "todo"
+
+  var titulosDetalle = {
+    editar:  "✏️ Editar cuenta",
+    ajustar: "⚖️ Ajustar saldo",
+    detalles:"📄 Detalles",
+    ranking: "🏆 Ranking de gastos",
+    gastos:  "📊 Evolución de gastos",
+    saldo:   "📈 Evolución del saldo",
+    flujo:   "💧 Flujo de caja"
+  };
+
+  function abrirPuntosCuenta() {
+    document.getElementById("menuCuenta").classList.toggle("abierto");
+  }
+
+  function abrirDetalle(vista) {
+    document.getElementById("menuCuenta").classList.remove("abierto");
+    vistaDetalle = vista;
+    document.getElementById("pantallaDetalle").classList.add("abierta");
+    document.getElementById("pantallaDetalle").scrollTop = 0;
+    document.querySelector(".fab").style.display = "none";   // escondemos el botón +
+    dibujarDetalle();
+  }
+  function cerrarDetalle() {
+    vistaDetalle = null;
+    document.getElementById("pantallaDetalle").classList.remove("abierta");
+    document.querySelector(".fab").style.display = "";
+  }
+  function elegirPeriodo(p) { periodo = p; dibujarDetalle(); }
+
+  // ---- Ayudantes para fechas y periodos ----
+  // Desde y hasta qué fecha abarca el periodo elegido
+  function rango(p) {
+    if (p === "mes")  return [mesTexto() + "-01", mesTexto() + "-31"];
+    if (p === "anio") return [anioActual + "-01-01", anioActual + "-12-31"];
+    return ["0000-00-00", "9999-12-31"];
+  }
+  function nombrePeriodo(p) {
+    if (p === "mes")  return meses[mesActual] + " " + anioActual;
+    if (p === "anio") return "Año " + anioActual;
+    return "Desde el inicio";
+  }
+
+  // Movimientos de una cuenta
+  function movsDe(nombre) {
+    return movimientos.filter(function (m) { return m.cuenta === nombre || m.destino === nombre; });
+  }
+
+  // Saldo ANTES de una fecha (sin contar ese día)
+  function saldoAntes(nombre, fecha) {
+    var total = 0;
+    movimientos.forEach(function (m) { if (m.fecha < fecha) total += efecto(m, nombre); });
+    return total;
+  }
+
+  // Resumen de una cuenta entre dos fechas
+  function resumen(nombre, desde, hasta) {
+    var r = { inicial: saldoAntes(nombre, desde), ingresos: 0, entran: 0, salen: 0, gastos: 0, ajPositivo: 0, ajNegativo: 0 };
+    movimientos.forEach(function (m) {
+      if (m.fecha < desde || m.fecha > hasta) return;
+      if (m.tipo === "ingreso" && m.cuenta === nombre) r.ingresos += m.monto;
+      if (m.tipo === "gasto"   && m.cuenta === nombre) r.gastos   += m.monto;
+      if (m.tipo === "ajuste"  && m.cuenta === nombre) {
+        if (m.monto >= 0) r.ajPositivo += m.monto;     // ajuste positivo
+        else              r.ajNegativo += -m.monto;    // ajuste negativo
+      }
+      if (m.tipo === "transferencia") {
+        if (m.cuenta === nombre)  r.salen  += m.monto;
+        if (m.destino === nombre) r.entran += m.montoDestino;
+      }
+    });
+    r.final = r.inicial + r.ingresos + r.entran - r.salen - r.gastos + r.ajPositivo - r.ajNegativo;
+    return r;
+  }
+
+  // Divide el periodo en pedacitos: días (mes), meses (año) o meses (acumulado)
+  function pedazos(nombre, p) {
+    var lista = [];
+    if (p === "mes") {
+      var dias = new Date(anioActual, mesActual + 1, 0).getDate();
+      for (var d = 1; d <= dias; d++) {
+        var f = mesTexto() + "-" + String(d).padStart(2, "0");
+        lista.push({ etiqueta: String(d), desde: f, hasta: f });
+      }
+    } else if (p === "anio") {
+      for (var i = 0; i < 12; i++) {
+        var mm = anioActual + "-" + String(i + 1).padStart(2, "0");
+        lista.push({ etiqueta: meses[i], desde: mm + "-01", hasta: mm + "-31" });
+      }
+    } else {
+      // Desde el mes del primer movimiento hasta hoy (o el último movimiento)
+      var fechas = movsDe(nombre).map(function (m) { return m.fecha; }).sort();
+      var inicio = fechas.length ? fechas[0].slice(0, 7) : hoyTexto().slice(0, 7);
+      var fin = hoyTexto().slice(0, 7);
+      if (fechas.length && fechas[fechas.length - 1].slice(0, 7) > fin) fin = fechas[fechas.length - 1].slice(0, 7);
+      var a = Number(inicio.slice(0, 4)), mes = Number(inicio.slice(5, 7)) - 1;
+      while (true) {
+        var txt = a + "-" + String(mes + 1).padStart(2, "0");
+        lista.push({ etiqueta: meses[mes] + " " + String(a).slice(2), desde: txt + "-01", hasta: txt + "-31" });
+        if (txt >= fin) break;
+        mes++; if (mes > 11) { mes = 0; a++; }
+      }
+    }
+    return lista;
+  }
+
+  // ---- Dibujar gráficos de barras / línea (SVG) ----
+  // valores: lista de números. tipo: "barras" o "linea"
+  // sinCero = true: la escala no empieza en 0 (útil para el odómetro)
+  function grafico(valores, etiquetas, tipo, colorPos, colorNeg, sinCero) {
+    var W = 320, arriba = 10, abajo = 140, n = valores.length;
+    var max = Math.max.apply(null, sinCero ? valores : valores.concat([0]));
+    var min = Math.min.apply(null, sinCero ? valores : valores.concat([0]));
+    if (max === min) max = min + 1;
+    function y(v) { return arriba + (max - v) / (max - min) * (abajo - arriba); }
+    var paso = W / n, svg = "";
+
+    // Línea del cero
+    svg += '<line x1="0" x2="' + W + '" y1="' + y(0) + '" y2="' + y(0) + '" stroke="#d1d5db" stroke-width="1"/>';
+
+    if (tipo === "barras") {
+      valores.forEach(function (v, i) {
+        var alto = Math.abs(y(v) - y(0));
+        svg += '<rect x="' + (i * paso + paso * 0.15) + '" y="' + Math.min(y(v), y(0)) + '" width="' + (paso * 0.7) +
+               '" height="' + alto + '" rx="2" fill="' + (v < 0 ? colorNeg : colorPos) + '"/>';
+      });
+    } else {
+      var linea = "";
+      valores.forEach(function (v, i) { linea += (i ? " L " : "M ") + (i * paso + paso / 2) + " " + y(v); });
+      svg += '<path d="' + linea + ' L ' + ((n - 1) * paso + paso / 2) + ' ' + y(min) + ' L ' + (paso / 2) + ' ' + y(min) + ' Z" fill="' + colorPos + '" opacity="0.12"/>';
+      svg += '<path d="' + linea + '" fill="none" stroke="' + colorPos + '" stroke-width="2.5" stroke-linejoin="round"/>';
+      if (n <= 31) valores.forEach(function (v, i) {
+        svg += '<circle cx="' + (i * paso + paso / 2) + '" cy="' + y(v) + '" r="2.5" fill="' + colorPos + '"/>';
+      });
+    }
+
+    // Etiquetas de abajo (no todas, para que no se amontonen)
+    var cada = Math.ceil(n / 8);
+    etiquetas.forEach(function (e, i) {
+      if (i % cada === 0) svg += '<text x="' + (i * paso + paso / 2) + '" y="158" font-size="9" fill="#6b7280" text-anchor="middle">' + e + '</text>';
+    });
+    // Máximo y mínimo a la izquierda
+    svg += '<text x="' + (W - 2) + '" y="' + (arriba + 8) + '" font-size="9" fill="#9ca3af" text-anchor="end">' + Math.round(max).toLocaleString("es-PE") + '</text>';
+    if (min < 0 || sinCero) svg += '<text x="' + (W - 2) + '" y="' + (abajo - 2) + '" font-size="9" fill="#9ca3af" text-anchor="end">' + Math.round(min).toLocaleString("es-PE") + '</text>';
+
+    return '<svg class="graf" viewBox="0 0 ' + W + ' 165">' + svg + '</svg>';
+  }
+
+  // Botoncitos Mes / Año / Acumulado
+  function selectorPeriodo() {
+    var ops = [["mes", "Mes"], ["anio", "Año"], ["todo", "Acumulado"]];
+    return '<div class="periodos">' + ops.map(function (o) {
+      return '<button class="' + (periodo === o[0] ? "on" : "") + '" onclick="elegirPeriodo(\'' + o[0] + '\')">' + o[1] + '</button>';
+    }).join("") + '</div><div class="aviso" style="margin:-4px 0 8px">' + nombrePeriodo(periodo) + '</div>';
+  }
+
+  // Cajitas de resumen (ej: Total, Promedio)
+  function cajitas(lista) {
+    return '<div class="limite-datos">' + lista.map(function (c) {
+      return '<div><small>' + c[0] + '</small><b style="color:' + (c[2] || '#1d2433') + '">' + c[1] + '</b></div>';
+    }).join("") + '</div>';
+  }
+
+  // ---- Qué se dibuja en cada opción ----
+  function dibujarDetalle() {
+    var c = buscarCuenta(cuentaAbierta);
+    var s = simbolo(c.moneda);
+    document.getElementById("tituloDetalle").textContent = titulosDetalle[vistaDetalle];
+    var html = "";
+
+    // 1. EDITAR
+    if (vistaDetalle === "editar") {
+      html = '<div class="tarjeta">' +
+        '<div class="campo"><label>Nombre</label><input id="eNombre" value="' + limpio(c.nombre) + '"></div>' +
+        '<div class="campo"><label>Ícono (un emoji)</label><input id="eIcono" value="' + c.icono + '"></div>' +
+        '<div class="campo"><label>Moneda</label><select id="eMoneda">' +
+          '<option value="PEN"' + (c.moneda === "PEN" ? " selected" : "") + '>🇵🇪 Soles (S/)</option>' +
+          '<option value="USD"' + (c.moneda === "USD" ? " selected" : "") + '>🇺🇸 Dólares ($)</option></select></div>' +
+        '<div class="campo"><label>Color</label><input type="color" id="eColor1" value="' + c.color[0] + '"></div>' +
+        '<label class="check"><input type="checkbox" id="eDos"' + (c.color.length > 1 ? " checked" : "") + '> Usar dos colores</label>' +
+        '<div class="campo"><label>Segundo color</label><input type="color" id="eColor2" value="' + (c.color[1] || "#ffffff") + '"></div>' +
+        '<div class="aviso" style="text-align:left;margin-bottom:8px">Ojo: cambiar la moneda no convierte los montos que ya registraste.</div>' +
+        '<div class="error" id="eError"></div>' +
+        '<div class="botones"><button class="btn-cancelar" onclick="cerrarDetalle()">Cancelar</button>' +
+        '<button class="btn-guardar" onclick="guardarEdicion()">Guardar</button></div></div>';
+    }
+
+    // 2. AJUSTAR SALDO
+    if (vistaDetalle === "ajustar") {
+      html = '<div class="tarjeta">' +
+        cajitas([["Saldo en la app", s + plata(saldoDe(c.nombre))]]) +
+        '<p class="aviso" style="text-align:left">Escribe cuánto tienes de verdad en esta cuenta. Si es más de lo que dice la app, se registra un "Ajuste positivo"; si es menos, un "Ajuste negativo".</p>' +
+        '<div class="campo"><label>Saldo real (' + s.trim() + ')</label><input type="number" step="0.01" id="aSaldo" value="' + saldoDe(c.nombre).toFixed(2) + '"></div>' +
+        '<div class="campo"><label>Fecha</label><input type="date" id="aFecha" value="' + hoyTexto() + '"></div>' +
+        '<div class="error" id="aError"></div>' +
+        '<div class="botones"><button class="btn-cancelar" onclick="cerrarDetalle()">Cancelar</button>' +
+        '<button class="btn-guardar" onclick="guardarAjuste()">Ajustar</button></div></div>';
+    }
+
+    // 3. DETALLES (mes, año y acumulado lado a lado)
+    if (vistaDetalle === "detalles") {
+      var rs = [resumen(c.nombre, rango("mes")[0], rango("mes")[1]),
+                resumen(c.nombre, rango("anio")[0], rango("anio")[1]),
+                resumen(c.nombre, rango("todo")[0], rango("todo")[1])];
+      function fila(nombre, campo, color, signo) {
+        return '<tr><td>' + nombre + '</td>' + rs.map(function (r) {
+          return '<td style="color:' + color + '">' + (r[campo] ? signo : "") + plata(r[campo]) + '</td>';
+        }).join("") + '</tr>';
+      }
+      html = '<div class="tarjeta"><h3>📄 Resumen</h3><table class="tabla">' +
+        '<tr><th></th><th>' + meses[mesActual] + '</th><th>' + anioActual + '</th><th>Total</th></tr>' +
+        fila("Saldo inicial", "inicial", "#1d2433", "") +
+        fila("+ Ingresos", "ingresos", "#16a34a", "") +
+        fila("⇄ Transf. que entran", "entran", "#ca8a04", "") +
+        fila("⇄ Transf. que salen", "salen", "#ca8a04", "−") +
+        fila("− Gastos", "gastos", "#dc2626", "−") +
+        fila("⚖️ Ajuste positivo", "ajPositivo", "#15803d", "") +
+        fila("⚖️ Ajuste negativo", "ajNegativo", "#b91c1c", "−") +
+        '<tr class="total"><td>= Saldo final</td>' + rs.map(function (r) { return '<td>' + plata(r.final) + '</td>'; }).join("") + '</tr>' +
+        '</table><div class="aviso">Montos en ' + (c.moneda === "USD" ? "dólares ($)" : "soles (S/)") + '</div></div>';
+    }
+
+    // ---- Lo que sigue también va dentro de DETALLES, con su selector Mes/Año/Acumulado ----
+    if (vistaDetalle === "detalles") {
+      html += '<div class="tarjeta"><h3>📅 Ver gráficos de:</h3>' + selectorPeriodo() + '</div>';
+    }
+
+    // 4. RANKING DE GASTOS POR CATEGORÍA Y ÁMBITO
+    if (vistaDetalle === "detalles") {
+      var rg = rango(periodo), porCat = {}, ambito = {}, tipos = {}, total = 0;
+      movimientos.forEach(function (m) {
+        if (m.tipo !== "gasto" || m.cuenta !== c.nombre || m.fecha < rg[0] || m.fecha > rg[1]) return;
+        porCat[m.categoria] = (porCat[m.categoria] || 0) + m.monto;
+        var a = ambitoDe(m), t = tipoDe(m);
+        ambito[a] = (ambito[a] || 0) + m.monto;
+        tipos[t]  = (tipos[t]  || 0) + m.monto;
+        total += m.monto;
+      });
+      function ranking(obj, color) {
+        var lista = Object.keys(obj).map(function (k) { return [k, obj[k]]; })
+                      .filter(function (x) { return x[1] > 0; })
+                      .sort(function (a, b) { return b[1] - a[1]; });
+        if (!lista.length) return '<div class="vacio">No hay gastos en este periodo.</div>';
+        var max = lista[0][1];
+        return lista.map(function (x, i) {
+          return '<div class="rank"><div class="rank-txt"><span>' + (i + 1) + '. ' + limpio(x[0]) + '</span><b>' + s + plata(x[1]) +
+                 ' <small>(' + Math.round(x[1] / total * 100) + '%)</small></b></div>' +
+                 '<div class="barrita"><div style="width:' + (x[1] / max * 100) + '%;background:' + color + '"></div></div></div>';
+        }).join("");
+      }
+      html += '<div class="tarjeta"><h3>🏆 Ranking de gastos</h3>' + cajitas([["Total gastado", s + plata(total), "#dc2626"]]) +
+             '<h3 style="margin-top:14px">🏷️ Por categoría</h3>' + ranking(porCat, "#dc2626") +
+             '<h3 style="margin-top:14px">🎯 Por ámbito</h3>' + ranking(ambito, "#2563eb") +
+             '<h3 style="margin-top:14px">🧭 Por tipo</h3>' + ranking(tipos, "#9333ea") + '</div>';
+    }
+
+    // 5. EVOLUCIÓN DE GASTOS
+    if (vistaDetalle === "detalles") {
+      var pz = pedazos(c.nombre, periodo);
+      var vals = pz.map(function (p) { return resumen(c.nombre, p.desde, p.hasta).gastos; });
+      var tot = vals.reduce(function (a, b) { return a + b; }, 0);
+      var unidad = periodo === "mes" ? "por día" : "por mes";
+      html += '<div class="tarjeta"><h3>📊 Evolución de gastos</h3>' +
+             cajitas([["Total", s + plata(tot), "#dc2626"], ["Promedio " + unidad, s + plata(tot / pz.length)], ["Máximo", s + plata(Math.max.apply(null, vals))]]) +
+             grafico(vals, pz.map(function (p) { return p.etiqueta; }), "barras", "#dc2626", "#dc2626") + '</div>';
+    }
+
+    // 6. EVOLUCIÓN DEL SALDO
+    if (vistaDetalle === "detalles") {
+      var pz2 = pedazos(c.nombre, periodo);
+      var vals2 = pz2.map(function (p) { return saldoDe(c.nombre, p.hasta); });
+      html += '<div class="tarjeta"><h3>📈 Evolución del saldo</h3>' +
+             cajitas([["Al inicio", s + plata(saldoAntes(c.nombre, pz2[0].desde))],
+                      ["Al final", s + plata(vals2[vals2.length - 1]), "#2563eb"],
+                      ["Más alto", s + plata(Math.max.apply(null, vals2))]]) +
+             grafico(vals2, pz2.map(function (p) { return p.etiqueta; }), "linea", "#2563eb") + '</div>';
+    }
+
+    // 7. FLUJO DE CAJA (lo que entra menos lo que sale)
+    if (vistaDetalle === "detalles") {
+      var pz3 = pedazos(c.nombre, periodo), ent = 0, sal = 0;
+      var netos = pz3.map(function (p) {
+        var r = resumen(c.nombre, p.desde, p.hasta);
+        ent += r.ingresos + r.entran; sal += r.gastos + r.salen;
+        return (r.ingresos + r.entran) - (r.gastos + r.salen);
+      });
+      html += '<div class="tarjeta"><h3>💧 Flujo de caja</h3>' +
+             cajitas([["Entró", s + plata(ent), "#16a34a"], ["Salió", s + plata(sal), "#dc2626"],
+                      ["Neto", s + plata(ent - sal), ent - sal < 0 ? "#dc2626" : "#16a34a"]]) +
+             grafico(netos, pz3.map(function (p) { return p.etiqueta; }), "barras", "#16a34a", "#dc2626") +
+             '<div class="aviso">Verde = entró más de lo que salió · Rojo = salió más</div></div>';
+    }
+
+    document.getElementById("contenidoDetalle").innerHTML = html;
+  }
+
+  // ---- Guardar la edición de la cuenta ----
+  function guardarEdicion() {
+    var c = buscarCuenta(cuentaAbierta);
+    var nuevo = document.getElementById("eNombre").value.trim();
+    var error = document.getElementById("eError");
+    if (!nuevo) { error.textContent = "Escribe un nombre."; return; }
+    if (nuevo !== c.nombre && buscarCuenta(nuevo)) { error.textContent = "Ya tienes una cuenta con ese nombre."; return; }
+
+    // Si cambió el nombre, también lo cambiamos en sus movimientos
+    if (nuevo !== c.nombre) {
+      movimientos.forEach(function (m) {
+        if (m.cuenta === c.nombre)  m.cuenta = nuevo;
+        if (m.destino === c.nombre) m.destino = nuevo;
+      });
+    }
+    c.nombre = nuevo;
+    c.icono  = document.getElementById("eIcono").value.trim() || "💳";
+    c.moneda = document.getElementById("eMoneda").value;
+    c.color  = [document.getElementById("eColor1").value];
+    if (document.getElementById("eDos").checked) c.color.push(document.getElementById("eColor2").value);
+
+    cuentaAbierta = nuevo;
+    guardarTodo();
+    guardarCuentas();
+    cerrarDetalle();
+    refrescar();
+  }
+
+  // ---- Guardar el ajuste de saldo ----
+  function guardarAjuste() {
+    var real = Number(document.getElementById("aSaldo").value);
+    var fecha = document.getElementById("aFecha").value;
+    if (isNaN(real) || document.getElementById("aSaldo").value === "") { document.getElementById("aError").textContent = "Escribe el saldo real."; return; }
+    var diferencia = Math.round((real - saldoDe(cuentaAbierta)) * 100) / 100;
+    if (diferencia !== 0) {
+      movimientos.push({ id: Date.now(), fecha: fecha || hoyTexto(), tipo: "ajuste", monto: diferencia, cuenta: cuentaAbierta, nota: "" });
+      guardarTodo();
+    }
+    cerrarDetalle();
+    refrescar();
+  }
+
+
+  // =========================================================
+  //  8. GRÁFICOS DE LA VISTA GENERAL Y MENSAJES
+  // =========================================================
+  // Aquí se juntan TODAS las cuentas, convertidas a soles.
+  // Las transferencias entre tus cuentas no cuentan (el dinero sigue siendo tuyo).
+  var periodoFlujo = "mes";
+  function elegirPeriodoFlujo(p) { periodoFlujo = p; mostrarGraficosGenerales(); }
+
+  // Ingresos y gastos (en soles) entre dos fechas
+  function entradasSalidas(desde, hasta) {
+    var r = { ingresos: 0, gastos: 0 };
+    movimientos.forEach(function (m) {
+      if (m.fecha < desde || m.fecha > hasta) return;
+      if (m.tipo === "ingreso") r.ingresos += enSoles(m.monto, monedaDe(m.cuenta));
+      if (m.tipo === "gasto")   r.gastos   += enSoles(m.monto, monedaDe(m.cuenta));
+    });
+    return r;
+  }
+
+  // Barras dobles: verde hacia arriba (entró) y roja hacia abajo (salió)
+  function graficoDoble(entradas, salidas, etiquetas) {
+    var W = 320, arriba = 10, abajo = 140, n = entradas.length;
+    var max = Math.max.apply(null, entradas.concat([1]));
+    var min = -Math.max.apply(null, salidas.concat([1]));
+    function y(v) { return arriba + (max - v) / (max - min) * (abajo - arriba); }
+    var paso = W / n, svg = '<line x1="0" x2="' + W + '" y1="' + y(0) + '" y2="' + y(0) + '" stroke="#d1d5db"/>';
+    for (var i = 0; i < n; i++) {
+      var x = i * paso + paso * 0.15, w = paso * 0.7;
+      svg += '<rect x="' + x + '" y="' + y(entradas[i]) + '" width="' + w + '" height="' + (y(0) - y(entradas[i])) + '" rx="2" fill="#16a34a"/>';
+      svg += '<rect x="' + x + '" y="' + y(0) + '" width="' + w + '" height="' + (y(-salidas[i]) - y(0)) + '" rx="2" fill="#dc2626"/>';
+    }
+    var cada = Math.ceil(n / 8);
+    etiquetas.forEach(function (e, i) {
+      if (i % cada === 0) svg += '<text x="' + (i * paso + paso / 2) + '" y="158" font-size="9" fill="#6b7280" text-anchor="middle">' + e + '</text>';
+    });
+    svg += '<text x="' + (W - 2) + '" y="' + (arriba + 8) + '" font-size="9" fill="#9ca3af" text-anchor="end">+' + Math.round(max).toLocaleString("es-PE") + '</text>';
+    svg += '<text x="' + (W - 2) + '" y="' + (abajo - 2) + '" font-size="9" fill="#9ca3af" text-anchor="end">' + Math.round(min).toLocaleString("es-PE") + '</text>';
+    return '<svg class="graf" viewBox="0 0 ' + W + ' 165">' + svg + '</svg>';
+  }
+
+  function mostrarGraficosGenerales() {
+    // ---- FLUJO DE CAJA ----
+    var pz = [];
+    if (periodoFlujo === "mes") {
+      var dias = new Date(anioActual, mesActual + 1, 0).getDate();
+      for (var d = 1; d <= dias; d++) {
+        var f = mesTexto() + "-" + String(d).padStart(2, "0");
+        pz.push({ etiqueta: String(d), desde: f, hasta: f });
+      }
+    } else {
+      for (var i = 0; i < 12; i++) {
+        var mm = anioActual + "-" + String(i + 1).padStart(2, "0");
+        pz.push({ etiqueta: meses[i], desde: mm + "-01", hasta: mm + "-31" });
+      }
+    }
+    var ent = [], sal = [], te = 0, ts = 0;
+    pz.forEach(function (p) {
+      var r = entradasSalidas(p.desde, p.hasta);
+      ent.push(r.ingresos); sal.push(r.gastos); te += r.ingresos; ts += r.gastos;
+    });
+    document.getElementById("flujoGeneral").innerHTML =
+      '<div class="periodos">' +
+        '<button class="' + (periodoFlujo === "mes" ? "on" : "") + '" onclick="elegirPeriodoFlujo(\'mes\')">' + meses[mesActual] + ' ' + anioActual + '</button>' +
+        '<button class="' + (periodoFlujo === "anio" ? "on" : "") + '" onclick="elegirPeriodoFlujo(\'anio\')">Año ' + anioActual + '</button>' +
+      '</div>' +
+      cajitas([["Entró", "S/ " + plata(te), "#16a34a"], ["Salió", "S/ " + plata(ts), "#dc2626"],
+               ["Neto", "S/ " + plata(te - ts), te - ts < 0 ? "#dc2626" : "#16a34a"]]) +
+      graficoDoble(ent, sal, pz.map(function (p) { return p.etiqueta; })) +
+      '<div class="aviso">🟩 Ingresos · 🟥 Gastos · Todo en soles</div>';
+
+    // ---- ECONOMÍA MENSUAL (lo que te sobró cada mes del año) ----
+    var ahorros = [], etiquetas = [], totalAhorro = 0, mejor = null;
+    for (var k = 0; k < 12; k++) {
+      var t = anioActual + "-" + String(k + 1).padStart(2, "0");
+      var r = entradasSalidas(t + "-01", t + "-31");
+      var ahorro = r.ingresos - r.gastos;
+      ahorros.push(ahorro); etiquetas.push(meses[k]); totalAhorro += ahorro;
+      if (r.ingresos > 0 && (mejor === null || ahorro > ahorros[mejor])) mejor = k;
+    }
+    var rMes = entradasSalidas(mesTexto() + "-01", mesTexto() + "-31");
+    var tasa = rMes.ingresos > 0 ? (rMes.ingresos - rMes.gastos) / rMes.ingresos * 100 : 0;
+    document.getElementById("economiaGeneral").innerHTML =
+      cajitas([["Ahorro " + meses[mesActual], Math.round(tasa) + "%", tasa < 0 ? "#dc2626" : "#2563eb"],
+               ["Ahorro del año", "S/ " + plata(totalAhorro), totalAhorro < 0 ? "#dc2626" : "#16a34a"],
+               ["Mejor mes", mejor === null ? "—" : meses[mejor]]]) +
+      grafico(ahorros, etiquetas, "barras", "#2563eb", "#dc2626") +
+      '<div class="aviso">🟦 Te sobró dinero · 🟥 Gastaste más de lo que ganaste</div>' +
+      (ajustes.metaValor > 0 ? '<div class="aviso">🎯 Tu meta: ahorrar ' +
+        (ajustes.metaTipo === "%" ? ajustes.metaValor + "% de tus ingresos" : "S/ " + plata(ajustes.metaValor)) + ' al mes</div>' : '');
+
+    mostrarCurvasYDona();
+    mostrarMensajes();
+  }
+
+  // =========================================================
+  //  8b. CURVAS (ingresos, gastos, saldo) Y DONA DE CATEGORÍAS
+  // =========================================================
+  var periodoCurvas = "mes";
+  function elegirPeriodoCurvas(p) { periodoCurvas = p; mostrarCurvasYDona(); }
+
+  // Convierte una lista de puntos en una curva suave (en vez de líneas con picos)
+  function curvaSuave(pts) {
+    if (pts.length < 2) return "M " + pts[0][0] + " " + pts[0][1];
+    var d = "M " + pts[0][0] + " " + pts[0][1];
+    for (var i = 0; i < pts.length - 1; i++) {
+      var p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
+      var c1x = p1[0] + (p2[0] - p0[0]) / 6, c1y = p1[1] + (p2[1] - p0[1]) / 6;
+      var c2x = p2[0] - (p3[0] - p1[0]) / 6, c2y = p2[1] - (p3[1] - p1[1]) / 6;
+      // Que la curva no se pase de largo (ni baje de cero cuando no debe)
+      var bajo = Math.min(p1[1], p2[1]), alto = Math.max(p1[1], p2[1]);
+      c1y = Math.min(alto, Math.max(bajo, c1y));
+      c2y = Math.min(alto, Math.max(bajo, c2y));
+      d += " C " + c1x + " " + c1y + ", " + c2x + " " + c2y + ", " + p2[0] + " " + p2[1];
+    }
+    return d;
+  }
+
+  function mostrarCurvasYDona() {
+    // ---- Pedacitos del periodo ----
+    var pz = [], hoyT = hoyTexto();
+    if (periodoCurvas === "mes") {
+      var dias = new Date(anioActual, mesActual + 1, 0).getDate();
+      for (var d = 1; d <= dias; d++) {
+        var f = mesTexto() + "-" + String(d).padStart(2, "0");
+        pz.push({ etiqueta: String(d), desde: mesTexto() + "-01", hasta: f });   // acumulado desde el día 1
+      }
+    } else {
+      for (var i = 0; i < 12; i++) {
+        var mm = anioActual + "-" + String(i + 1).padStart(2, "0");
+        pz.push({ etiqueta: meses[i], desde: mm + "-01", hasta: mm + "-31" });
+      }
+    }
+    // No dibujamos el futuro
+    pz = pz.filter(function (p, i) { return i === 0 || (periodoCurvas === "mes" ? p.hasta <= hoyT : p.desde <= hoyT); });
+
+    var ing = [], gas = [], sal = [];
+    pz.forEach(function (p) {
+      var r = entradasSalidas(p.desde, p.hasta);
+      ing.push(r.ingresos); gas.push(r.gastos); sal.push(totalEnSoles(p.hasta));
+    });
+
+    // ---- Escala ----
+    var W = 320, arriba = 12, abajo = 140, n = pz.length;
+    var todos = ing.concat(gas, sal, [0]);
+    var max = Math.max.apply(null, todos), min = Math.min.apply(null, todos);
+    if (max === min) max = min + 1;
+    var total = periodoCurvas === "mes" ? new Date(anioActual, mesActual + 1, 0).getDate() : 12;
+    function x(i) { return total > 1 ? i / (total - 1) * (W - 10) + 5 : W / 2; }
+    function y(v) { return arriba + (max - v) / (max - min) * (abajo - arriba); }
+
+    var svg = '<line x1="0" x2="' + W + '" y1="' + y(0) + '" y2="' + y(0) + '" stroke="#e5e7eb"/>';
+    [[sal, "#2563eb"], [ing, "#16a34a"], [gas, "#dc2626"]].forEach(function (serie) {
+      var pts = serie[0].map(function (v, i) { return [x(i), y(v)]; });
+      var linea = curvaSuave(pts);
+      // relleno suave debajo de la curva
+      svg += '<path d="' + linea + ' L ' + pts[pts.length - 1][0] + ' ' + y(Math.max(min, 0)) + ' L ' + pts[0][0] + ' ' + y(Math.max(min, 0)) + ' Z" fill="' + serie[1] + '" opacity="0.07"/>';
+      svg += '<path d="' + linea + '" fill="none" stroke="' + serie[1] + '" stroke-width="2.5" stroke-linecap="round"/>';
+      var ult = pts[pts.length - 1];
+      svg += '<circle cx="' + ult[0] + '" cy="' + ult[1] + '" r="4" fill="' + serie[1] + '" stroke="white" stroke-width="1.5"/>';
+    });
+    var etiquetas = periodoCurvas === "mes" ? ["1", "5", "10", "15", "20", "25", String(total)] : null;
+    for (var k = 0; k < total; k++) {
+      var lab = periodoCurvas === "mes" ? String(k + 1) : meses[k];
+      if (periodoCurvas === "anio" ? k % 2 === 0 : etiquetas.indexOf(lab) !== -1)
+        svg += '<text x="' + x(k) + '" y="158" font-size="9" fill="#6b7280" text-anchor="' +
+               (k === 0 ? "start" : k === total - 1 ? "end" : "middle") + '">' + lab + '</text>';
+    }
+    svg += '<text x="' + (W - 2) + '" y="' + (arriba + 2) + '" font-size="9" fill="#9ca3af" text-anchor="end">' + Math.round(max).toLocaleString("es-PE") + '</text>';
+
+    var u = n - 1;
+    document.getElementById("curvasGeneral").innerHTML =
+      '<div class="periodos">' +
+        '<button class="' + (periodoCurvas === "mes" ? "on" : "") + '" onclick="elegirPeriodoCurvas(\'mes\')">' + meses[mesActual] + ' ' + anioActual + '</button>' +
+        '<button class="' + (periodoCurvas === "anio" ? "on" : "") + '" onclick="elegirPeriodoCurvas(\'anio\')">Año ' + anioActual + '</button>' +
+      '</div>' +
+      cajitas([["🟢 Ingresos", "S/ " + plata(periodoCurvas === "mes" ? ing[u] : ing.reduce(function (a, b) { return a + b; }, 0)), "#16a34a"],
+               ["🔴 Gastos",   "S/ " + plata(periodoCurvas === "mes" ? gas[u] : gas.reduce(function (a, b) { return a + b; }, 0)), "#dc2626"],
+               ["🔵 Saldo",    "S/ " + plata(sal[u]), "#2563eb"]]) +
+      '<svg class="graf" viewBox="0 0 ' + W + ' 165">' + svg + '</svg>' +
+      '<div class="aviso">' + (periodoCurvas === "mes" ? "Ingresos y gastos acumulados día a día" : "Ingresos y gastos de cada mes") + ' · Saldo de todas tus cuentas</div>';
+
+    // ---- DONA DE GASTOS POR CATEGORÍA ----
+    var rg = periodoCurvas === "mes" ? [mesTexto() + "-01", mesTexto() + "-31"] : [anioActual + "-01-01", anioActual + "-12-31"];
+    var porCat = {}, totalG = 0;
+    movimientos.forEach(function (m) {
+      if (m.tipo !== "gasto" || m.fecha < rg[0] || m.fecha > rg[1]) return;
+      var v = enSoles(m.monto, monedaDe(m.cuenta));
+      porCat[m.categoria] = (porCat[m.categoria] || 0) + v;
+      totalG += v;
+    });
+    var cats = Object.keys(porCat).sort(function (a, b) { return porCat[b] - porCat[a]; });
+    var colores = ["#2563eb", "#dc2626", "#16a34a", "#f97316", "#9333ea", "#0891b2", "#ca8a04", "#db2777", "#65a30d", "#6b7280", "#7c3aed"];
+
+    var html = "";
+    if (!cats.length) {
+      html = '<div class="vacio">No hay gastos en ' + (periodoCurvas === "mes" ? meses[mesActual] + " " + anioActual : "el año " + anioActual) + '.</div>';
+    } else {
+      var R = 60, C = 2 * Math.PI * R, avance = 0, aros = "";
+      cats.forEach(function (cat, i) {
+        var parte = porCat[cat] / totalG * C;
+        aros += '<circle cx="90" cy="90" r="' + R + '" fill="none" stroke="' + colores[i % colores.length] + '" stroke-width="26"' +
+                ' stroke-dasharray="' + parte + ' ' + (C - parte) + '" stroke-dashoffset="' + (-avance) + '" transform="rotate(-90 90 90)"/>';
+        avance += parte;
+      });
+      html = '<div class="dona"><svg viewBox="0 0 180 180">' + aros +
+               '<text x="90" y="84" text-anchor="middle" font-size="11" fill="#6b7280">Total</text>' +
+               '<text x="90" y="104" text-anchor="middle" font-size="17" font-weight="bold" fill="#1d2433">S/ ' + Math.round(totalG).toLocaleString("es-PE") + '</text>' +
+             '</svg></div>' +
+             '<div class="leyenda">' + cats.map(function (cat, i) {
+               return '<div><span class="punto" style="background:' + colores[i % colores.length] + '"></span>' +
+                      '<span class="cat">' + limpio(cat) + '</span><b>S/ ' + plata(porCat[cat]) + '</b>' +
+                      '<small>' + Math.round(porCat[cat] / totalG * 100) + '%</small></div>';
+             }).join("") + '</div>';
+    }
+    document.getElementById("donaGeneral").innerHTML =
+      '<div class="aviso" style="margin:-4px 0 8px">' + (periodoCurvas === "mes" ? meses[mesActual] + " " + anioActual : "Año " + anioActual) + '</div>' + html;
+  }
+
+
+  // =========================================================
+  //  8c. ADMINISTRAR CUENTAS (menú ☰ → Cuentas)
+  // =========================================================
+  // ¿Esta cuenta se suma al total? (si nunca lo elegiste, sí se suma)
+  function sumaAlTotal(c) { return c.enTotal !== false; }
+
+  function abrirAdminCuentas() {
+    cerrarTodo();
+    document.getElementById("pantallaCuentas").classList.add("abierta");
+    document.querySelector(".fab").style.display = "none";
+    cerrarNuevaCuenta();
+    mostrarAdminCuentas();
+  }
+  function cerrarAdminCuentas() {
+    document.getElementById("pantallaCuentas").classList.remove("abierta");
+    document.querySelector(".fab").style.display = "";
+    refrescar();
+  }
+
+  function mostrarAdminCuentas() {
+    var html = cuentas.map(function (c, i) {
+      return '<div class="admin-cuenta' + (sumaAlTotal(c) ? '' : ' apagada') + '">' +
+          '<div class="flechas">' +
+            '<button onclick="moverCuenta(' + i + ',-1)"' + (i === 0 ? ' disabled' : '') + '>▲</button>' +
+            '<button onclick="moverCuenta(' + i + ',1)"'  + (i === cuentas.length - 1 ? ' disabled' : '') + '>▼</button>' +
+          '</div>' +
+          '<div class="ico" style="' + fondo(c.color) + '">' + c.icono + '</div>' +
+          '<div class="nombre">' + limpio(c.nombre) + '<small>' + (c.moneda === "USD" ? "Dólares" : "Soles") + '</small></div>' +
+          // Interruptor: ¿suma al total?
+          '<label class="switch" title="Sumar al total">' +
+            '<input type="checkbox"' + (sumaAlTotal(c) ? ' checked' : '') + ' onchange="cambiarEnTotal(' + i + ', this.checked)">' +
+            '<span></span></label>' +
+          '<button class="borrar" onclick="eliminarCuenta(' + i + ')" title="Eliminar">🗑️</button>' +
+        '</div>';
+    }).join("");
+    document.getElementById("listaAdmin").innerHTML = html;
+  }
+
+  // Subir o bajar una cuenta en la lista
+  function moverCuenta(i, paso) {
+    var j = i + paso;
+    if (j < 0 || j >= cuentas.length) return;
+    var temporal = cuentas[i];       // intercambiamos las dos cuentas
+    cuentas[i] = cuentas[j];
+    cuentas[j] = temporal;
+    guardarCuentas();
+    mostrarAdminCuentas();
+  }
+
+  function cambiarEnTotal(i, valor) {
+    cuentas[i].enTotal = valor;
+    guardarCuentas();
+    mostrarAdminCuentas();
+  }
+
+  function eliminarCuenta(i) {
+    var c = cuentas[i];
+    var cuantos = movsDe(c.nombre).length;
+    var pregunta = "¿Eliminar la cuenta «" + c.nombre + "»?";
+    if (cuantos > 0) pregunta += "\n\nTiene " + cuantos + " movimiento(s) y también se borrarán (incluidas las transferencias con otras cuentas).";
+    if (!confirm(pregunta)) return;
+    movimientos = movimientos.filter(function (m) { return m.cuenta !== c.nombre && m.destino !== c.nombre; });
+    cuentas.splice(i, 1);            // quitar la cuenta de la lista
+    guardarTodo();
+    guardarCuentas();
+    mostrarAdminCuentas();
+  }
+
+  // ---- Agregar una cuenta nueva ----
+  function abrirNuevaCuenta() {
+    document.getElementById("formNuevaCuenta").style.display = "block";
+    document.getElementById("btnNuevaCuenta").style.display = "none";
+    document.getElementById("nNombre").value = "";
+    document.getElementById("nIcono").value = "🏦";
+    document.getElementById("nError").textContent = "";
+    document.getElementById("nNombre").focus();
+  }
+  function cerrarNuevaCuenta() {
+    document.getElementById("formNuevaCuenta").style.display = "none";
+    document.getElementById("btnNuevaCuenta").style.display = "block";
+  }
+  function guardarNuevaCuenta() {
+    var nombre = document.getElementById("nNombre").value.trim();
+    var error = document.getElementById("nError");
+    if (!nombre) { error.textContent = "Escribe un nombre."; return; }
+    if (buscarCuenta(nombre)) { error.textContent = "Ya tienes una cuenta con ese nombre."; return; }
+    var nueva = {
+      nombre: nombre,
+      icono: document.getElementById("nIcono").value.trim() || "💳",
+      moneda: document.getElementById("nMoneda").value,
+      color: [document.getElementById("nColor1").value],
+      enTotal: document.getElementById("nEnTotal").checked
+    };
+    if (document.getElementById("nDos").checked) nueva.color.push(document.getElementById("nColor2").value);
+    cuentas.push(nueva);
+    guardarCuentas();
+    cerrarNuevaCuenta();
+    mostrarAdminCuentas();
+  }
+
+
+  // =========================================================
+  //  8d. PANTALLA DE MOVIMIENTOS (menú ☰ → Movimientos)
+  // =========================================================
+  var filtroMovs = "todos";      // "todos", "ingreso", "gasto" o "transferencia"
+  var pantallaMovsAbierta = false;
+
+  function abrirMovimientos() {
+    cerrarTodo();
+    pantallaMovsAbierta = true;
+    document.getElementById("pantallaMovs").classList.add("abierta");
+    document.getElementById("pantallaMovs").scrollTop = 0;
+    mostrarMovimientosMes();
+  }
+  function cerrarMovimientos() {
+    pantallaMovsAbierta = false;
+    document.getElementById("pantallaMovs").classList.remove("abierta");
+  }
+  function elegirFiltro(f) { filtroMovs = f; mostrarMovimientosMes(); }
+
+  function mostrarMovimientosMes() {
+    document.getElementById("textoMesMovs").textContent = meses[mesActual] + " " + anioActual;
+
+    // ---- Extracto del mes (los mismos números del gráfico de arriba) ----
+    var e = extracto;
+    var r = { ingreso: {PEN:0, USD:0}, gasto: {PEN:0, USD:0}, transferencia: {PEN:0, USD:0} };
+    var delMes = movimientos.filter(function (m) { return m.fecha.slice(0, 7) === mesTexto(); });
+    delMes.forEach(function (m) { if (r[m.tipo]) r[m.tipo][monedaDe(m.cuenta)] += m.monto; });
+    function dos(o) { return "S/ " + plata(o.PEN) + (o.USD ? '<br><small>$ ' + plata(o.USD) + '</small>' : ''); }
+
+    document.getElementById("extractoMovs").innerHTML =
+      '<div class="tres-datos">' +
+        '<div><small>Inicial</small><b>S/ ' + plata(e.inicial) + '</b></div>' +
+        '<div class="saldo"><small>Saldo</small><b>S/ ' + plata(e.saldo) + '</b></div>' +
+        '<div><small>Previsto</small><b>S/ ' + plata(e.previsto) + '</b></div>' +
+      '</div>' +
+      '<div class="tres-datos resumen-movs">' +
+        '<div><small>+ Ingresos</small><b style="color:#16a34a">' + dos(r.ingreso) + '</b></div>' +
+        '<div><small>− Gastos</small><b style="color:#dc2626">' + dos(r.gasto) + '</b></div>' +
+        '<div><small>⇄ Transf.</small><b style="color:#ca8a04">' + dos(r.transferencia) + '</b></div>' +
+      '</div>';
+
+    // ---- Botones de filtro ----
+    var ops = [["todos", "Todos"], ["ingreso", "Ingresos"], ["gasto", "Gastos"], ["transferencia", "Transf."]];
+    document.getElementById("filtrosMovs").innerHTML = ops.map(function (o) {
+      var n = o[0] === "todos" ? delMes.length : delMes.filter(function (m) { return m.tipo === o[0]; }).length;
+      return '<button class="' + (filtroMovs === o[0] ? "on" : "") + '" onclick="elegirFiltro(\'' + o[0] + '\')">' + o[1] + ' (' + n + ')</button>';
+    }).join("");
+
+    // ---- La lista: del más nuevo al más antiguo ----
+    var lista = delMes.filter(function (m) { return filtroMovs === "todos" || m.tipo === filtroMovs; });
+    lista.sort(function (a, b) {
+      if (a.fecha !== b.fecha) return a.fecha < b.fecha ? 1 : -1;
+      return b.id - a.id;          // mismo día: el último que registraste va primero
+    });
+
+    if (!lista.length) {
+      document.getElementById("listaMovsMes").innerHTML = '<div class="vacio">No hay movimientos aquí en ' + meses[mesActual] + ' ' + anioActual + '.</div>';
+      return;
+    }
+    var html = "", diaAnterior = "";
+    lista.forEach(function (m) {
+      if (m.fecha !== diaAnterior) { html += '<div class="dia">' + fechaBonita(m.fecha) + '</div>'; diaAnterior = m.fecha; }
+      var mon = simbolo(monedaDe(m.cuenta));
+      var color, signo, titulo, cuentaTxt, montoTxt, colorMonto;
+      if (m.tipo === "ingreso") {
+        color = "#16a34a"; signo = "+"; titulo = m.categoria; cuentaTxt = m.cuenta;
+        montoTxt = "+ " + mon + plata(m.monto); colorMonto = "#16a34a";
+      }
+      if (m.tipo === "gasto") {
+        color = "#dc2626"; signo = "−"; titulo = nombreCategoria(m) + (m.personal ? " 🙋" : ""); cuentaTxt = m.cuenta;
+        montoTxt = "− " + mon + plata(m.monto); colorMonto = "#dc2626";
+      }
+      if (m.tipo === "transferencia") {
+        color = "#ca8a04"; signo = "⇄"; titulo = "Transferencia"; cuentaTxt = m.cuenta + " → " + m.destino;
+        montoTxt = mon + plata(m.monto); colorMonto = "#ca8a04";
+        if (m.tipoCambio) cuentaTxt += " · llegaron " + simbolo(monedaDe(m.destino)) + plata(m.montoDestino);
+      }
+      if (m.tipo === "ajuste") {
+        var pos = m.monto >= 0;
+        color = pos ? "#15803d" : "#b91c1c"; signo = "⚖"; titulo = pos ? "Ajuste positivo" : "Ajuste negativo";
+        cuentaTxt = m.cuenta; montoTxt = (pos ? "+ " : "− ") + mon + plata(Math.abs(m.monto)); colorMonto = color;
+      }
+      html += '<div class="mov" onclick="editarMovimiento(' + m.id + ')">' +
+                '<div class="ic" style="background:' + color + '">' + signo + '</div>' +
+                '<div class="txt">' + limpio(titulo) +
+                  '<small>' + limpio(cuentaTxt) + (m.nota ? ' · ' + limpio(m.nota) : '') + '</small>' +
+                  (infoCombustible(m) ? '<small>' + infoCombustible(m) + '</small>' : '') + '</div>' +
+                '<b style="color:' + colorMonto + '">' + montoTxt + '</b>' +
+                (m.tipo === "ajuste" ? '' : '<span class="editar-ic">✏️</span>') +
+                '<button class="borrar" onclick="event.stopPropagation(); borrarMovimiento(' + m.id + ')" title="Borrar">🗑️</button>' +
+              '</div>';
+    });
+    document.getElementById("listaMovsMes").innerHTML = html;
+  }
+
+
+  // =========================================================
+  //  8e. PANTALLA DE CATEGORÍAS (menú ☰ → Categorías)
+  // =========================================================
+  function abrirCategorias() {
+    cerrarTodo();
+    document.getElementById("pantallaCategorias").classList.add("abierta");
+    document.querySelector(".fab").style.display = "none";
+    mostrarCategorias();
+  }
+  function cerrarCategorias() {
+    document.getElementById("pantallaCategorias").classList.remove("abierta");
+    document.querySelector(".fab").style.display = "";
+  }
+
+  function mostrarCategorias() {
+    // Cuántos gastos tiene cada ámbito / tipo (de todos los tiempos)
+    function cuantos(fn, nombre) {
+      return movimientos.filter(function (m) { return m.tipo === "gasto" && fn(m) === nombre; }).length;
+    }
+    function lista(items, fn) {
+      return items.map(function (x) {
+        return '<div class="clasif"><div class="ico">' + x.icono + '</div>' +
+               '<div class="nombre">' + x.nombre + '<small>' + x.detalle + '</small></div>' +
+               '<small style="color:#6b7280">' + cuantos(fn, x.nombre) + (cuantos(fn, x.nombre) === 1 ? ' gasto' : ' gastos') + '</small></div>';
+      }).join("");
+    }
+    function chips(arr) { return '<div class="chips">' + arr.map(function (c) { return '<span>' + limpio(c) + '</span>'; }).join("") + '</div>'; }
+
+    // Lista de categorías que se pueden tocar para editarlas
+    function listaEditable(tipo) {
+      var lista = tipo === "gasto" ? categoriasGasto : categoriasIngreso;
+      var palabra = tipo === "gasto" ? "gasto" : "ingreso";
+      return lista.map(function (c, i) {
+        var n = movimientos.filter(function (m) { return m.tipo === tipo && m.categoria === c.nombre; }).length;
+        return '<div class="clasif editable" onclick="abrirEditorCategoria(\'' + tipo + '\',' + i + ')">' +
+               '<div class="ico">' + c.icono + '</div>' +
+               '<div class="nombre">' + limpio(c.nombre) +
+               (c.subs.length ? chips(c.subs) : '<small>Sin subcategorías</small>') + '</div>' +
+               '<small style="color:#6b7280">' + n + ' ' + palabra + (n === 1 ? '' : 's') + '</small>' +
+               '<span class="editar-ic">✏️</span></div>';
+      }).join("") +
+      '<button class="btn-grande" style="margin-top:10px" onclick="abrirEditorCategoria(\'' + tipo + '\',-1)">➕ Nueva categoría de ' + palabra + '</button>';
+    }
+
+    document.getElementById("contenidoCategorias").innerHTML =
+      '<div class="tarjeta"><h3>🎯 Ámbitos</h3>' + lista(ambitos, ambitoDe) + '</div>' +
+      '<div class="tarjeta"><h3>🧭 Tipos</h3>' + lista(tiposGasto, tipoDe) + '</div>' +
+      '<div class="tarjeta"><h3>− Categorías de gasto</h3>' +
+        '<div class="aviso" style="text-align:left;margin:0 0 4px">Toca una categoría para editarla o eliminarla.</div>' +
+        listaEditable("gasto") + '</div>' +
+      '<div class="tarjeta"><h3>+ Categorías de ingreso</h3>' + listaEditable("ingreso") + '</div>';
+  }
+
+  // ---- EDITOR DE UNA CATEGORÍA (nombre, emoji y subcategorías) ----
+  var editCat = { tipo: "gasto", indice: -1 };   // indice -1 = categoría nueva
+
+  function abrirEditorCategoria(tipo, i) {
+    editCat = { tipo: tipo, indice: i };
+    var lista = tipo === "gasto" ? categoriasGasto : categoriasIngreso;
+    var c = i >= 0 ? lista[i] : { nombre: "", icono: tipo === "gasto" ? "🏷️" : "💰", subs: [] };
+    document.getElementById("tituloEditorCat").textContent =
+      (i >= 0 ? "✏️ Editar categoría de " : "➕ Nueva categoría de ") + (tipo === "gasto" ? "gasto" : "ingreso");
+    document.getElementById("ecNombre").value = c.nombre;
+    document.getElementById("ecIcono").value = c.icono;
+    document.getElementById("ecError").textContent = "";
+    document.getElementById("ecSubs").innerHTML = "";
+    c.subs.forEach(function (s) { agregarFilaSub(s); });
+    document.getElementById("btnEliminarCat").style.display = i >= 0 ? "block" : "none";
+    document.getElementById("editorCategoria").classList.add("abierto");
+  }
+  function cerrarEditorCategoria() {
+    document.getElementById("editorCategoria").classList.remove("abierto");
+  }
+
+  // Agrega una cajita para una subcategoría (guarda su nombre original para saber si la renombraste)
+  function agregarFilaSub(nombre) {
+    var fila = document.createElement("div");
+    fila.className = "fila-sub";
+    fila.innerHTML = '<input placeholder="Nombre de la subcategoría">' +
+                     '<button onclick="this.parentNode.remove()" title="Quitar">✕</button>';
+    fila.querySelector("input").value = nombre || "";
+    fila.dataset.original = nombre || "";
+    document.getElementById("ecSubs").appendChild(fila);
+    if (!nombre) fila.querySelector("input").focus();
+  }
+
+  function guardarCategoria() {
+    var tipo = editCat.tipo;
+    var lista = tipo === "gasto" ? categoriasGasto : categoriasIngreso;
+    var nombre = document.getElementById("ecNombre").value.trim();
+    var error = document.getElementById("ecError");
+    if (!nombre) { error.textContent = "Escribe un nombre."; return; }
+    var repetida = lista.some(function (c, i) { return c.nombre.toLowerCase() === nombre.toLowerCase() && i !== editCat.indice; });
+    if (repetida) { error.textContent = "Ya existe una categoría con ese nombre."; return; }
+
+    // Leer las subcategorías escritas
+    var filas = Array.prototype.slice.call(document.querySelectorAll("#ecSubs .fila-sub"));
+    var subs = [], renombres = [];
+    filas.forEach(function (f) {
+      var nuevo = f.querySelector("input").value.trim();
+      if (!nuevo || subs.indexOf(nuevo) !== -1) return;          // vacías o repetidas no se guardan
+      subs.push(nuevo);
+      if (f.dataset.original && f.dataset.original !== nuevo) renombres.push([f.dataset.original, nuevo]);
+    });
+
+    var cat = { nombre: nombre, icono: document.getElementById("ecIcono").value.trim() || "🏷️", subs: subs };
+
+    if (editCat.indice >= 0) {
+      var viejo = lista[editCat.indice].nombre;
+      // Actualizar los movimientos que usaban los nombres viejos
+      movimientos.forEach(function (m) {
+        if (m.tipo !== tipo || m.categoria !== viejo) return;
+        m.categoria = nombre;
+        renombres.forEach(function (r) { if (m.subcategoria === r[0]) m.subcategoria = r[1]; });
+      });
+      lista[editCat.indice] = cat;
+    } else {
+      lista.push(cat);
+    }
+    guardarCategorias();
+    guardarTodo();
+    cerrarEditorCategoria();
+    mostrarCategorias();
+    refrescar();
+  }
+
+  function eliminarCategoria() {
+    var lista = editCat.tipo === "gasto" ? categoriasGasto : categoriasIngreso;
+    var c = lista[editCat.indice];
+    var n = movimientos.filter(function (m) { return m.tipo === editCat.tipo && m.categoria === c.nombre; }).length;
+    var pregunta = "¿Eliminar la categoría «" + c.nombre + "»?";
+    if (n > 0) pregunta += "\n\nTiene " + n + " movimiento(s). No se borrarán: seguirán con el nombre «" + c.nombre + "».";
+    if (!confirm(pregunta)) return;
+    lista.splice(editCat.indice, 1);
+    guardarCategorias();
+    cerrarEditorCategoria();
+    mostrarCategorias();
+  }
+
+
+  // =========================================================
+  //  8f. AJUSTES (menú ☰ → Ajustes)
+  // =========================================================
+  var seccionesInicio = [
+    ["grafico",  "📈 Gráfico del saldo (Inicial · Saldo · Previsto)"],
+    ["casillas", "🟩 Casillas de ingresos, gastos, transferencias y economía"],
+    ["limite",   "🙋 Límite de uso personal"],
+    ["cuentas",  "💳 Mis cuentas"],
+    ["flujo",    "💧 Flujo de caja"],
+    ["economia", "🐷 Economía mensual"],
+    ["curvas",   "📈 Ingresos, gastos y saldo"],
+    ["dona",     "🍩 Gastos por categoría"],
+    ["alertas",  "💬 Mis alertas y consejos"]
+  ];
+
+  function guardarAjustes() {
+    try { localStorage.setItem("mymoney_ajustes", JSON.stringify(ajustes)); } catch (e) {}
+    avisoGuardado();
+  }
+  // Mensajito "Guardado ✓" abajo de la pantalla
+  function avisoGuardado() {
+    var t = document.getElementById("toast");
+    t.classList.add("visible");
+    clearTimeout(avisoGuardado.reloj);
+    avisoGuardado.reloj = setTimeout(function () { t.classList.remove("visible"); }, 1300);
+  }
+
+  // Aplica modo oscuro y secciones ocultas
+  function aplicarAjustes() {
+    document.body.classList.toggle("oscuro", !!ajustes.oscuro);
+    seccionesInicio.forEach(function (s) {
+      var el = document.querySelector('[data-seccion="' + s[0] + '"]');
+      if (el) el.style.display = ajustes.ocultas.indexOf(s[0]) !== -1 ? "none" : "";
+    });
+  }
+
+  function abrirAjustes() {
+    cerrarTodo();
+    document.getElementById("pantallaAjustes").classList.add("abierta");
+    document.querySelector(".fab").style.display = "none";
+    mostrarAjustes();
+  }
+  function cerrarAjustes() {
+    document.getElementById("pantallaAjustes").classList.remove("abierta");
+    document.querySelector(".fab").style.display = "";
+    refrescar();
+  }
+
+  // Un interruptor (switch) reutilizable
+  function interruptor(marcado, accion) {
+    return '<label class="switch"><input type="checkbox"' + (marcado ? ' checked' : '') + ' onchange="' + accion + '"><span></span></label>';
+  }
+
+  function mostrarAjustes() {
+    var a = ajustes;
+    var html = '';
+
+    // 4. META DE AHORRO
+    html += '<div class="tarjeta"><h3>🎯 Meta de ahorro mensual</h3>' +
+      '<div class="dos-campos">' +
+        '<div class="campo"><label>Tipo de meta</label><select onchange="ajustes.metaTipo=this.value; guardarAjustes(); mostrarAjustes()">' +
+          '<option value="%"' + (a.metaTipo === "%" ? " selected" : "") + '>% de mis ingresos</option>' +
+          '<option value="S/"' + (a.metaTipo === "S/" ? " selected" : "") + '>Monto fijo (S/)</option></select></div>' +
+        '<div class="campo"><label>' + (a.metaTipo === "%" ? "Porcentaje (%)" : "Monto (S/)") + '</label>' +
+          '<input type="number" min="0" step="1" value="' + a.metaValor + '" onchange="ajustes.metaValor=Number(this.value)||0; guardarAjustes()"></div>' +
+      '</div><div class="aviso" style="text-align:left">Pon 0 si no quieres meta. Las alertas te dirán si la vas cumpliendo.</div></div>';
+
+    // 5 y 6. TIPO DE CAMBIO Y LÍMITE PERSONAL
+    html += '<div class="tarjeta"><h3>💱 Dinero</h3>' +
+      '<div class="dos-campos">' +
+        '<div class="campo"><label>Tipo de cambio por defecto</label>' +
+          '<input type="number" min="0" step="0.001" value="' + tipoCambio + '" onchange="cambiarTipoCambio(this.value)"></div>' +
+        '<div class="campo"><label>Límite de uso personal (S/)</label>' +
+          '<input type="number" min="0" step="10" value="' + limitePersonal + '" onchange="cambiarLimite(this.value)"></div>' +
+      '</div></div>';
+
+    // 7. SENSIBILIDAD DE LAS ALERTAS
+    html += '<div class="tarjeta"><h3>🔔 Sensibilidad de las alertas</h3>' +
+      filaNumero("Avisarme cuando use este % de mi límite personal", "alertaLimite", a.alertaLimite) +
+      filaNumero("Alertarme si gasto este % más rápido que mi promedio", "alertaRitmo", a.alertaRitmo) +
+      filaNumero("Avisarme si una categoría pasa este % de mis gastos", "alertaCategoria", a.alertaCategoria) +
+      '</div>';
+
+    // 8. PIN
+    html += '<div class="tarjeta"><h3>🔒 PIN para abrir la app</h3>' +
+      (a.pin
+        ? '<div class="aviso" style="text-align:left;margin-bottom:8px">✅ Tienes un PIN activado.</div>' +
+          '<div class="botones"><button class="btn-cancelar" onclick="quitarPin()">Quitar PIN</button>' +
+          '<button class="btn-guardar" onclick="mostrarCrearPin()">Cambiar PIN</button></div>'
+        : '<div class="aviso" style="text-align:left;margin-bottom:8px">Protección básica por si alguien toma tu celular.</div>' +
+          '<button class="btn-grande" onclick="mostrarCrearPin()">🔒 Crear PIN</button>') +
+      '<div id="cajaPin" style="display:none;margin-top:10px">' +
+        '<div class="dos-campos">' +
+          '<div class="campo"><label>Nuevo PIN (4 números)</label><input type="password" inputmode="numeric" maxlength="4" id="pin1"></div>' +
+          '<div class="campo"><label>Repítelo</label><input type="password" inputmode="numeric" maxlength="4" id="pin2"></div>' +
+        '</div><div class="error" id="pinError"></div>' +
+        '<button class="btn-guardar" style="width:100%;padding:12px;border:none;border-radius:10px;font-size:16px" onclick="guardarPin()">Guardar PIN</button>' +
+      '</div></div>';
+
+    // 9. MODO OSCURO
+    html += '<div class="tarjeta"><div class="fila-ajuste"><span>🌙 Modo oscuro</span>' +
+      interruptor(a.oscuro, "ajustes.oscuro=this.checked; guardarAjustes(); aplicarAjustes()") + '</div></div>';
+
+    // 10. SECCIONES VISIBLES
+    html += '<div class="tarjeta"><h3>👁️ Secciones de la vista general</h3>' +
+      seccionesInicio.map(function (s) {
+        return '<div class="fila-ajuste"><span>' + s[1] + '</span>' +
+               interruptor(a.ocultas.indexOf(s[0]) === -1, "mostrarSeccion('" + s[0] + "', this.checked)") + '</div>';
+      }).join("") + '</div>';
+
+    // 11. BORRAR TODO
+    html += '<div class="tarjeta"><h3>🗑️ Borrar todos los datos</h3>' +
+      '<div class="aviso" style="text-align:left;margin-bottom:8px">Borra movimientos, cuentas, categorías y ajustes. La app queda como nueva. No se puede deshacer.</div>' +
+      '<button class="btn-peligro" onclick="borrarTodo()">Borrar todo</button></div>';
+
+    document.getElementById("contenidoAjustes").innerHTML = html;
+  }
+
+  function filaNumero(texto, campo, valor) {
+    return '<div class="fila-ajuste"><span>' + texto + '</span>' +
+           '<span class="num-pct"><input type="number" min="1" max="100" value="' + valor + '" ' +
+           'onchange="ajustes.' + campo + '=Number(this.value)||' + valor + '; guardarAjustes()">%</span></div>';
+  }
+
+  function cambiarTipoCambio(v) {
+    v = Number(v); if (!(v > 0)) return;
+    tipoCambio = v;
+    try { localStorage.setItem("mymoney_tc", v); } catch (e) {}
+    avisoGuardado();
+  }
+  function cambiarLimite(v) {
+    v = Number(v); if (isNaN(v) || v < 0) return;
+    limitePersonal = v;
+    try { localStorage.setItem("mymoney_limite", v); } catch (e) {}
+    avisoGuardado();
+  }
+  function mostrarSeccion(id, visible) {
+    ajustes.ocultas = ajustes.ocultas.filter(function (x) { return x !== id; });
+    if (!visible) ajustes.ocultas.push(id);
+    guardarAjustes();
+    aplicarAjustes();
+  }
+
+  // ---- PIN ----
+  function mostrarCrearPin() { document.getElementById("cajaPin").style.display = "block"; document.getElementById("pin1").focus(); }
+  function guardarPin() {
+    var p1 = document.getElementById("pin1").value, p2 = document.getElementById("pin2").value;
+    if (!/^\d{4}$/.test(p1)) { document.getElementById("pinError").textContent = "El PIN debe tener 4 números."; return; }
+    if (p1 !== p2)           { document.getElementById("pinError").textContent = "Los dos PIN no coinciden."; return; }
+    ajustes.pin = p1;
+    guardarAjustes();
+    mostrarAjustes();
+  }
+  function quitarPin() {
+    if (!confirm("¿Quitar el PIN? La app se abrirá sin pedirlo.")) return;
+    ajustes.pin = "";
+    guardarAjustes();
+    mostrarAjustes();
+  }
+
+  // Pantalla de bloqueo con teclado numérico
+  var pinEscrito = "";
+  function mostrarBloqueo() {
+    if (!ajustes.pin) return;
+    pinEscrito = "";
+    var teclas = ["1","2","3","4","5","6","7","8","9","","0","⌫"];
+    document.getElementById("teclado").innerHTML = teclas.map(function (t) {
+      return t === "" ? '<span></span>' : '<button onclick="teclaPin(\'' + t + '\')">' + t + '</button>';
+    }).join("");
+    pintarPuntos();
+    document.getElementById("bloqueo").classList.add("abierto");
+  }
+  function teclaPin(t) {
+    if (t === "⌫") pinEscrito = pinEscrito.slice(0, -1);
+    else if (pinEscrito.length < 4) pinEscrito += t;
+    pintarPuntos();
+    if (pinEscrito.length === 4) {
+      if (pinEscrito === ajustes.pin) {
+        document.getElementById("bloqueo").classList.remove("abierto");
+      } else {
+        document.getElementById("pinMal").textContent = "PIN incorrecto";
+        pinEscrito = "";
+        setTimeout(function () { pintarPuntos(); document.getElementById("pinMal").textContent = ""; }, 700);
+      }
+    }
+  }
+  function pintarPuntos() {
+    var p = "";
+    for (var i = 0; i < 4; i++) p += '<span class="' + (i < pinEscrito.length ? "lleno" : "") + '"></span>';
+    document.getElementById("puntosPin").innerHTML = p;
+  }
+
+  // ---- BORRAR TODO (doble confirmación) ----
+  function borrarTodo() {
+    if (!confirm("⚠️ ¿Seguro que quieres BORRAR TODOS tus datos de My Money?")) return;
+    var palabra = prompt("Para confirmar, escribe BORRAR en mayúsculas:");
+    if (palabra !== "BORRAR") { alert("No se borró nada."); return; }
+    try {
+      ["mymoney_movimientos", "mymoney_cuentas", "mymoney_categorias", "mymoney_limite", "mymoney_tc", "mymoney_ajustes"]
+        .forEach(function (k) { localStorage.removeItem(k); });
+    } catch (e) {}
+    location.reload();
+  }
+
+
+  // =========================================================
+  //  8g. REPORTES (menú ☰ → Reportes)
+  // =========================================================
+  var periodoReporte = "mes";   // "mes", "anio" o "todo"
+
+  function abrirReportes() {
+    cerrarTodo();
+    document.getElementById("pantallaReportes").classList.add("abierta");
+    document.getElementById("pantallaReportes").scrollTop = 0;
+    document.querySelector(".fab").style.display = "none";
+    mostrarReportes();
+  }
+  function cerrarReportes() {
+    document.getElementById("pantallaReportes").classList.remove("abierta");
+    document.querySelector(".fab").style.display = "";
+  }
+  function elegirPeriodoReporte(p) { periodoReporte = p; mostrarReportes(); }
+
+  // Pedacitos del periodo para TODAS las cuentas: días (mes), meses (año), meses (acumulado)
+  function pedazosGlobal(p) {
+    var lista = [];
+    if (p === "mes") {
+      var dias = new Date(anioActual, mesActual + 1, 0).getDate();
+      for (var d = 1; d <= dias; d++) {
+        var f = mesTexto() + "-" + String(d).padStart(2, "0");
+        lista.push({ etiqueta: String(d), desde: f, hasta: f });
+      }
+      return lista;
+    }
+    var inicio, fin;
+    if (p === "anio") { inicio = anioActual + "-01"; fin = anioActual + "-12"; }
+    else {
+      var fechas = movimientos.map(function (m) { return m.fecha; }).sort();
+      inicio = fechas.length ? fechas[0].slice(0, 7) : hoyTexto().slice(0, 7);
+      fin = hoyTexto().slice(0, 7);
+      if (fechas.length && fechas[fechas.length - 1].slice(0, 7) > fin) fin = fechas[fechas.length - 1].slice(0, 7);
+    }
+    var a = Number(inicio.slice(0, 4)), mes = Number(inicio.slice(5, 7)) - 1;
+    while (true) {
+      var txt = a + "-" + String(mes + 1).padStart(2, "0");
+      lista.push({ etiqueta: p === "anio" ? meses[mes] : meses[mes] + " " + String(a).slice(2), desde: txt + "-01", hasta: txt + "-31" });
+      if (txt >= fin) break;
+      mes++; if (mes > 11) { mes = 0; a++; }
+    }
+    return lista;
+  }
+
+  function nombrePeriodoReporte() {
+    if (periodoReporte === "mes")  return meses[mesActual] + " " + anioActual;
+    if (periodoReporte === "anio") return "Año " + anioActual;
+    return "Desde el inicio";
+  }
+
+  // ¿Es una carga de combustible?
+  function esCarga(m) {
+    return m.tipo === "gasto" && (m.galones > 0 || (m.categoria === "Moto" && m.subcategoria === "Combustible"));
+  }
+
+  // Barras horizontales de ranking: [[nombre, monto, extra], ...]
+  function barrasRanking(lista, total, color) {
+    if (!lista.length) return '<div class="vacio">No hay datos en este periodo.</div>';
+    var max = lista[0][1];
+    return lista.map(function (x, i) {
+      return '<div class="rank"><div class="rank-txt"><span>' + (i + 1) + '. ' + x[0] + '</span><b>S/ ' + plata(x[1]) +
+             ' <small>(' + Math.round(x[1] / total * 100) + '%)</small></b></div>' +
+             '<div class="barrita"><div style="width:' + (x[1] / max * 100) + '%;background:' + color + '"></div></div>' +
+             (x[2] || '') + '</div>';
+    }).join("");
+  }
+
+  function mostrarReportes() {
+    var p = periodoReporte;
+    var pz = pedazosGlobal(p);
+    var desde = pz[0].desde, hasta = pz[pz.length - 1].hasta;
+    var etiquetas = pz.map(function (x) { return x.etiqueta; });
+    var enRango = movimientos.filter(function (m) { return m.fecha >= desde && m.fecha <= hasta; });
+    var html = "";
+
+    // ---- Selector Mes / Año / Acumulado ----
+    var ops = [["mes", "Mes"], ["anio", "Año"], ["todo", "Acumulado"]];
+    html += '<div class="tarjeta"><div class="periodos">' + ops.map(function (o) {
+      return '<button class="' + (p === o[0] ? "on" : "") + '" onclick="elegirPeriodoReporte(\'' + o[0] + '\')">' + o[1] + '</button>';
+    }).join("") + '</div><div class="aviso">' + nombrePeriodoReporte() + ' · montos en soles</div></div>';
+
+    // =====================================================
+    // 1. ESTADÍSTICAS GENERALES
+    // =====================================================
+    var tot = entradasSalidas(desde, hasta);
+    var ahorro = tot.ingresos - tot.gastos;
+    var tasa = tot.ingresos > 0 ? ahorro / tot.ingresos * 100 : 0;
+    var gastos = enRango.filter(function (m) { return m.tipo === "gasto"; });
+    var ingresos = enRango.filter(function (m) { return m.tipo === "ingreso"; });
+    var mayor = gastos.slice().sort(function (a, b) {
+      return enSoles(b.monto, monedaDe(b.cuenta)) - enSoles(a.monto, monedaDe(a.cuenta));
+    })[0];
+
+    var ent = [], sal = [], netos = [];
+    pz.forEach(function (x) {
+      var r = entradasSalidas(x.desde, x.hasta);
+      ent.push(r.ingresos); sal.push(r.gastos); netos.push(r.ingresos - r.gastos);
+    });
+    var unidad = p === "mes" ? "día" : "mes";
+    var conGasto = sal.filter(function (v) { return v > 0; }).length;
+    var iMax = sal.indexOf(Math.max.apply(null, sal));
+
+    html += '<div class="tarjeta"><h3>📊 Estadísticas generales</h3>' +
+      cajitas([["Ingresos", "S/ " + plata(tot.ingresos), "#16a34a"],
+               ["Gastos", "S/ " + plata(tot.gastos), "#dc2626"],
+               ["Ahorro", "S/ " + plata(ahorro), ahorro < 0 ? "#dc2626" : "#2563eb"]]) +
+      '<table class="tabla" style="margin-top:12px">' +
+        filaDato("💹 Tasa de ahorro", Math.round(tasa) + "%") +
+        filaDato("🧾 Movimientos registrados", enRango.length + " (" + ingresos.length + " ingresos · " + gastos.length + " gastos)") +
+        filaDato("📅 Gasto promedio por " + unidad, "S/ " + plata(tot.gastos / pz.length)) +
+        filaDato("🎫 Gasto promedio por compra", gastos.length ? "S/ " + plata(tot.gastos / gastos.length) : "—") +
+        filaDato("🔥 " + (p === "mes" ? "Día" : "Mes") + " con más gasto", sal[iMax] > 0 ? etiquetas[iMax] + (p === "mes" ? " " + meses[mesActual] : "") + " (S/ " + plata(sal[iMax]) + ")" : "—") +
+        filaDato("💸 Gasto más grande", mayor ? limpio(nombreCategoria(mayor)) + "<br>S/ " + plata(enSoles(mayor.monto, monedaDe(mayor.cuenta))) + " · " + mayor.fecha.split("-").reverse().join("/") : "—") +
+        filaDato("📆 " + (p === "mes" ? "Días" : "Meses") + " con gastos", conGasto + " de " + pz.length) +
+      '</table>' +
+      '<h3 style="margin-top:16px">Ingresos vs gastos</h3>' + graficoDoble(ent, sal, etiquetas) +
+      '<div class="aviso">🟩 Ingresos · 🟥 Gastos</div>' +
+      '<h3 style="margin-top:16px">Ahorro por ' + unidad + '</h3>' + grafico(netos, etiquetas, "barras", "#2563eb", "#dc2626") +
+      '<div class="aviso">🟦 Ahorraste · 🟥 Gastaste más de lo que entró</div></div>';
+
+    // Las curvas no bajan a 0 en los días/meses que aún no llegan
+    var hastaHoy = pz.filter(function (x) { return x.desde <= hoyTexto(); }).length || 1;
+
+    // Evolución de ingresos y gastos en curvas
+    html += '<div class="tarjeta"><h3>📈 Evolución de ingresos y gastos</h3>' +
+      graficoLineas([ent.slice(0, hastaHoy), sal.slice(0, hastaHoy)], ["#16a34a", "#dc2626"], etiquetas, true) +
+      '<div class="leyenda-mini"><span><i style="background:#16a34a"></i>Ingresos</span>' +
+      '<span><i style="background:#dc2626"></i>Gastos</span></div></div>';
+
+    // =====================================================
+    // 2. POR CATEGORÍAS
+    // =====================================================
+    var porCat = {}, porSub = {}, porAmb = {}, porTipo = {}, porIng = {};
+    gastos.forEach(function (m) {
+      var v = enSoles(m.monto, monedaDe(m.cuenta));
+      porCat[m.categoria] = (porCat[m.categoria] || 0) + v;
+      if (m.subcategoria) {
+        porSub[m.categoria] = porSub[m.categoria] || {};
+        porSub[m.categoria][m.subcategoria] = (porSub[m.categoria][m.subcategoria] || 0) + v;
+      }
+      porAmb[ambitoDe(m)] = (porAmb[ambitoDe(m)] || 0) + v;
+      porTipo[tipoDe(m)]  = (porTipo[tipoDe(m)]  || 0) + v;
+    });
+    ingresos.forEach(function (m) {
+      porIng[m.categoria] = (porIng[m.categoria] || 0) + enSoles(m.monto, monedaDe(m.cuenta));
+    });
+    function ordenar(obj) {
+      return Object.keys(obj).map(function (k) { return [k, obj[k]]; }).sort(function (a, b) { return b[1] - a[1]; });
+    }
+    function conIcono(nombre, tipo) {
+      var c = buscarCategoria(nombre, tipo);
+      return (c ? c.icono + " " : "") + limpio(nombre);
+    }
+    var listaCat = ordenar(porCat).map(function (x) {
+      var subs = porSub[x[0]] ? ordenar(porSub[x[0]]) : [];
+      var detalle = subs.length ? '<div class="subs-rep">' + subs.map(function (s) {
+        return '<span>' + limpio(s[0]) + ': S/ ' + plata(s[1]) + '</span>';
+      }).join("") + '</div>' : '';
+      return [conIcono(x[0], "gasto"), x[1], detalle];
+    });
+
+    // Evolución de las 3 categorías principales
+    var top3 = ordenar(porCat).slice(0, 3).map(function (x) { return x[0]; });
+    var coloresTop = ["#dc2626", "#f97316", "#9333ea"];
+    var series = top3.map(function (cat) {
+      return pz.map(function (x) {
+        var t = 0;
+        gastos.forEach(function (m) { if (m.categoria === cat && m.fecha >= x.desde && m.fecha <= x.hasta) t += enSoles(m.monto, monedaDe(m.cuenta)); });
+        return t;
+      });
+    });
+
+    html += '<div class="tarjeta"><h3>🏷️ Gastos por categoría</h3>' +
+      donaHTML(ordenar(porCat).map(function (x) { return [conIcono(x[0], "gasto"), x[1]]; }), tot.gastos) +
+      '<h3 style="margin-top:16px">🏆 Ranking con subcategorías</h3>' +
+      barrasRanking(listaCat, tot.gastos, "#dc2626") + '</div>';
+    if (top3.length) {
+      html += '<div class="tarjeta"><h3>📈 Evolución de tus 3 categorías principales</h3>' +
+        graficoLineas(series.map(function (s) { return s.slice(0, hastaHoy); }), coloresTop, etiquetas) +
+        '<div class="leyenda-mini">' + top3.map(function (c, i) {
+          return '<span><i style="background:' + coloresTop[i] + '"></i>' + conIcono(c, "gasto") + '</span>';
+        }).join("") + '</div></div>';
+    }
+    html += '<div class="tarjeta"><h3>🎯 Por ámbito</h3>' +
+      barrasRanking(ordenar(porAmb).map(function (x) { var a = ambitos.filter(function (y) { return y.nombre === x[0]; })[0]; return [(a ? a.icono + " " : "") + x[0], x[1]]; }), tot.gastos, "#2563eb") +
+      '<h3 style="margin-top:14px">🧭 Por tipo</h3>' +
+      barrasRanking(ordenar(porTipo).map(function (x) { var t = tiposGasto.filter(function (y) { return y.nombre === x[0]; })[0]; return [(t ? t.icono + " " : "") + x[0], x[1]]; }), tot.gastos, "#9333ea") +
+      '</div>';
+    html += '<div class="tarjeta"><h3>💰 Ingresos por categoría</h3>' +
+      barrasRanking(ordenar(porIng).map(function (x) { return [conIcono(x[0], "ingreso"), x[1]]; }), tot.ingresos, "#16a34a") + '</div>';
+
+    // =====================================================
+    // 3. COMBUSTIBLE
+    // =====================================================
+    var cargas = enRango.filter(esCarga);
+    var galonesTot = 0, gastoComb = 0;
+    cargas.forEach(function (m) { galonesTot += m.galones || 0; gastoComb += enSoles(m.monto, monedaDe(m.cuenta)); });
+    var conGal = cargas.filter(function (m) { return m.galones > 0; });
+    var gastoConGal = 0; conGal.forEach(function (m) { gastoConGal += enSoles(m.monto, monedaDe(m.cuenta)); });
+
+    // Km recorridos: desde el último odómetro ANTES del periodo (o la primera lectura del periodo)
+    var lecturas = movimientos.filter(function (m) { return m.odometro > 0; })
+                              .sort(function (a, b) { return a.odometro - b.odometro; });
+    var dentro = lecturas.filter(function (m) { return m.fecha >= desde && m.fecha <= hasta; });
+    var antes = lecturas.filter(function (m) { return m.fecha < desde; });
+    var km = 0, galRend = 0;
+    if (dentro.length) {
+      var base = antes.length ? antes[antes.length - 1] : dentro[0];
+      km = dentro[dentro.length - 1].odometro - base.odometro;
+      // galones usados para recorrer esos km (sin contar la carga que sirvió de punto de partida)
+      dentro.forEach(function (m) { if (m !== base) galRend += m.galones || 0; });
+    }
+    var rend = galRend > 0 ? km / galRend : 0;
+
+    // Series para los gráficos
+    var galPorPz = [], gasPorPz = [], odoPorPz = [], ultimoOdo = antes.length ? antes[antes.length - 1].odometro : null;
+    pz.forEach(function (x) {
+      var g = 0, s = 0;
+      cargas.forEach(function (m) {
+        if (m.fecha >= x.desde && m.fecha <= x.hasta) { g += m.galones || 0; s += enSoles(m.monto, monedaDe(m.cuenta)); }
+      });
+      lecturas.forEach(function (m) { if (m.fecha >= x.desde && m.fecha <= x.hasta && (ultimoOdo === null || m.odometro > ultimoOdo)) ultimoOdo = m.odometro; });
+      galPorPz.push(g); gasPorPz.push(s); odoPorPz.push(ultimoOdo);
+    });
+    // Antes de la primera lectura usamos la primera lectura (para no dibujar vacíos)
+    var primera = odoPorPz.filter(function (v) { return v !== null; })[0];
+    odoPorPz = odoPorPz.map(function (v) { return v === null ? primera : v; });
+
+    html += '<div class="tarjeta"><h3>⛽ Combustible</h3>';
+    if (!cargas.length) {
+      html += '<div class="vacio">No hay cargas de combustible en este periodo.<br>Regístralas como 🏍️ Moto › Combustible.</div>';
+    } else {
+      html += cajitas([["Gasto", "S/ " + plata(gastoComb), "#dc2626"],
+                       ["Galones", galonesTot.toFixed(2) + " gal"],
+                       ["Cargas", String(cargas.length)]]) +
+        '<table class="tabla" style="margin-top:12px">' +
+          filaDato("💲 Precio promedio por galón", conGal.length && galonesTot ? "S/ " + plata(gastoConGal / galonesTot) : "—") +
+          filaDato("🛣️ Km recorridos", km ? km.toLocaleString("es-PE") + " km" : "—") +
+          filaDato("🚀 Rendimiento promedio", rend ? rend.toFixed(1) + " km/gal" : "—") +
+          filaDato("🪙 Costo por km", km && gastoComb ? "S/ " + (gastoComb / km).toFixed(2) : "—") +
+          filaDato("🧭 Último odómetro", lecturas.length ? lecturas[lecturas.length - 1].odometro.toLocaleString("es-PE") + " km" : "—") +
+        '</table>' +
+        '<h3 style="margin-top:16px">⛽ Consumo (galones por ' + unidad + ')</h3>' +
+        grafico(galPorPz, etiquetas, "barras", "#0891b2", "#0891b2") +
+        '<h3 style="margin-top:16px">💸 Gasto en combustible (S/ por ' + unidad + ')</h3>' +
+        grafico(gasPorPz, etiquetas, "barras", "#f97316", "#f97316");
+      if (primera !== undefined) {
+        html += '<h3 style="margin-top:16px">🧭 Evolución del odómetro (km)</h3>' +
+                grafico(odoPorPz, etiquetas, "linea", "#9333ea", "#9333ea", true);
+      }
+      if (km && dentro.length === 1 && !antes.length)
+        html += '<div class="aviso">Con una sola lectura de odómetro aún no se puede calcular el rendimiento.</div>';
+    }
+    html += '</div>';
+
+    document.getElementById("contenidoReportes").innerHTML = html;
+  }
+
+  function filaDato(nombre, valor) {
+    return '<tr><td>' + nombre + '</td><td style="text-align:right;white-space:normal">' + valor + '</td></tr>';
+  }
+
+  // Varias curvas suaves en un mismo gráfico
+  // Dona: lista = [[nombre, monto], ...] ordenada de mayor a menor
+  function donaHTML(lista, total) {
+    if (!lista.length || !total) return '<div class="vacio">No hay gastos en este periodo.</div>';
+    var colores = ["#2563eb", "#dc2626", "#16a34a", "#f97316", "#9333ea", "#0891b2", "#ca8a04", "#db2777", "#65a30d", "#6b7280", "#7c3aed"];
+    var R = 60, C = 2 * Math.PI * R, avance = 0, aros = "";
+    lista.forEach(function (x, i) {
+      var parte = x[1] / total * C;
+      aros += '<circle cx="90" cy="90" r="' + R + '" fill="none" stroke="' + colores[i % colores.length] + '" stroke-width="26"' +
+              ' stroke-dasharray="' + parte + ' ' + (C - parte) + '" stroke-dashoffset="' + (-avance) + '" transform="rotate(-90 90 90)"/>';
+      avance += parte;
+    });
+    return '<div class="dona"><svg viewBox="0 0 180 180">' + aros +
+             '<text x="90" y="84" text-anchor="middle" font-size="11" fill="#6b7280">Total</text>' +
+             '<text x="90" y="104" text-anchor="middle" font-size="17" font-weight="bold" fill="#1d2433">S/ ' + Math.round(total).toLocaleString("es-PE") + '</text>' +
+           '</svg></div>' +
+           '<div class="leyenda">' + lista.map(function (x, i) {
+             return '<div><span class="punto" style="background:' + colores[i % colores.length] + '"></span>' +
+                    '<span class="cat">' + x[0] + '</span><b>S/ ' + plata(x[1]) + '</b>' +
+                    '<small>' + Math.round(x[1] / total * 100) + '%</small></div>';
+           }).join("") + '</div>';
+  }
+
+  // relleno = true: pinta suavecito debajo de cada curva
+  function graficoLineas(series, colores, etiquetas, relleno) {
+    var W = 320, arriba = 12, abajo = 140, n = etiquetas.length;
+    var todos = [0]; series.forEach(function (s) { todos = todos.concat(s); });
+    var max = Math.max.apply(null, todos) || 1;
+    function x(i) { return n > 1 ? i / (n - 1) * (W - 10) + 5 : W / 2; }
+    function y(v) { return arriba + (max - v) / max * (abajo - arriba); }
+    var svg = '<line x1="0" x2="' + W + '" y1="' + y(0) + '" y2="' + y(0) + '" stroke="#e5e7eb"/>';
+    series.forEach(function (s, k) {
+      var pts = s.map(function (v, i) { return [x(i), y(v)]; });
+      if (relleno && pts.length > 1)
+        svg += '<path d="' + curvaSuave(pts) + ' L ' + pts[pts.length - 1][0] + ' ' + y(0) + ' L ' + pts[0][0] + ' ' + y(0) + ' Z" fill="' + colores[k] + '" opacity="0.08"/>';
+      svg += '<path d="' + curvaSuave(pts) + '" fill="none" stroke="' + colores[k] + '" stroke-width="2.5" stroke-linecap="round"/>';
+      if (n <= 31) pts.forEach(function (pt) { svg += '<circle cx="' + pt[0] + '" cy="' + pt[1] + '" r="2" fill="' + colores[k] + '"/>'; });
+    });
+    var cada = Math.ceil(n / 7);
+    etiquetas.forEach(function (e, i) {
+      if (i % cada === 0) svg += '<text x="' + x(i) + '" y="158" font-size="9" fill="#6b7280" text-anchor="' + (i === 0 ? "start" : "middle") + '">' + e + '</text>';
+    });
+    svg += '<text x="' + (W - 2) + '" y="' + (arriba + 2) + '" font-size="9" fill="#9ca3af" text-anchor="end">' + Math.round(max).toLocaleString("es-PE") + '</text>';
+    return '<svg class="graf" viewBox="0 0 ' + W + ' 165">' + svg + '</svg>';
+  }
+
+
+  // =========================================================
+  //  CALCULADORA DEL FORMULARIO
+  // =========================================================
+  // Ej: desayuno = sándwich 11 + jugo 5  →  escribe 11+5 y toca ✓ Usar → Monto = 16
+  var calcTexto = "";
+
+  function abrirCalculadora() {
+    var caja = document.getElementById("calculadora");
+    if (caja.classList.contains("abierta")) { caja.classList.remove("abierta"); return; }
+    // Empieza con lo que ya estaba en Monto (si había algo)
+    calcTexto = document.getElementById("fMonto").value || "";
+    pintarCalculadora();
+    caja.classList.add("abierta");
+  }
+
+  function calcTecla(t) {
+    var esOp = "+−×÷".indexOf(t) !== -1;
+    var ultimo = calcTexto.slice(-1);
+    if (t === "C") calcTexto = "";
+    else if (t === "⌫") calcTexto = calcTexto.slice(0, -1);
+    else if (esOp) {
+      if (calcTexto === "") return;                                    // no empezar con un signo
+      if ("+−×÷".indexOf(ultimo) !== -1) calcTexto = calcTexto.slice(0, -1);   // cambiar el signo anterior
+      calcTexto += t;
+    } else if (t === ".") {
+      var trozo = calcTexto.split(/[+−×÷]/).pop();
+      if (trozo.indexOf(".") !== -1) return;                           // un número no puede tener dos puntos
+      calcTexto += trozo === "" ? "0." : ".";
+    } else calcTexto += t;
+    pintarCalculadora();
+  }
+
+  // Calcula la operación respetando que × y ÷ van antes que + y −
+  function calcular2(texto) {
+    var partes = texto.match(/(\d+\.?\d*|\.\d+|[+−×÷])/g);
+    if (!partes) return NaN;
+    if ("+−×÷".indexOf(partes[partes.length - 1]) !== -1) partes.pop();   // ignora un signo al final
+    // Primero × y ÷
+    var pila = [Number(partes[0])];
+    for (var i = 1; i < partes.length; i += 2) {
+      var op = partes[i], n = Number(partes[i + 1]);
+      if (op === "×") pila[pila.length - 1] *= n;
+      else if (op === "÷") pila[pila.length - 1] /= n;
+      else { pila.push(op); pila.push(n); }
+    }
+    // Luego + y −
+    var total = pila[0];
+    for (var j = 1; j < pila.length; j += 2) total = pila[j] === "+" ? total + pila[j + 1] : total - pila[j + 1];
+    return total;
+  }
+
+  function pintarCalculadora() {
+    document.getElementById("calcOperacion").textContent = calcTexto || "0";
+    var r = calcular2(calcTexto);
+    document.getElementById("calcResultado").textContent =
+      (/[+−×÷]/.test(calcTexto) && isFinite(r)) ? "= " + plata(Math.round(r * 100) / 100) : "";
+  }
+
+  function usarCalculadora() {
+    var r = calcular2(calcTexto);
+    if (!isFinite(r) || r <= 0) { document.getElementById("calcResultado").textContent = "El resultado debe ser mayor a 0"; return; }
+    r = Math.round(r * 100) / 100;
+    document.getElementById("fMonto").value = r;
+    // Si la nota está vacía, guardamos la operación para que recuerdes cómo sumaste
+    var nota = document.getElementById("fNota");
+    if (/[+−×÷]/.test(calcTexto) && !nota.value.trim()) nota.value = "🧮 " + calcTexto.replace(/([+−×÷])/g, " $1 ");
+    document.getElementById("calculadora").classList.remove("abierta");
+    editado("sale");
+    precioGalon();
+  }
+
+
+  // =========================================================
+  //  8h. EXPORTAR A EXCEL (con hojas por mes, por año, acumulado y gráficos)
+  // =========================================================
+  // Un archivo .xlsx es en realidad una carpeta comprimida (ZIP) llena de archivos de texto (XML).
+  // Aquí armamos esos archivos a mano y los comprimimos, sin necesitar internet ni programas extra.
+
+  // ---- 1. Herramientas para armar el ZIP ----
+  var tablaCRC = (function () {
+    var t = [];
+    for (var n = 0; n < 256; n++) {
+      var c = n;
+      for (var k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1;
+      t[n] = c >>> 0;
+    }
+    return t;
+  })();
+  function crc32(bytes) {
+    var c = 0xFFFFFFFF;
+    for (var i = 0; i < bytes.length; i++) c = tablaCRC[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  }
+  function crearZip(archivos) {   // archivos: [{nombre, texto}]
+    var enc = new TextEncoder(), partes = [], central = [], offset = 0;
+    function num(v, bytes) { var a = []; for (var i = 0; i < bytes; i++) a.push((v >>> (8 * i)) & 0xFF); return a; }
+    archivos.forEach(function (f) {
+      var nombre = enc.encode(f.nombre), datos = enc.encode(f.texto), crc = crc32(datos);
+      var cab = [].concat(num(0x04034b50, 4), num(20, 2), num(0x0800, 2), num(0, 2), num(0, 2), num(0, 2),
+                          num(crc, 4), num(datos.length, 4), num(datos.length, 4), num(nombre.length, 2), num(0, 2));
+      partes.push(new Uint8Array(cab), nombre, datos);
+      central.push(new Uint8Array([].concat(num(0x02014b50, 4), num(20, 2), num(20, 2), num(0x0800, 2), num(0, 2), num(0, 2), num(0, 2),
+                   num(crc, 4), num(datos.length, 4), num(datos.length, 4), num(nombre.length, 2), num(0, 2), num(0, 2),
+                   num(0, 2), num(0, 2), num(0, 4), num(offset, 4))), nombre);
+      offset += cab.length + nombre.length + datos.length;
+    });
+    var tamCentral = central.reduce(function (s, x) { return s + x.length; }, 0);
+    var fin = new Uint8Array([].concat(num(0x06054b50, 4), num(0, 2), num(0, 2), num(archivos.length, 2), num(archivos.length, 2),
+                                       num(tamCentral, 4), num(offset, 4), num(0, 2)));
+    return new Blob(partes.concat(central, [fin]), { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  }
+
+  // ---- 2. Ayudantes para escribir celdas ----
+  function xml(t) {
+    return String(t == null ? "" : t).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; });
+  }
+  function letra(col) {   // 0 → A, 1 → B, ... 26 → AA
+    var s = ""; col++;
+    while (col > 0) { var r = (col - 1) % 26; s = String.fromCharCode(65 + r) + s; col = Math.floor((col - 1) / 26); }
+    return s;
+  }
+  // Estilos (ver styles.xml más abajo)
+  var E = { normal: 0, titulo: 1, cabecera: 2, soles: 3, total: 4, negrita: 5, porcentaje: 6, totalTxt: 7, nota: 8, fecha: 9, totalPct: 10 };
+
+  // Una hoja se arma fila por fila: cada celda es {v: valor, s: estilo, f: fórmula}
+  function nuevaHoja(nombre) { return { nombre: nombre, filas: [], graficos: [], anchos: [32, 15, 15, 15, 16, 14, 10, 14, 34] }; }
+  function poner(hoja, fila, col, celda) {
+    hoja.filas[fila] = hoja.filas[fila] || [];
+    hoja.filas[fila][col] = celda;
+  }
+  function hojaXML(hoja, conDibujo) {
+    var x = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' +
+      '<sheetViews><sheetView workbookViewId="0" showGridLines="0"/></sheetViews><cols>' +
+      hoja.anchos.map(function (w, i) { return '<col min="' + (i + 1) + '" max="' + (i + 1) + '" width="' + w + '" customWidth="1"/>'; }).join("") +
+      '</cols><sheetData>';
+    hoja.filas.forEach(function (fila, r) {
+      if (!fila) return;
+      x += '<row r="' + (r + 1) + '">';
+      fila.forEach(function (c, col) {
+        if (!c) return;
+        var ref = letra(col) + (r + 1), s = c.s ? ' s="' + c.s + '"' : '';
+        if (c.f !== undefined) x += '<c r="' + ref + '"' + s + '><f>' + xml(c.f) + '</f><v>' + (isFinite(c.v) ? c.v : 0) + '</v></c>';
+        else if (typeof c.v === "number") x += '<c r="' + ref + '"' + s + '><v>' + (isFinite(c.v) ? Math.round(c.v * 100) / 100 : 0) + '</v></c>';
+        else x += '<c r="' + ref + '"' + s + ' t="inlineStr"><is><t xml:space="preserve">' + xml(c.v) + '</t></is></c>';
+      });
+      x += '</row>';
+    });
+    x += '</sheetData><pageMargins left="0.7" right="0.7" top="0.75" bottom="0.75" header="0.3" footer="0.3"/>';
+    if (conDibujo) x += '<drawing r:id="rId1"/>';
+    return x + '</worksheet>';
+  }
+
+  // ---- 3. Gráficos (formato de Excel) ----
+  function refHoja(hoja, col, f1, f2) {
+    return "'" + hoja.nombre.replace(/'/g, "''") + "'!$" + letra(col) + "$" + (f1 + 1) + (f2 !== undefined ? ":$" + letra(col) + "$" + (f2 + 1) : "");
+  }
+  function cacheTexto(lista) {
+    return '<c:strCache><c:ptCount val="' + lista.length + '"/>' + lista.map(function (v, i) {
+      return '<c:pt idx="' + i + '"><c:v>' + xml(v) + '</c:v></c:pt>'; }).join("") + '</c:strCache>';
+  }
+  function cacheNum(lista) {
+    return '<c:numCache><c:formatCode>General</c:formatCode><c:ptCount val="' + lista.length + '"/>' + lista.map(function (v, i) {
+      return '<c:pt idx="' + i + '"><c:v>' + (Math.round(v * 100) / 100) + '</c:v></c:pt>'; }).join("") + '</c:numCache>';
+  }
+  function tituloGrafico(t) {
+    return '<c:title><c:tx><c:rich><a:bodyPr/><a:p><a:pPr><a:defRPr sz="1200" b="1"/></a:pPr><a:r><a:rPr lang="es-PE" sz="1200" b="1"/><a:t>' +
+           xml(t) + '</a:t></a:r></a:p></c:rich></c:tx><c:overlay val="0"/></c:title><c:autoTitleDeleted val="0"/>';
+  }
+  function ejes() {
+    return '<c:catAx><c:axId val="5001"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="b"/>' +
+           '<c:numFmt formatCode="General" sourceLinked="0"/><c:majorTickMark val="none"/><c:minorTickMark val="none"/><c:tickLblPos val="low"/>' +
+           '<c:crossAx val="5002"/><c:crosses val="autoZero"/><c:auto val="1"/><c:lblAlgn val="ctr"/><c:lblOffset val="100"/><c:noMultiLvlLbl val="0"/></c:catAx>' +
+           '<c:valAx><c:axId val="5002"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="l"/>' +
+           '<c:majorGridlines><c:spPr><a:ln><a:solidFill><a:srgbClr val="E5E7EB"/></a:solidFill></a:ln></c:spPr></c:majorGridlines>' +
+           '<c:numFmt formatCode="#,##0" sourceLinked="0"/><c:majorTickMark val="none"/><c:minorTickMark val="none"/><c:tickLblPos val="nextTo"/>' +
+           '<c:crossAx val="5001"/><c:crosses val="autoZero"/><c:crossBetween val="between"/></c:valAx>';
+  }
+  function envolverGrafico(titulo, cuerpo, leyenda) {
+    return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<c:chartSpace xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' +
+      '<c:roundedCorners val="0"/><c:chart>' + tituloGrafico(titulo) + '<c:plotArea><c:layout/>' + cuerpo + '</c:plotArea>' +
+      (leyenda ? '<c:legend><c:legendPos val="' + leyenda + '"/><c:overlay val="0"/></c:legend>' : '') +
+      '<c:plotVisOnly val="1"/><c:dispBlanksAs val="gap"/></c:chart></c:chartSpace>';
+  }
+  // g = {tipo: "barras"|"linea"|"dona", titulo, hoja, cats:{col,f1,f2,valores}, series:[{nombre, celdaNombre:{col,fila}, col, f1, f2, valores, color}]}
+  function graficoXML(g) {
+    var cat = '<c:cat><c:strRef><c:f>' + xml(refHoja(g.hoja, g.cats.col, g.cats.f1, g.cats.f2)) + '</c:f>' + cacheTexto(g.cats.valores) + '</c:strRef></c:cat>';
+    function serie(s, i, extra, despues) {
+      return '<c:ser><c:idx val="' + i + '"/><c:order val="' + i + '"/>' +
+        '<c:tx><c:strRef><c:f>' + xml(refHoja(g.hoja, s.celdaNombre.col, s.celdaNombre.fila)) + '</c:f>' + cacheTexto([s.nombre]) + '</c:strRef></c:tx>' +
+        extra + cat +
+        '<c:val><c:numRef><c:f>' + xml(refHoja(g.hoja, s.col, s.f1, s.f2)) + '</c:f>' + cacheNum(s.valores) + '</c:numRef></c:val>' + (despues || '') + '</c:ser>';
+    }
+    if (g.tipo === "barras") {
+      return envolverGrafico(g.titulo, '<c:barChart><c:barDir val="col"/><c:grouping val="clustered"/><c:varyColors val="0"/>' +
+        g.series.map(function (s, i) {
+          return serie(s, i, '<c:spPr><a:solidFill><a:srgbClr val="' + s.color + '"/></a:solidFill></c:spPr><c:invertIfNegative val="0"/>');
+        }).join("") + '<c:gapWidth val="60"/><c:axId val="5001"/><c:axId val="5002"/></c:barChart>' + ejes(), "b");
+    }
+    if (g.tipo === "linea") {
+      return envolverGrafico(g.titulo, '<c:lineChart><c:grouping val="standard"/><c:varyColors val="0"/>' +
+        g.series.map(function (s, i) {
+          return serie(s, i, '<c:spPr><a:ln w="31750" cap="rnd"><a:solidFill><a:srgbClr val="' + s.color + '"/></a:solidFill></a:ln></c:spPr>' +
+                       '<c:marker><c:symbol val="circle"/><c:size val="4"/><c:spPr><a:solidFill><a:srgbClr val="' + s.color + '"/></a:solidFill></c:spPr></c:marker>',
+                       '<c:smooth val="1"/>');
+        }).join("") + '<c:marker val="1"/><c:axId val="5001"/><c:axId val="5002"/></c:lineChart>' + ejes(), g.series.length > 1 ? "b" : null);
+    }
+    // dona
+    var colores = ["2563EB", "DC2626", "16A34A", "F97316", "9333EA", "0891B2", "CA8A04", "DB2777", "65A30D", "6B7280", "7C3AED"];
+    var s = g.series[0];
+    var puntos = s.valores.map(function (v, i) {
+      return '<c:dPt><c:idx val="' + i + '"/><c:bubble3D val="0"/><c:spPr><a:solidFill><a:srgbClr val="' + colores[i % colores.length] + '"/></a:solidFill>' +
+             '<a:ln><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill></a:ln></c:spPr></c:dPt>';
+    }).join("");
+    var etiquetas = '<c:dLbls><c:spPr><a:noFill/><a:ln><a:noFill/></a:ln></c:spPr><c:txPr><a:bodyPr/><a:lstStyle/><a:p><a:pPr><a:defRPr sz="900" b="1"><a:solidFill><a:srgbClr val="FFFFFF"/></a:solidFill></a:defRPr></a:pPr><a:endParaRPr lang="es-PE"/></a:p></c:txPr>' +
+                    '<c:showLegendKey val="0"/><c:showVal val="0"/><c:showCatName val="0"/><c:showSerName val="0"/><c:showPercent val="1"/><c:showBubbleSize val="0"/><c:showLeaderLines val="0"/></c:dLbls>';
+    return envolverGrafico(g.titulo, '<c:doughnutChart><c:varyColors val="1"/>' + serie(s, 0, puntos + etiquetas) +
+      '<c:firstSliceAng val="0"/><c:holeSize val="55"/></c:doughnutChart>', "r");
+  }
+  function dibujoXML(n) {   // coloca n gráficos uno debajo de otro, a la derecha de las tablas
+    var x = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">';
+    for (var i = 0; i < n; i++) {
+      x += '<xdr:twoCellAnchor editAs="oneCell">' +
+        '<xdr:from><xdr:col>10</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>' + (1 + i * 20) + '</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from>' +
+        '<xdr:to><xdr:col>19</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>' + (19 + i * 20) + '</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:to>' +
+        '<xdr:graphicFrame macro=""><xdr:nvGraphicFramePr><xdr:cNvPr id="' + (i + 2) + '" name="Grafico ' + (i + 1) + '"/><xdr:cNvGraphicFramePr/></xdr:nvGraphicFramePr>' +
+        '<xdr:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/></xdr:xfrm><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/chart">' +
+        '<c:chart xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId' + (i + 1) + '"/>' +
+        '</a:graphicData></a:graphic></xdr:graphicFrame><xdr:clientData/></xdr:twoCellAnchor>';
+    }
+    return x + '</xdr:wsDr>';
+  }
+
+  // ---- 4. Llenar una hoja de FLUJO DE CAJA ----
+  // pedazos: [{etiqueta, desde, hasta}] · conDetalle: lista de movimientos del periodo
+  function hojaFlujo(nombre, titulo, pedazos, conDetalle) {
+    var h = nuevaHoja(nombre);
+    var desde = pedazos[0].desde, hasta = pedazos[pedazos.length - 1].hasta;
+    var f = 0;
+    poner(h, f++, 0, { v: "💰 My Money — Flujo de caja — " + titulo, s: E.titulo });
+    poner(h, f++, 0, { v: "Montos en soles (los dólares se convierten a S/ " + tipoCambio + " por $1). Las transferencias entre tus cuentas no cuentan como ingreso ni gasto.", s: E.nota });
+    f++;
+
+    // RESUMEN
+    var tot = entradasSalidas(desde, hasta);
+    var dia0 = new Date(desde + "T12:00:00"); dia0.setDate(dia0.getDate() - 1);
+    var antes = dia0.getFullYear() + "-" + String(dia0.getMonth() + 1).padStart(2, "0") + "-" + String(dia0.getDate()).padStart(2, "0");
+    var inicial = desde <= "0000-12-31" ? 0 : totalEnSoles(antes);
+    var final = totalEnSoles(hasta);
+    poner(h, f, 0, { v: "RESUMEN", s: E.cabecera }); poner(h, f, 1, { v: "S/", s: E.cabecera }); f++;
+    var fR = f;
+    poner(h, f, 0, { v: "Saldo inicial", s: E.negrita });               poner(h, f++, 1, { v: inicial, s: E.soles });
+    poner(h, f, 0, { v: "+ Ingresos" });                                poner(h, f++, 1, { v: tot.ingresos, s: E.soles });
+    poner(h, f, 0, { v: "− Gastos" });                                  poner(h, f++, 1, { v: tot.gastos, s: E.soles });
+    poner(h, f, 0, { v: "= Flujo neto", s: E.negrita });                poner(h, f++, 1, { f: "B" + (fR + 2) + "-B" + (fR + 3), v: tot.ingresos - tot.gastos, s: E.soles });
+    poner(h, f, 0, { v: "± Ajustes y diferencia de cambio" });          poner(h, f++, 1, { v: final - inicial - (tot.ingresos - tot.gastos), s: E.soles });
+    poner(h, f, 0, { v: "Saldo final", s: E.totalTxt });                poner(h, f++, 1, { f: "B" + (fR + 1) + "+B" + (fR + 4) + "+B" + (fR + 5), v: final, s: E.total });
+    poner(h, f, 0, { v: "Tasa de ahorro" });
+    poner(h, f++, 1, { f: "IF(B" + (fR + 2) + "=0,0,B" + (fR + 4) + "/B" + (fR + 2) + ")", v: tot.ingresos ? (tot.ingresos - tot.gastos) / tot.ingresos : 0, s: E.porcentaje });
+    f++;
+
+    // FLUJO POR PERIODO
+    ["Periodo", "Ingresos", "Gastos", "Flujo neto", "Saldo"].forEach(function (t, i) { poner(h, f, i, { v: t, s: E.cabecera }); });
+    var fCab = f; f++;
+    var fIni = f, ing = [], gas = [], sal = [], etq = [];
+    pedazos.forEach(function (p) {
+      var r = entradasSalidas(p.desde, p.hasta), s = totalEnSoles(p.hasta);
+      poner(h, f, 0, { v: p.etiqueta });
+      poner(h, f, 1, { v: r.ingresos, s: E.soles });
+      poner(h, f, 2, { v: r.gastos, s: E.soles });
+      poner(h, f, 3, { f: "B" + (f + 1) + "-C" + (f + 1), v: r.ingresos - r.gastos, s: E.soles });
+      poner(h, f, 4, { v: s, s: E.soles });
+      ing.push(r.ingresos); gas.push(r.gastos); sal.push(s); etq.push(p.etiqueta);
+      f++;
+    });
+    var fFin = f - 1;
+    poner(h, f, 0, { v: "TOTAL", s: E.totalTxt });
+    ["B", "C", "D"].forEach(function (L, i) {
+      poner(h, f, i + 1, { f: "SUM(" + L + (fIni + 1) + ":" + L + (fFin + 1) + ")", v: [tot.ingresos, tot.gastos, tot.ingresos - tot.gastos][i], s: E.total });
+    });
+    poner(h, f, 4, { v: final, s: E.total });
+    f += 2;
+
+    h.graficos.push({ tipo: "barras", titulo: "Ingresos vs gastos", hoja: h,
+      cats: { col: 0, f1: fIni, f2: fFin, valores: etq },
+      series: [{ nombre: "Ingresos", celdaNombre: { col: 1, fila: fCab }, col: 1, f1: fIni, f2: fFin, valores: ing, color: "16A34A" },
+               { nombre: "Gastos",   celdaNombre: { col: 2, fila: fCab }, col: 2, f1: fIni, f2: fFin, valores: gas, color: "DC2626" }] });
+    h.graficos.push({ tipo: "linea", titulo: "Evolución del saldo", hoja: h,
+      cats: { col: 0, f1: fIni, f2: fFin, valores: etq },
+      series: [{ nombre: "Saldo", celdaNombre: { col: 4, fila: fCab }, col: 4, f1: fIni, f2: fFin, valores: sal, color: "2563EB" }] });
+
+    // GASTOS E INGRESOS POR CATEGORÍA
+    function tablaCategorias(tipo, tituloTabla, total, conGrafico) {
+      var porCat = {};
+      movimientos.forEach(function (m) {
+        if (m.tipo !== tipo || m.fecha < desde || m.fecha > hasta) return;
+        porCat[m.categoria] = (porCat[m.categoria] || 0) + enSoles(m.monto, monedaDe(m.cuenta));
+      });
+      var lista = Object.keys(porCat).map(function (k) { return [k, porCat[k]]; }).sort(function (a, b) { return b[1] - a[1]; });
+      [tituloTabla, "Monto", "%"].forEach(function (t, i) { poner(h, f, i, { v: t, s: E.cabecera }); });
+      var cab = f; f++;
+      if (!lista.length) { poner(h, f++, 0, { v: "(sin movimientos)", s: E.nota }); f++; return; }
+      var ini = f;
+      lista.forEach(function (x) {
+        poner(h, f, 0, { v: x[0] });
+        poner(h, f, 1, { v: x[1], s: E.soles });
+        poner(h, f, 2, { f: "B" + (f + 1) + "/SUM($B$" + (ini + 1) + ":$B$" + (ini + lista.length) + ")", v: x[1] / total, s: E.porcentaje });
+        f++;
+      });
+      poner(h, f, 0, { v: "TOTAL", s: E.totalTxt });
+      poner(h, f, 1, { f: "SUM(B" + (ini + 1) + ":B" + f + ")", v: total, s: E.total });
+      poner(h, f, 2, { v: 1, s: E.totalPct });
+      if (conGrafico) h.graficos.push({ tipo: "dona", titulo: "Gastos por categoría", hoja: h,
+        cats: { col: 0, f1: ini, f2: f - 1, valores: lista.map(function (x) { return x[0]; }) },
+        series: [{ nombre: "Monto", celdaNombre: { col: 1, fila: cab }, col: 1, f1: ini, f2: f - 1, valores: lista.map(function (x) { return x[1]; }) }] });
+      f += 2;
+    }
+    tablaCategorias("gasto", "Gastos por categoría", tot.gastos, true);
+    tablaCategorias("ingreso", "Ingresos por categoría", tot.ingresos, false);
+
+    // DETALLE DE MOVIMIENTOS (solo en las hojas de cada mes)
+    if (conDetalle) filasMovimientos(h, f, movimientos.filter(function (m) { return m.fecha >= desde && m.fecha <= hasta; }));
+    return h;
+  }
+
+  // Tabla con cada movimiento
+  function filasMovimientos(h, f, lista) {
+    ["Fecha", "Tipo", "Cuenta", "Categoría", "Subcategoría", "Monto", "Moneda", "Monto en S/", "Nota / detalle"]
+      .forEach(function (t, i) { poner(h, f, i, { v: t, s: E.cabecera }); });
+    f++;
+    lista.slice().sort(function (a, b) { return a.fecha < b.fecha ? -1 : a.fecha > b.fecha ? 1 : a.id - b.id; }).forEach(function (m) {
+      var p = m.fecha.split("-").map(Number);
+      var serial = (Date.UTC(p[0], p[1] - 1, p[2]) - Date.UTC(1899, 11, 30)) / 86400000;
+      var tipo = { ingreso: "Ingreso", gasto: "Gasto", transferencia: "Transferencia", ajuste: m.monto >= 0 ? "Ajuste positivo" : "Ajuste negativo" }[m.tipo];
+      var signo = m.tipo === "gasto" || (m.tipo === "ajuste" && m.monto < 0) ? -1 : 1;
+      var detalle = [];
+      if (m.nota) detalle.push(m.nota);
+      if (m.tipo === "gasto") detalle.push(ambitoDe(m) + " · " + tipoDe(m));
+      if (m.galones) detalle.push(m.galones + " gal");
+      if (m.odometro) detalle.push(m.odometro + " km");
+      if (m.tipoCambio) detalle.push("Llegaron " + simbolo(monedaDe(m.destino)) + m.montoDestino + " (TC " + m.tipoCambio + ")");
+      poner(h, f, 0, { v: serial, s: E.fecha });
+      poner(h, f, 1, { v: tipo });
+      poner(h, f, 2, { v: m.tipo === "transferencia" ? m.cuenta + " → " + m.destino : m.cuenta });
+      poner(h, f, 3, { v: m.categoria || "" });
+      poner(h, f, 4, { v: m.subcategoria || "" });
+      poner(h, f, 5, { v: signo * Math.abs(m.monto) });
+      poner(h, f, 6, { v: monedaDe(m.cuenta) === "USD" ? "US$" : "S/" });
+      poner(h, f, 7, { v: signo * Math.abs(enSoles(m.monto, monedaDe(m.cuenta))), s: E.soles });
+      poner(h, f, 8, { v: detalle.join(" · ") });
+      f++;
+    });
+  }
+
+  // ---- 5. Armar todo el libro y descargarlo ----
+  function exportarExcel() {
+    cerrarTodo();
+    var hojas = [];
+    var fechas = movimientos.map(function (m) { return m.fecha; }).sort();
+    var primerMes = fechas.length ? fechas[0].slice(0, 7) : hoyTexto().slice(0, 7);
+    var ultimoMes = hoyTexto().slice(0, 7);
+    if (fechas.length && fechas[fechas.length - 1].slice(0, 7) > ultimoMes) ultimoMes = fechas[fechas.length - 1].slice(0, 7);
+
+    // Lista de meses desde el primero hasta el último
+    var listaMeses = [], a = Number(primerMes.slice(0, 4)), mm = Number(primerMes.slice(5, 7)) - 1;
+    while (true) {
+      var t = a + "-" + String(mm + 1).padStart(2, "0");
+      listaMeses.push({ texto: t, anio: a, mes: mm });
+      if (t >= ultimoMes) break;
+      mm++; if (mm > 11) { mm = 0; a++; }
+    }
+    function nombreMes(x) { return meses[x.mes].charAt(0) + meses[x.mes].slice(1).toLowerCase() + " " + x.anio; }
+
+    // Hoja ACUMULADA: un renglón por mes
+    hojas.push(hojaFlujo("Acumulado", "Acumulado (desde " + nombreMes(listaMeses[0]) + ")",
+      listaMeses.map(function (x) { return { etiqueta: nombreMes(x), desde: x.texto + "-01", hasta: x.texto + "-31" }; }), false));
+
+    // Una hoja por AÑO: un renglón por mes
+    var anios = [];
+    listaMeses.forEach(function (x) { if (anios.indexOf(x.anio) === -1) anios.push(x.anio); });
+    anios.forEach(function (an) {
+      var pz = [];
+      for (var i = 0; i < 12; i++) {
+        var tt = an + "-" + String(i + 1).padStart(2, "0");
+        pz.push({ etiqueta: meses[i].charAt(0) + meses[i].slice(1).toLowerCase(), desde: tt + "-01", hasta: tt + "-31" });
+      }
+      hojas.push(hojaFlujo("Año " + an, "Año " + an, pz, false));
+    });
+
+    // Una hoja por MES: un renglón por día + detalle de movimientos
+    listaMeses.forEach(function (x) {
+      var dias = new Date(x.anio, x.mes + 1, 0).getDate(), pz = [];
+      for (var d = 1; d <= dias; d++) {
+        var f = x.texto + "-" + String(d).padStart(2, "0");
+        pz.push({ etiqueta: String(d), desde: f, hasta: f });
+      }
+      hojas.push(hojaFlujo(nombreMes(x), nombreMes(x), pz, true));
+    });
+
+    // Hoja con TODOS los movimientos
+    var hm = nuevaHoja("Movimientos");
+    poner(hm, 0, 0, { v: "💰 My Money — Todos los movimientos", s: E.titulo });
+    filasMovimientos(hm, 2, movimientos);
+    hojas.push(hm);
+
+    // ---- Archivos del .xlsx ----
+    var archivos = [], tipos = [], relsLibro = [], hojasLibro = [], nGraf = 0, nDib = 0;
+    hojas.forEach(function (h, i) {
+      var n = i + 1, conDibujo = h.graficos.length > 0;
+      archivos.push({ nombre: "xl/worksheets/sheet" + n + ".xml", texto: hojaXML(h, conDibujo) });
+      tipos.push('<Override PartName="/xl/worksheets/sheet' + n + '.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>');
+      relsLibro.push('<Relationship Id="rId' + n + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet' + n + '.xml"/>');
+      hojasLibro.push('<sheet name="' + xml(h.nombre) + '" sheetId="' + n + '" r:id="rId' + n + '"/>');
+      if (!conDibujo) return;
+      nDib++;
+      archivos.push({ nombre: "xl/worksheets/_rels/sheet" + n + ".xml.rels", texto:
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+        '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing' + nDib + '.xml"/></Relationships>' });
+      archivos.push({ nombre: "xl/drawings/drawing" + nDib + ".xml", texto: dibujoXML(h.graficos.length) });
+      tipos.push('<Override PartName="/xl/drawings/drawing' + nDib + '.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>');
+      var relsDib = [];
+      h.graficos.forEach(function (g, k) {
+        nGraf++;
+        archivos.push({ nombre: "xl/charts/chart" + nGraf + ".xml", texto: graficoXML(g) });
+        tipos.push('<Override PartName="/xl/charts/chart' + nGraf + '.xml" ContentType="application/vnd.openxmlformats-officedocument.drawingml.chart+xml"/>');
+        relsDib.push('<Relationship Id="rId' + (k + 1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/chart" Target="../charts/chart' + nGraf + '.xml"/>');
+      });
+      archivos.push({ nombre: "xl/drawings/_rels/drawing" + nDib + ".xml.rels", texto:
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' + relsDib.join("") + '</Relationships>' });
+    });
+    var nH = hojas.length;
+    relsLibro.push('<Relationship Id="rId' + (nH + 1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>');
+
+    archivos.unshift(
+      { nombre: "[Content_Types].xml", texto: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+        '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>' +
+        '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' +
+        '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>' + tipos.join("") + '</Types>' },
+      { nombre: "_rels/.rels", texto: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+        '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>' },
+      { nombre: "xl/workbook.xml", texto: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' +
+        '<sheets>' + hojasLibro.join("") + '</sheets><calcPr calcId="191029" fullCalcOnLoad="1"/></workbook>' },
+      { nombre: "xl/_rels/workbook.xml.rels", texto: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' + relsLibro.join("") + '</Relationships>' },
+      { nombre: "xl/styles.xml", texto: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+        '<numFmts count="1"><numFmt numFmtId="164" formatCode="&quot;S/ &quot;#,##0.00;[Red]&quot;S/ -&quot;#,##0.00"/></numFmts>' +
+        '<fonts count="5"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font>' +
+        '<font><b/><sz val="16"/><color rgb="FF1E3A8A"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>' +
+        '<font><i/><sz val="10"/><color rgb="FF6B7280"/><name val="Calibri"/></font></fonts>' +
+        '<fills count="4"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>' +
+        '<fill><patternFill patternType="solid"><fgColor rgb="FF1E3A8A"/><bgColor indexed="64"/></patternFill></fill>' +
+        '<fill><patternFill patternType="solid"><fgColor rgb="FFEEF2FF"/><bgColor indexed="64"/></patternFill></fill></fills>' +
+        '<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border>' +
+        '<border><left/><right/><top style="thin"><color rgb="FF1E3A8A"/></top><bottom/><diagonal/></border></borders>' +
+        '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
+        '<cellXfs count="11">' +
+          '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
+          '<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
+          '<xf numFmtId="0" fontId="3" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/>' +
+          '<xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>' +
+          '<xf numFmtId="164" fontId="1" fillId="3" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1"/>' +
+          '<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
+          '<xf numFmtId="10" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>' +
+          '<xf numFmtId="0" fontId="1" fillId="3" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"/>' +
+          '<xf numFmtId="0" fontId="4" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
+          '<xf numFmtId="14" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>' +
+          '<xf numFmtId="9" fontId="1" fillId="3" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1"/>' +
+        '</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>' }
+    );
+
+    // Descargar
+    var blob = crearZip(archivos);
+    var enlace = document.createElement("a");
+    enlace.href = URL.createObjectURL(blob);
+    enlace.download = "MyMoney_" + hoyTexto() + ".xlsx";
+    document.body.appendChild(enlace);
+    enlace.click();
+    setTimeout(function () { URL.revokeObjectURL(enlace.href); enlace.remove(); }, 1000);
+  }
+
+
+  // ---- MENSAJES: alertas ⚠️ y motivación 🎉 ----
+  // Cada regla revisa algo de tu mes y, si se cumple, agrega un mensaje.
+  function mostrarMensajes() {
+    var lista = [];   // cada mensaje: [tipo, texto]   tipo = "alerta", "cuidado" o "bien"
+    var hoy = new Date();
+    var esMesActual = anioActual === hoy.getFullYear() && mesActual === hoy.getMonth();
+    var dias = new Date(anioActual, mesActual + 1, 0).getDate();
+    var diaHoy = esMesActual ? hoy.getDate() : dias;
+    var avanceMes = diaHoy / dias;                       // ej: 0.5 = vamos a mitad de mes
+
+    var r = entradasSalidas(mesTexto() + "-01", mesTexto() + "-31");
+    var hayDatos = r.ingresos > 0 || r.gastos > 0;
+
+    if (!hayDatos) {
+      lista.push(["bien", "👋 Registra tus ingresos y gastos de " + meses[mesActual] + " y aquí te daré alertas y consejos."]);
+    } else {
+      // 1. ¿Gastas más de lo que ganas?
+      if (r.gastos > r.ingresos) {
+        lista.push(["alerta", "🚨 Este mes llevas gastado S/ " + plata(r.gastos) + ", más de lo que ingresó (S/ " + plata(r.ingresos) + ")."]);
+      }
+
+      // 2. Meta de ahorro (si la pusiste en Ajustes)
+      if (ajustes.metaValor > 0 && r.ingresos > 0) {
+        var ahorro = r.ingresos - r.gastos;
+        var objetivo = ajustes.metaTipo === "%" ? r.ingresos * ajustes.metaValor / 100 : ajustes.metaValor;
+        var textoMeta = ajustes.metaTipo === "%" ? ajustes.metaValor + "%" : "S/ " + plata(ajustes.metaValor);
+        if (ahorro >= objetivo)
+          lista.push(["bien", "🎯 ¡Estás cumpliendo tu meta de ahorro (" + textoMeta + ")! Llevas S/ " + plata(ahorro) + " ahorrado."]);
+        else
+          lista.push(["cuidado", "🎯 Para cumplir tu meta de ahorro (" + textoMeta + ") te faltan S/ " + plata(objetivo - ahorro) + "."]);
+      }
+
+      // 2b. Tasa de ahorro (solo si no tienes meta)
+      if (r.ingresos > 0 && !(ajustes.metaValor > 0)) {
+        var tasa = (r.ingresos - r.gastos) / r.ingresos * 100;
+        var cuando = (esMesActual && diaHoy < dias) ? "Hasta ahora " : "";
+        if (tasa >= 30)      lista.push(["bien", "🏆 ¡Excelente! " + cuando + "estás ahorrando el " + Math.round(tasa) + "% de tus ingresos. ¡Sigue así!"]);
+        else if (tasa >= 20) lista.push(["bien", "🎉 ¡Muy bien! " + cuando + "ahorras el " + Math.round(tasa) + "% de lo que ganas. Esa es una meta sana."]);
+        else if (tasa >= 10) lista.push(["bien", "👍 Vas bien: " + cuando.toLowerCase() + "ahorras el " + Math.round(tasa) + "%. Si llegas al 20% estarás genial."]);
+        else if (tasa >= 0)  lista.push(["cuidado", "🙂 Estás ahorrando poco (" + Math.round(tasa) + "%). Intenta llegar al menos al 10%."]);
+      }
+
+      // 3. Ritmo de gasto: comparado con tu promedio de los 3 meses anteriores
+      var suma = 0, cuantos = 0;
+      for (var a = 1; a <= 3; a++) {
+        var fm = new Date(anioActual, mesActual - a, 1);
+        var t = fm.getFullYear() + "-" + String(fm.getMonth() + 1).padStart(2, "0");
+        var g = entradasSalidas(t + "-01", t + "-31").gastos;
+        if (g > 0) { suma += g; cuantos++; }
+      }
+      if (cuantos > 0 && diaHoy >= 10) {
+        var promedio = suma / cuantos;
+        var esperado = promedio * avanceMes;            // lo "normal" a estas alturas del mes
+        var diferencia = (r.gastos - esperado) / esperado * 100;
+        if (diferencia > ajustes.alertaRitmo)
+          lista.push(["alerta", "📈 Vas gastando " + Math.round(diferencia) + "% más rápido que tu promedio de los últimos meses (S/ " + plata(promedio) + " al mes)."]);
+        else if (diferencia < -15)
+          lista.push(["bien", "💪 Estás gastando " + Math.round(-diferencia) + "% menos que tu promedio. ¡Buen control!"]);
+      }
+
+      // 4. ¿Terminarás el mes en rojo a este ritmo?
+      if (esMesActual && r.ingresos > 0 && diaHoy >= 10 && diaHoy < dias) {
+        var gastoFinal = r.gastos / diaHoy * dias;
+        if (gastoFinal > r.ingresos && r.gastos <= r.ingresos)
+          lista.push(["cuidado", "⏳ Si sigues gastando a este ritmo, a fin de mes gastarás unos S/ " + plata(gastoFinal) + ", más de lo que ingresó."]);
+      }
+
+      // 5. La categoría donde más gastas
+      var porCat = {};
+      movimientos.forEach(function (m) {
+        if (m.tipo === "gasto" && m.fecha.slice(0, 7) === mesTexto())
+          porCat[m.categoria] = (porCat[m.categoria] || 0) + enSoles(m.monto, monedaDe(m.cuenta));
+      });
+      var top = Object.keys(porCat).sort(function (x, y) { return porCat[y] - porCat[x]; })[0];
+      if (top && r.gastos > 0 && porCat[top] / r.gastos >= ajustes.alertaCategoria / 100)
+        lista.push(["cuidado", "🔎 El " + Math.round(porCat[top] / r.gastos * 100) + "% de tus gastos es en «" + top + "». Revisa si puedes reducir algo ahí."]);
+    }
+
+    // 6. Límite de uso personal
+    var personal = 0;
+    movimientos.forEach(function (m) {
+      if (m.tipo === "gasto" && m.personal && m.fecha.slice(0, 7) === mesTexto())
+        personal += enSoles(m.monto, monedaDe(m.cuenta));
+    });
+    if (limitePersonal > 0 && personal > 0) {
+      var uso = personal / limitePersonal;
+      if (uso >= 1)
+        lista.push(["alerta", "⚠️ Ya pasaste tu límite personal de S/ " + plata(limitePersonal) + " (llevas S/ " + plata(personal) + ")."]);
+      else if (uso >= ajustes.alertaLimite / 100)
+        lista.push(["cuidado", "👀 Ya usaste el " + Math.round(uso * 100) + "% de tu límite personal. Te quedan S/ " + plata(limitePersonal - personal) + "."]);
+      else if (uso < avanceMes - 0.15)
+        lista.push(["bien", "🙌 Vas muy bien con tu gasto personal: usaste el " + Math.round(uso * 100) + "% y ya pasó el " + Math.round(avanceMes * 100) + "% del mes."]);
+    }
+
+    // Primero las alertas, luego los "cuidado", al final las buenas noticias
+    var orden = { alerta: 0, cuidado: 1, bien: 2 };
+    lista.sort(function (a, b) { return orden[a[0]] - orden[b[0]]; });
+    document.getElementById("mensajes").innerHTML = lista.map(function (m) {
+      return '<div class="msj msj-' + m[0] + '">' + m[1] + '</div>';
+    }).join("");
+  }
+
+
+  // =========================================================
+  //  9. ACTUALIZAR TODA LA PANTALLA
+  // =========================================================
+  function refrescar() {
+    calcular();
+    mostrarLimite();
+    mostrarCuentas();
+    mostrarGraficosGenerales();
+    if (cuentaAbierta) mostrarCuentaAbierta();
+    if (pantallaMovsAbierta) mostrarMovimientosMes();
+  }
+
+  aplicarAjustes();   // modo oscuro y secciones
+  refrescar();        // ¡Encender todo al abrir la app!
+  mostrarBloqueo();   // pide el PIN si tienes uno
+</script>
+</body>
+</html>
