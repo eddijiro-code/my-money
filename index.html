@@ -3,6 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Para instalarla como app y que funcione sin internet -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1e3a8a">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="My Money">
 <!-- Nombre que sale en la pestañita del navegador -->
 <title>My Money</title>
 
@@ -262,6 +269,97 @@
   .leyenda-mini { display: flex; flex-wrap: wrap; gap: 6px 14px; justify-content: center; font-size: 13px; margin-top: 6px; }
   .leyenda-mini i { display: inline-block; width: 12px; height: 4px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
   .oscuro .subs-rep { color: #94a3b8; }
+  /* Portada */
+  .portada {
+    position: fixed; inset: 0; z-index: 200; color: white; cursor: pointer;
+    background: linear-gradient(160deg, #1e3a8a 0%, #2563eb 60%, #0ea5e9 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    transition: opacity .5s;
+  }
+  .portada.chau { opacity: 0; pointer-events: none; }
+  .portada-centro { text-align: center; padding: 0 30px; }
+  .portada-logo {
+    font-size: 84px; width: 130px; height: 130px; margin: 0 auto 14px; border-radius: 34px;
+    background: rgba(255,255,255,.15); display: flex; align-items: center; justify-content: center;
+    animation: rebote 1.2s ease-out;
+  }
+  .portada-nombre { font-size: 40px; font-weight: 800; letter-spacing: .5px; animation: subir .8s ease-out; }
+  .portada-frase { font-size: 17px; margin-top: 14px; opacity: .95; font-style: italic; line-height: 1.4; max-width: 320px; animation: subir 1.1s ease-out; }
+  .portada-firma { position: absolute; bottom: 34px; font-size: 14px; opacity: .85; letter-spacing: .3px; }
+  .portada-firma b { font-size: 16px; }
+  @keyframes rebote { 0% { transform: scale(.3); opacity: 0; } 60% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); } }
+  @keyframes subir { 0% { transform: translateY(20px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+  .firma-menu { padding: 16px 18px; font-size: 12px; color: #9ca3af; }
+  /* Nombre de la app arriba y selector de mes */
+  .marca { font-size: 21px; font-weight: 800; letter-spacing: .3px; }
+  .selector-mes {
+    display: flex; align-items: center; justify-content: center; gap: 4px;
+    margin: 10px auto 0; width: fit-content; background: white; border-radius: 22px;
+    padding: 4px 6px; box-shadow: 0 1px 4px rgba(0,0,0,.08); font-weight: bold; font-size: 16px; color: #1e3a8a;
+  }
+  .selector-mes button { background: none; border: none; font-size: 20px; color: #1e3a8a; cursor: pointer; padding: 2px 14px; }
+  .oscuro .selector-mes { background: #1e293b; color: #93c5fd; }
+  .oscuro .selector-mes button { color: #93c5fd; }
+  .fila em { font-style: normal; }
+  @media (max-width: 380px) { .fila em { display: none; } }   /* en celulares angostos solo se ve la banderita */
+  /* Saludo y firma */
+  .saludo { margin: 14px 16px 0; cursor: pointer; }
+  .saludo .hola { font-size: 21px; font-weight: 800; color: #1e3a8a; }
+  .saludo .fecha-hoy { font-size: 13px; color: #6b7280; margin-top: 2px; }
+  .oscuro .saludo .hola { color: #93c5fd; }
+  .firma-pie { text-align: center; font-size: 11px; color: #9ca3af; margin: 18px 0 4px; letter-spacing: .3px; }
+  .buscador input[type=search] { width: 100%; box-sizing: border-box; padding: 10px 12px; font-size: 15px; border: 1px solid #d1d5db; border-radius: 10px; }
+  .oscuro .buscador input[type=search] { background: #0f172a; color: #e5e7eb; border-color: #334155; }
+  /* Opciones de exportar */
+  .opciones-exp { display: grid; gap: 8px; }
+  .opciones-exp button {
+    display: flex; align-items: center; gap: 12px; padding: 13px 14px; font-size: 16px; text-align: left;
+    border: 1px solid #e5e7eb; border-radius: 12px; background: white; cursor: pointer; color: #1d2433;
+  }
+  .opciones-exp button span { font-size: 22px; }
+  .opciones-exp button:active { background: #f1f5f9; }
+  .oscuro .opciones-exp button { background: #0f172a; border-color: #334155; color: #e5e7eb; }
+  /* Tutorial guiado */
+  .tutorial { display: none; position: fixed; inset: 0; z-index: 95; }
+  .tutorial.abierto { display: block; }
+  .tutorial.oscuro-fondo { background: rgba(15,23,42,.72); }
+  .tuto-luz {
+    position: fixed; border-radius: 12px; pointer-events: none; display: none;
+    box-shadow: 0 0 0 9999px rgba(15,23,42,.72); border: 3px solid #fbbf24;
+    transition: left .3s, top .3s, width .3s, height .3s;
+    animation: brillo 1.4s ease-in-out infinite;
+  }
+  @keyframes brillo { 0%,100% { border-color: #fbbf24; } 50% { border-color: #fde68a; } }
+  .tuto-globo {
+    position: fixed; background: white; color: #1d2433; border-radius: 14px; padding: 14px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.35); box-sizing: border-box; max-width: calc(100vw - 24px);
+    transition: opacity .2s, top .3s, left .3s;
+  }
+  .tuto-globo.centro { left: 50% !important; top: 50% !important; transform: translate(-50%, -50%); width: min(360px, calc(100vw - 32px)) !important; opacity: 1 !important; }
+  .tuto-globo.flecha-arriba::before, .tuto-globo.flecha-abajo::before {
+    content: ""; position: absolute; left: var(--flecha-x, 50%); margin-left: -9px;
+    border: 9px solid transparent;
+  }
+  .tuto-globo.flecha-arriba::before { top: -18px; border-bottom-color: white; }
+  .tuto-globo.flecha-abajo::before  { bottom: -18px; border-top-color: white; }
+  .tuto-cab { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .tuto-cab b { flex: 1; font-size: 17px; color: #1e3a8a; }
+  .tuto-emoji { font-size: 26px; }
+  .tuto-contador { font-size: 12px; color: #9ca3af; }
+  .tuto-texto { font-size: 15px; line-height: 1.45; }
+  .tuto-texto ul, .tuto-texto ol { padding-left: 20px; margin: 6px 0; }
+  .tuto-texto li { margin-bottom: 4px; }
+  .tuto-texto .tip { background: #eff6ff; border-left: 4px solid #2563eb; padding: 7px 10px; border-radius: 8px; margin-top: 8px; font-size: 13.5px; }
+  .tuto-botones { display: flex; gap: 8px; margin-top: 12px; align-items: center; }
+  .tuto-saltar { margin-right: auto; background: none; border: none; color: #6b7280; font-size: 14px; cursor: pointer; padding: 8px 4px; }
+  .tuto-atras { background: #e5e7eb; border: none; border-radius: 10px; padding: 9px 14px; font-size: 15px; cursor: pointer; }
+  .tuto-sig { background: #2563eb; color: white; border: none; border-radius: 10px; padding: 9px 16px; font-size: 15px; font-weight: bold; cursor: pointer; }
+  .oscuro .tuto-globo { background: #1e293b; color: #e5e7eb; }
+  .oscuro .tuto-globo.flecha-arriba::before { border-bottom-color: #1e293b; }
+  .oscuro .tuto-globo.flecha-abajo::before { border-top-color: #1e293b; }
+  .oscuro .tuto-cab b { color: #93c5fd; }
+  .oscuro .tuto-texto .tip { background: #172554; }
+  .oscuro .tuto-atras { background: #334155; color: #e5e7eb; }
   /* Ajustes */
   .fila-ajuste { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid #eef0f4; font-size: 14px; }
   .fila-ajuste:last-child { border-bottom: none; }
@@ -384,19 +482,24 @@
 </head>
 
 <body>
+<!-- PORTADA (sale 2-3 segundos al abrir la app) -->
+<div class="portada" id="portada" onclick="cerrarPortada()">
+  <div class="portada-centro">
+    <div class="portada-logo">💰</div>
+    <div class="portada-nombre">My Money</div>
+    <div class="portada-frase" id="portadaFrase"></div>
+  </div>
+  <div class="portada-firma">una creación de <b>eddijiro</b></div>
+</div>
 <div class="app">
 
   <!-- ============ HTML = LAS PAREDES ============ -->
 
   <!-- 1. BARRA DE ARRIBA: menú | mes | tres puntitos -->
   <div class="barra">
-    <button onclick="abrirMenu()">☰</button>
-    <div class="mes">
-      <button onclick="cambiarMes(-1)">‹</button>
-      <span id="textoMes">NOV 2026</span>
-      <button onclick="cambiarMes(1)">›</button>
-    </div>
-    <button onclick="abrirPuntos()">⋮</button>
+    <button id="btnMenu" onclick="abrirMenu()">☰</button>
+    <div class="marca">💰 My Money</div>
+    <button id="btnPuntos" onclick="abrirPuntos()">⋮</button>
   </div>
 
   <!-- Menú lateral (se esconde y aparece) -->
@@ -404,19 +507,35 @@
   <nav class="menu-lateral" id="menuLateral">
     <h2>💰 My Money</h2>
     <a href="#">🏠 Inicio</a>
-    <a href="#" onclick="abrirMovimientos(); return false;">📋 Movimientos</a>
-    <a href="#" onclick="abrirCategorias(); return false;">🏷️ Categorías</a>
-    <a href="#" onclick="abrirAdminCuentas(); return false;">💳 Cuentas</a>
-    <a href="#" onclick="abrirReportes(); return false;">📊 Reportes</a>
-    <a href="#" onclick="abrirAjustes(); return false;">⚙️ Ajustes</a>
+    <a href="#" id="menuMovs" onclick="abrirMovimientos(); return false;">📋 Movimientos</a>
+    <a href="#" id="menuCategorias" onclick="abrirCategorias(); return false;">🏷️ Categorías</a>
+    <a href="#" id="menuFijos" onclick="abrirFijos(); return false;">🔁 Movimientos fijos</a>
+    <a href="#" id="menuCuentas" onclick="abrirAdminCuentas(); return false;">💳 Cuentas</a>
+    <a href="#" id="menuReportes" onclick="abrirReportes(); return false;">📊 Reportes</a>
+    <a href="#" id="menuAjustes" onclick="abrirAjustes(); return false;">⚙️ Ajustes</a>
+    <a href="#" onclick="cerrarTodo(); abrirTutorial(); return false;">❓ Tutorial</a>
+      <div class="firma-menu">💰 My Money · una creación de <b>eddijiro</b></div>
   </nav>
 
   <!-- Menú de los tres puntitos -->
   <div class="menu-puntos" id="menuPuntos">
-    <a href="#" onclick="exportarExcel(); return false;">📤 Exportar a Excel</a>
-    <a href="#">💾 Hacer respaldo</a>
-    <a href="#">💱 Tipo de cambio</a>
-    <a href="#">ℹ️ Acerca de</a>
+    <a href="#" id="menuExportar" onclick="exportarExcel(); return false;">📤 Exportar a Excel / respaldo</a>
+    <a href="#" id="menuImportar" onclick="abrirImportar(); return false;">📥 Importar Excel</a>
+    <a href="#" id="menuInstalar" onclick="instalarApp(); return false;">📲 Instalar como app</a>
+    <a href="#" id="menuCompartir" onclick="compartirApp(); return false;">🔗 Compartir My Money</a>
+    <a href="#" onclick="abrirAjustes(); return false;">💱 Tipo de cambio</a>
+    <a href="#" onclick="cerrarTodo(); abrirTutorial(); return false;">❓ Tutorial</a>
+    <a href="#" onclick="abrirAcerca(); return false;">ℹ️ Acerca de</a>
+  </div>
+
+  <!-- SALUDO CON EL NOMBRE DEL USUARIO (tócalo para cambiar el nombre) -->
+  <div class="saludo" id="saludo" onclick="abrirNombre()"></div>
+
+  <!-- SELECTOR DE MES -->
+  <div class="selector-mes" id="selectorMes">
+    <button onclick="cambiarMes(-1)">‹</button>
+    <span id="textoMes">NOV 2026</span>
+    <button onclick="cambiarMes(1)">›</button>
   </div>
 
   <!-- 2. GRÁFICO: Inicial - Saldo - Previsto -->
@@ -433,23 +552,23 @@
   <div class="casillas" data-seccion="casillas">
     <div class="casilla verde">
       <div class="titulo"><span class="icono">+</span> Ingresos</div>
-      <div class="fila"><span>🇵🇪 Soles</span><b id="ingSoles">S/ 0.00</b></div>
-      <div class="fila"><span>🇺🇸 Dólares</span><b id="ingDolares">$ 0.00</b></div>
+      <div class="fila"><span>🇵🇪<em> Soles</em></span><b id="ingSoles">S/ 0.00</b></div>
+      <div class="fila"><span>🇺🇸<em> Dólares</em></span><b id="ingDolares">$ 0.00</b></div>
     </div>
     <div class="casilla roja">
       <div class="titulo"><span class="icono">−</span> Gastos</div>
-      <div class="fila"><span>🇵🇪 Soles</span><b id="gasSoles">S/ 0.00</b></div>
-      <div class="fila"><span>🇺🇸 Dólares</span><b id="gasDolares">$ 0.00</b></div>
+      <div class="fila"><span>🇵🇪<em> Soles</em></span><b id="gasSoles">S/ 0.00</b></div>
+      <div class="fila"><span>🇺🇸<em> Dólares</em></span><b id="gasDolares">$ 0.00</b></div>
     </div>
     <div class="casilla amarilla">
       <div class="titulo"><span class="icono">⇄</span> Transferencias</div>
-      <div class="fila"><span>🇵🇪 Soles</span><b id="traSoles">S/ 0.00</b></div>
-      <div class="fila"><span>🇺🇸 Dólares</span><b id="traDolares">$ 0.00</b></div>
+      <div class="fila"><span>🇵🇪<em> Soles</em></span><b id="traSoles">S/ 0.00</b></div>
+      <div class="fila"><span>🇺🇸<em> Dólares</em></span><b id="traDolares">$ 0.00</b></div>
     </div>
     <div class="casilla azul">
       <div class="titulo"><span class="icono">🐷</span> Economía mensual</div>
-      <div class="fila"><span>🇵🇪 Soles</span><b id="ecoSoles">S/ 0.00</b></div>
-      <div class="fila"><span>🇺🇸 Dólares</span><b id="ecoDolares">$ 0.00</b></div>
+      <div class="fila"><span>🇵🇪<em> Soles</em></span><b id="ecoSoles">S/ 0.00</b></div>
+      <div class="fila"><span>🇺🇸<em> Dólares</em></span><b id="ecoDolares">$ 0.00</b></div>
     </div>
   </div>
 
@@ -457,7 +576,7 @@
   <div class="tarjeta" data-seccion="limite">
     <div class="limite-cab">
       <h3 style="margin:0">🙋 Límite de uso personal</h3>
-      <button onclick="abrirEditarLimite()">✏️ Asignar</button>
+      <button id="btnAsignar" onclick="abrirEditarLimite()">✏️ Asignar</button>
     </div>
     <!-- Cajita para escribir el nuevo monto (se esconde y aparece) -->
     <div class="editar" id="editarLimite">
@@ -471,6 +590,12 @@
     </div>
     <div class="barrita"><div id="limBarra"></div></div>
     <div class="aviso" id="limAviso"></div>
+  </div>
+
+  <!-- PRESUPUESTOS POR CATEGORÍA -->
+  <div class="tarjeta" data-seccion="presupuestos">
+    <h3>🎯 Presupuestos del mes</h3>
+    <div id="listaPresupuestos"></div>
   </div>
 
   <!-- 4. MIS CUENTAS (la lista la llena JavaScript) -->
@@ -513,6 +638,7 @@
     <div id="mensajes"></div>
   </div>
 
+  <div class="firma-pie">💰 My Money · by <b>EddiJiro</b></div>
   <div style="height:80px"></div>  <!-- espacio para que el botón + no tape nada -->
 </div>
 
@@ -542,6 +668,16 @@
       <div id="listaMovs"></div>
     </div>
   </div>
+</div>
+
+<!-- PANTALLA DE MOVIMIENTOS FIJOS -->
+<div class="pantalla" id="pantallaFijos">
+  <div class="barra">
+    <button onclick="cerrarFijos()">←</button>
+    <div class="mes">🔁 Movimientos fijos</div>
+    <span style="width:40px"></span>
+  </div>
+  <div class="contenido" id="contenidoFijos"></div>
 </div>
 
 <!-- PANTALLA DE CATEGORÍAS -->
@@ -590,6 +726,85 @@
   </div>
 </div>
 
+<!-- TUTORIAL GUIADO -->
+<div class="tutorial" id="tutorial">
+  <div class="tuto-luz" id="tutoLuz"></div>
+  <div class="tuto-globo" id="tutoGlobo">
+    <div class="tuto-cab">
+      <span class="tuto-emoji" id="tutoEmoji"></span>
+      <b id="tutoTitulo"></b>
+      <span class="tuto-contador" id="tutoContador"></span>
+    </div>
+    <div class="tuto-texto" id="tutoTexto"></div>
+    <div class="tuto-botones">
+      <button class="tuto-saltar" onclick="cerrarTutorial()">Saltar</button>
+      <button class="tuto-atras" id="tutoAtras" onclick="pasoTutorial(-1)">←</button>
+      <button class="tuto-sig" id="tutoSiguiente" onclick="pasoTutorial(1)">Siguiente →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ¿CÓMO TE LLAMAS? -->
+<div class="modal" id="ventanaNombre" style="z-index:92; align-items:center">
+  <div class="hoja" style="border-radius:18px; margin:16px; text-align:center">
+    <div style="font-size:46px">👋</div>
+    <h3 style="margin-bottom:6px">¿Cómo te llamas?</h3>
+    <p class="aviso" style="margin:0 0 12px">Así My Money te saluda por tu nombre.</p>
+    <div class="campo"><input id="inputNombre" maxlength="25" placeholder="Escribe tu nombre" style="text-align:center;font-size:18px"></div>
+    <div class="error" id="nombreError"></div>
+    <button class="btn-guardar" style="width:100%;padding:13px;border:none;border-radius:10px;font-size:17px" onclick="guardarNombre()">¡Listo!</button>
+  </div>
+</div>
+
+<!-- CÓMO INSTALAR (cuando el celular no muestra el botón automático) -->
+<div class="modal" id="ventanaInstalar" style="z-index:60">
+  <div class="hoja">
+    <h3>📲 Instalar My Money como app</h3>
+    <div class="tuto-texto" id="textoInstalar"></div>
+    <button class="btn-guardar" style="width:100%;padding:12px;border:none;border-radius:10px;font-size:16px;margin-top:12px" onclick="document.getElementById('ventanaInstalar').classList.remove('abierto')">Entendido</button>
+  </div>
+</div>
+
+<!-- ACERCA DE -->
+<div class="modal" id="ventanaAcerca" style="z-index:60; align-items:center">
+  <div class="hoja" style="border-radius:18px; margin:16px; text-align:center">
+    <div style="font-size:52px">💰</div>
+    <h3 style="margin:4px 0">My Money</h3>
+    <div class="aviso" id="textoAcerca"></div>
+    <button class="btn-grande" style="margin:12px 0 8px" onclick="document.getElementById('ventanaAcerca').classList.remove('abierto'); compartirApp()">🔗 Compartir con un amigo</button>
+    <button class="btn-cancelar" style="width:100%;padding:12px;border:none;border-radius:10px;font-size:16px" onclick="document.getElementById('ventanaAcerca').classList.remove('abierto')">Cerrar</button>
+  </div>
+</div>
+
+<!-- EXPORTAR EXCEL: guardar o enviar -->
+<div class="modal" id="exportar" style="z-index:60">
+  <div class="hoja">
+    <h3>📤 Exportar a Excel</h3>
+    <p class="aviso" style="text-align:left;margin-top:-4px">Incluye hojas por mes, por año, acumulado, gráficos y el respaldo para importar.</p>
+    <div class="opciones-exp">
+      <button onclick="enviarExcel('guardar')"><span>💾</span>Guardar en el teléfono</button>
+      <button onclick="enviarExcel('whatsapp')"><span>🟢</span>Enviar por WhatsApp</button>
+      <button onclick="enviarExcel('correo')"><span>✉️</span>Enviar por correo</button>
+      <button id="btnOtrasApps" onclick="enviarExcel('otras')"><span>📲</span>Otras apps (Drive, Telegram…)</button>
+    </div>
+    <div class="aviso" id="exportarAviso" style="text-align:left;margin:10px 0;font-size:14px"></div>
+    <button class="btn-cancelar" style="width:100%;padding:12px;border:none;border-radius:10px;font-size:16px" onclick="cerrarExportar()">Cerrar</button>
+  </div>
+</div>
+
+<!-- IMPORTAR EXCEL -->
+<input type="file" id="archivoImportar" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="display:none" onchange="archivoElegido(this)">
+<div class="modal" id="importar" style="z-index:60">
+  <div class="hoja">
+    <h3>📥 Importar desde Excel</h3>
+    <div id="importarInfo" class="tuto-texto"></div>
+    <p class="aviso" style="text-align:left">¿Cómo quieres importarlo?</p>
+    <button class="btn-grande" style="margin-bottom:8px" onclick="aplicarImportar('combinar')">➕ Combinar<br><small style="font-weight:normal">Agrega lo que no tienes aquí, sin borrar nada</small></button>
+    <button class="btn-peligro" style="margin-bottom:8px" onclick="aplicarImportar('reemplazar')">🔄 Reemplazar todo<br><small style="font-weight:normal">Deja la app igual que en el Excel (ideal para celular nuevo)</small></button>
+    <button class="btn-cancelar" style="width:100%;padding:12px;border:none;border-radius:10px;font-size:16px" onclick="cerrarImportar()">Cancelar</button>
+  </div>
+</div>
+
 <!-- Mensajito "Guardado" -->
 <div class="toast" id="toast">✓ Guardado</div>
 
@@ -600,6 +815,10 @@
     <div class="dos-campos" style="grid-template-columns: 1fr 90px">
       <div class="campo"><label>Nombre</label><input id="ecNombre"></div>
       <div class="campo"><label>Emoji</label><input id="ecIcono"></div>
+    </div>
+    <div class="campo" id="cajaPresupuesto">
+      <label>🎯 Presupuesto mensual (S/) — opcional</label>
+      <input type="number" id="ecPresupuesto" min="0" step="10" placeholder="Ej: 600 (déjalo vacío si no quieres tope)">
     </div>
     <label style="font-size:13px;color:#4b5563">Subcategorías</label>
     <div id="ecSubs"></div>
@@ -631,7 +850,12 @@
     </div>
     <div class="tarjeta">
       <h3>📋 Movimientos</h3>
+      <div class="buscador">
+        <input type="search" id="buscarMovs" placeholder="🔍 Buscar: categoría, nota, cuenta, monto…" oninput="mostrarMovimientosMes()">
+        <label class="check" style="margin:6px 0 8px;font-size:14px"><input type="checkbox" id="buscarTodo" onchange="mostrarMovimientosMes()"> Buscar en todos los meses</label>
+      </div>
       <div class="periodos" id="filtrosMovs"></div>
+      <div id="resumenBusqueda"></div>
       <div id="listaMovsMes"></div>
     </div>
   </div>
@@ -801,6 +1025,12 @@
       </div>
     </div>
 
+    <!-- Repetir cada mes (solo al crear) -->
+    <label class="check" id="cajaFijo">
+      <input type="checkbox" id="fFijo">
+      <span>🔁 Repetir cada mes<br><small style="color:#6b7280">Se anotará solo cada mes (sueldo, pensión, internet…)</small></span>
+    </label>
+
     <div class="error" id="fError"></div>
     <div class="botones">
       <button class="btn-eliminar" id="btnEliminarMov" onclick="eliminarDesdeFormulario()">🗑️</button>
@@ -879,6 +1109,7 @@
     alertaCategoria: 40,  // avisar si una categoría pasa este % de tus gastos
     pin: "",              // PIN de 4 números ("" = sin PIN)
     oscuro: false,        // modo oscuro
+    nombre: "",           // nombre del usuario (sale en la pantalla principal)
     ocultas: []           // secciones escondidas de la vista general
   };
   try {
@@ -1061,6 +1292,10 @@
   function abrirPuntos() {
     document.getElementById("menuPuntos").classList.toggle("abierto");
   }
+  function mostrarPuntos() {   // abre (sin alternar) el menú ⋮ — lo usa el tutorial
+    cerrarTodo();
+    document.getElementById("menuPuntos").classList.add("abierto");
+  }
   function cerrarTodo() {
     document.getElementById("menuLateral").classList.remove("abierto");
     document.getElementById("sombra").classList.remove("visible");
@@ -1130,9 +1365,23 @@
     });
     var saldo = puntos.length ? puntos[puntos.length - 1] : inicial;
 
-    // Previsto: si sigues GASTANDO igual hasta fin de mes
-    var gastoPorDia = hasta > 0 ? gastado / hasta : 0;
-    var previsto = saldo - gastoPorDia * (diasDelMes - hasta);
+    // Previsto: cuánto tendrías a fin de mes
+    //  · Si hay meses anteriores: lo que normalmente gastas al mes (promedio de los últimos 3)
+    //    menos lo que ya gastaste este mes = lo que probablemente falta gastar.
+    //  · Si no hay historial: el ritmo de este mes (solo desde el día 10, antes es muy pronto).
+    var suma = 0, cuantos = 0;
+    for (var a = 1; a <= 3; a++) {
+      var fm = new Date(anioActual, mesActual - a, 1);
+      var tm = fm.getFullYear() + "-" + String(fm.getMonth() + 1).padStart(2, "0");
+      var gm = 0;
+      movimientos.forEach(function (m) { if (m.tipo === "gasto" && m.fecha.slice(0, 7) === tm) gm += enSoles(m.monto, monedaDe(m.cuenta)); });
+      if (gm > 0) { suma += gm; cuantos++; }
+    }
+    var previsto;
+    if (hasta >= diasDelMes) previsto = saldo;                                   // mes terminado
+    else if (cuantos > 0)   previsto = saldo - Math.max(0, suma / cuantos - gastado);
+    else if (hasta >= 10)   previsto = saldo - gastado / hasta * (diasDelMes - hasta);
+    else                    previsto = saldo;
     extracto = { inicial: inicial, saldo: saldo, previsto: previsto };   // lo usa la pantalla de Movimientos
 
     document.getElementById("inicial").textContent  = "S/ " + Math.round(inicial).toLocaleString("es-PE");
@@ -1258,6 +1507,7 @@
       var color, signo, titulo, detalle;
       if (m.tipo === "ingreso") { color = "#16a34a"; signo = "+"; titulo = m.categoria; }
       if (m.tipo === "gasto")   { color = "#dc2626"; signo = "−"; titulo = nombreCategoria(m) + (m.personal ? " 🙋" : ""); }
+      if (m.fijo) titulo += " 🔁";
       if (m.tipo === "transferencia") {
         color = "#ca8a04"; signo = "⇄";
         titulo = m.cuenta === c.nombre ? "Transferencia a " + m.destino : "Transferencia de " + m.cuenta;
@@ -1329,6 +1579,8 @@
 
     // Modo "nuevo"
     editandoId = null;
+    document.getElementById("fFijo").checked = false;
+    document.getElementById("cajaFijo").style.display = "flex";
     document.getElementById("tituloFormulario").textContent = "➕ Nuevo movimiento";
     document.getElementById("btnEliminarMov").style.display = "none";
 
@@ -1346,6 +1598,7 @@
     if (m.tipo === "ajuste") return;   // los ajustes no se editan: se borran con 🗑️ y se vuelve a ajustar
     abrirFormulario();
     editandoId = id;
+    document.getElementById("cajaFijo").style.display = "none";
     document.getElementById("tituloFormulario").textContent = "✏️ Editar movimiento";
     document.getElementById("btnEliminarMov").style.display = "block";
 
@@ -1598,6 +1851,15 @@
       movimientos = movimientos.map(function (x) { return x.id === editandoId ? m : x; });
     } else {
       movimientos.push(m);
+      // ¿Repetir cada mes? Guardamos una "plantilla" para anotarlo solo
+      if (document.getElementById("fFijo").checked) {
+        var plantilla = JSON.parse(JSON.stringify(m));
+        delete plantilla.id; delete plantilla.fecha;
+        var idFijo = Date.now() + 7;
+        fijos.push({ id: idFijo, plantilla: plantilla, dia: Number(m.fecha.slice(8, 10)), ultimoMes: m.fecha.slice(0, 7), activo: true });
+        m.fijo = idFijo;
+        guardarFijos();
+      }
     }
     guardarTodo();
     cerrarFormulario();
@@ -1893,8 +2155,11 @@
       var pz3 = pedazos(c.nombre, periodo), ent = 0, sal = 0;
       var netos = pz3.map(function (p) {
         var r = resumen(c.nombre, p.desde, p.hasta);
-        ent += r.ingresos + r.entran; sal += r.gastos + r.salen;
-        return (r.ingresos + r.entran) - (r.gastos + r.salen);
+        // entradas = ingresos + transferencias que llegan + ajustes positivos
+        // salidas  = gastos + transferencias que salen + ajustes negativos
+        var e = r.ingresos + r.entran + r.ajPositivo, sa = r.gastos + r.salen + r.ajNegativo;
+        ent += e; sal += sa;
+        return e - sa;
       });
       html += '<div class="tarjeta"><h3>💧 Flujo de caja</h3>' +
              cajitas([["Entró", s + plata(ent), "#16a34a"], ["Salió", s + plata(sal), "#dc2626"],
@@ -1959,11 +2224,14 @@
 
   // Ingresos y gastos (en soles) entre dos fechas
   function entradasSalidas(desde, hasta) {
-    var r = { ingresos: 0, gastos: 0 };
+    // ajPos / ajNeg = ajustes positivos y negativos (cuentan en el FLUJO DE CAJA)
+    var r = { ingresos: 0, gastos: 0, ajPos: 0, ajNeg: 0 };
     movimientos.forEach(function (m) {
       if (m.fecha < desde || m.fecha > hasta) return;
-      if (m.tipo === "ingreso") r.ingresos += enSoles(m.monto, monedaDe(m.cuenta));
-      if (m.tipo === "gasto")   r.gastos   += enSoles(m.monto, monedaDe(m.cuenta));
+      var v = enSoles(m.monto, monedaDe(m.cuenta));
+      if (m.tipo === "ingreso") r.ingresos += v;
+      if (m.tipo === "gasto")   r.gastos   += v;
+      if (m.tipo === "ajuste") { if (v >= 0) r.ajPos += v; else r.ajNeg += -v; }
     });
     return r;
   }
@@ -2007,7 +2275,8 @@
     var ent = [], sal = [], te = 0, ts = 0;
     pz.forEach(function (p) {
       var r = entradasSalidas(p.desde, p.hasta);
-      ent.push(r.ingresos); sal.push(r.gastos); te += r.ingresos; ts += r.gastos;
+      var e = r.ingresos + r.ajPos, sa = r.gastos + r.ajNeg;   // los ajustes también son entradas/salidas de caja
+      ent.push(e); sal.push(sa); te += e; ts += sa;
     });
     document.getElementById("flujoGeneral").innerHTML =
       '<div class="periodos">' +
@@ -2017,7 +2286,7 @@
       cajitas([["Entró", "S/ " + plata(te), "#16a34a"], ["Salió", "S/ " + plata(ts), "#dc2626"],
                ["Neto", "S/ " + plata(te - ts), te - ts < 0 ? "#dc2626" : "#16a34a"]]) +
       graficoDoble(ent, sal, pz.map(function (p) { return p.etiqueta; })) +
-      '<div class="aviso">🟩 Ingresos · 🟥 Gastos · Todo en soles</div>';
+      '<div class="aviso">🟩 Entradas (ingresos + ajustes positivos) · 🟥 Salidas (gastos + ajustes negativos) · en soles</div>';
 
     // ---- ECONOMÍA MENSUAL (lo que te sobró cada mes del año) ----
     var ahorros = [], etiquetas = [], totalAhorro = 0, mejor = null;
@@ -2310,22 +2579,41 @@
         '<div><small>⇄ Transf.</small><b style="color:#ca8a04">' + dos(r.transferencia) + '</b></div>' +
       '</div>';
 
+    // ---- Búsqueda: en este mes o en todo el historial ----
+    var texto = document.getElementById("buscarMovs").value.trim();
+    var enTodo = document.getElementById("buscarTodo").checked;
+    var base = texto && enTodo ? movimientos : delMes;
+    if (texto) base = base.filter(function (m) { return coincide(m, texto); });
+
     // ---- Botones de filtro ----
     var ops = [["todos", "Todos"], ["ingreso", "Ingresos"], ["gasto", "Gastos"], ["transferencia", "Transf."]];
     document.getElementById("filtrosMovs").innerHTML = ops.map(function (o) {
-      var n = o[0] === "todos" ? delMes.length : delMes.filter(function (m) { return m.tipo === o[0]; }).length;
+      var n = o[0] === "todos" ? base.length : base.filter(function (m) { return m.tipo === o[0]; }).length;
       return '<button class="' + (filtroMovs === o[0] ? "on" : "") + '" onclick="elegirFiltro(\'' + o[0] + '\')">' + o[1] + ' (' + n + ')</button>';
     }).join("");
 
     // ---- La lista: del más nuevo al más antiguo ----
-    var lista = delMes.filter(function (m) { return filtroMovs === "todos" || m.tipo === filtroMovs; });
+    var lista = base.filter(function (m) { return filtroMovs === "todos" || m.tipo === filtroMovs; });
+
+    // Resumen de lo encontrado
+    var rb = document.getElementById("resumenBusqueda");
+    if (texto) {
+      var sg = 0, si = 0;
+      lista.forEach(function (m) {
+        if (m.tipo === "gasto")   sg += enSoles(m.monto, monedaDe(m.cuenta));
+        if (m.tipo === "ingreso") si += enSoles(m.monto, monedaDe(m.cuenta));
+      });
+      rb.innerHTML = '<div class="msj msj-bien" style="margin:4px 0 8px">🔍 ' + lista.length + ' resultado(s) para «' + limpio(texto) + '»' +
+        (enTodo ? ' en todos los meses' : ' en ' + meses[mesActual]) +
+        (sg ? '<br>− Gastos: <b>S/ ' + plata(sg) + '</b>' : '') + (si ? '<br>+ Ingresos: <b>S/ ' + plata(si) + '</b>' : '') + '</div>';
+    } else rb.innerHTML = "";
     lista.sort(function (a, b) {
       if (a.fecha !== b.fecha) return a.fecha < b.fecha ? 1 : -1;
       return b.id - a.id;          // mismo día: el último que registraste va primero
     });
 
     if (!lista.length) {
-      document.getElementById("listaMovsMes").innerHTML = '<div class="vacio">No hay movimientos aquí en ' + meses[mesActual] + ' ' + anioActual + '.</div>';
+      document.getElementById("listaMovsMes").innerHTML = '<div class="vacio">' + (texto ? 'No encontré nada con «' + limpio(texto) + '».' : 'No hay movimientos aquí en ' + meses[mesActual] + ' ' + anioActual + '.') + '</div>';
       return;
     }
     var html = "", diaAnterior = "";
@@ -2351,6 +2639,7 @@
         color = pos ? "#15803d" : "#b91c1c"; signo = "⚖"; titulo = pos ? "Ajuste positivo" : "Ajuste negativo";
         cuentaTxt = m.cuenta; montoTxt = (pos ? "+ " : "− ") + mon + plata(Math.abs(m.monto)); colorMonto = color;
       }
+      if (m.fijo) titulo += " 🔁";
       html += '<div class="mov" onclick="editarMovimiento(' + m.id + ')">' +
                 '<div class="ic" style="background:' + color + '">' + signo + '</div>' +
                 '<div class="txt">' + limpio(titulo) +
@@ -2402,7 +2691,8 @@
         return '<div class="clasif editable" onclick="abrirEditorCategoria(\'' + tipo + '\',' + i + ')">' +
                '<div class="ico">' + c.icono + '</div>' +
                '<div class="nombre">' + limpio(c.nombre) +
-               (c.subs.length ? chips(c.subs) : '<small>Sin subcategorías</small>') + '</div>' +
+               (c.subs.length ? chips(c.subs) : '<small>Sin subcategorías</small>') +
+               (c.presupuesto ? '<small>🎯 Presupuesto: S/ ' + plata(c.presupuesto) + ' al mes</small>' : '') + '</div>' +
                '<small style="color:#6b7280">' + n + ' ' + palabra + (n === 1 ? '' : 's') + '</small>' +
                '<span class="editar-ic">✏️</span></div>';
       }).join("") +
@@ -2432,6 +2722,8 @@
     document.getElementById("ecError").textContent = "";
     document.getElementById("ecSubs").innerHTML = "";
     c.subs.forEach(function (s) { agregarFilaSub(s); });
+    document.getElementById("cajaPresupuesto").style.display = tipo === "gasto" ? "block" : "none";
+    document.getElementById("ecPresupuesto").value = c.presupuesto || "";
     document.getElementById("btnEliminarCat").style.display = i >= 0 ? "block" : "none";
     document.getElementById("editorCategoria").classList.add("abierto");
   }
@@ -2471,6 +2763,8 @@
     });
 
     var cat = { nombre: nombre, icono: document.getElementById("ecIcono").value.trim() || "🏷️", subs: subs };
+    var tope = Number(document.getElementById("ecPresupuesto").value);
+    if (tipo === "gasto" && tope > 0) cat.presupuesto = tope;
 
     if (editCat.indice >= 0) {
       var viejo = lista[editCat.indice].nombre;
@@ -2512,6 +2806,7 @@
     ["grafico",  "📈 Gráfico del saldo (Inicial · Saldo · Previsto)"],
     ["casillas", "🟩 Casillas de ingresos, gastos, transferencias y economía"],
     ["limite",   "🙋 Límite de uso personal"],
+    ["presupuestos", "🎯 Presupuestos del mes"],
     ["cuentas",  "💳 Mis cuentas"],
     ["flujo",    "💧 Flujo de caja"],
     ["economia", "🐷 Economía mensual"],
@@ -2603,6 +2898,11 @@
         '</div><div class="error" id="pinError"></div>' +
         '<button class="btn-guardar" style="width:100%;padding:12px;border:none;border-radius:10px;font-size:16px" onclick="guardarPin()">Guardar PIN</button>' +
       '</div></div>';
+
+    // TU NOMBRE
+    html += '<div class="tarjeta"><h3>👤 Tu nombre</h3>' +
+      '<div class="campo"><input maxlength="25" value="' + limpio(a.nombre || "") + '" placeholder="Escribe tu nombre" ' +
+      'onchange="ajustes.nombre=this.value.trim(); guardarAjustes(); mostrarSaludo()"></div></div>';
 
     // 9. MODO OSCURO
     html += '<div class="tarjeta"><div class="fila-ajuste"><span>🌙 Modo oscuro</span>' +
@@ -2704,7 +3004,7 @@
     if (palabra !== "BORRAR") { alert("No se borró nada."); return; }
     try {
       ["mymoney_movimientos", "mymoney_cuentas", "mymoney_categorias", "mymoney_limite", "mymoney_tc", "mymoney_ajustes"]
-        .forEach(function (k) { localStorage.removeItem(k); });
+        .concat(["mymoney_tutorial_visto", "mymoney_fijos"]).forEach(function (k) { localStorage.removeItem(k); });
     } catch (e) {}
     location.reload();
   }
@@ -2821,6 +3121,7 @@
                ["Ahorro", "S/ " + plata(ahorro), ahorro < 0 ? "#dc2626" : "#2563eb"]]) +
       '<table class="tabla" style="margin-top:12px">' +
         filaDato("💹 Tasa de ahorro", Math.round(tasa) + "%") +
+        filaDato("⚖️ Ajustes de saldo", (tot.ajPos || tot.ajNeg) ? "+S/ " + plata(tot.ajPos) + " · −S/ " + plata(tot.ajNeg) : "—") +
         filaDato("🧾 Movimientos registrados", enRango.length + " (" + ingresos.length + " ingresos · " + gastos.length + " gastos)") +
         filaDato("📅 Gasto promedio por " + unidad, "S/ " + plata(tot.gastos / pz.length)) +
         filaDato("🎫 Gasto promedio por compra", gastos.length ? "S/ " + plata(tot.gastos / gastos.length) : "—") +
@@ -3115,24 +3416,36 @@
     for (var i = 0; i < bytes.length; i++) c = tablaCRC[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
     return (c ^ 0xFFFFFFFF) >>> 0;
   }
-  function crearZip(archivos) {   // archivos: [{nombre, texto}]
+  // Comprime cada archivo (si el navegador puede) para que el Excel pese mucho menos
+  async function comprimir(datos) {
+    if (typeof CompressionStream === "undefined") return null;
+    try {
+      var flujo = new Blob([datos]).stream().pipeThrough(new CompressionStream("deflate-raw"));
+      return new Uint8Array(await new Response(flujo).arrayBuffer());
+    } catch (e) { return null; }
+  }
+  async function crearZip(archivos) {   // archivos: [{nombre, texto}]
     var enc = new TextEncoder(), partes = [], central = [], offset = 0;
     function num(v, bytes) { var a = []; for (var i = 0; i < bytes; i++) a.push((v >>> (8 * i)) & 0xFF); return a; }
-    archivos.forEach(function (f) {
+    for (var k = 0; k < archivos.length; k++) {
+      var f = archivos[k];
       var nombre = enc.encode(f.nombre), datos = enc.encode(f.texto), crc = crc32(datos);
-      var cab = [].concat(num(0x04034b50, 4), num(20, 2), num(0x0800, 2), num(0, 2), num(0, 2), num(0, 2),
-                          num(crc, 4), num(datos.length, 4), num(datos.length, 4), num(nombre.length, 2), num(0, 2));
-      partes.push(new Uint8Array(cab), nombre, datos);
-      central.push(new Uint8Array([].concat(num(0x02014b50, 4), num(20, 2), num(20, 2), num(0x0800, 2), num(0, 2), num(0, 2), num(0, 2),
-                   num(crc, 4), num(datos.length, 4), num(datos.length, 4), num(nombre.length, 2), num(0, 2), num(0, 2),
+      var comp = await comprimir(datos), metodo = 0, guardado = datos;
+      if (comp && comp.length < datos.length) { metodo = 8; guardado = comp; }   // 8 = comprimido
+      var cab = [].concat(num(0x04034b50, 4), num(20, 2), num(0x0800, 2), num(metodo, 2), num(0, 2), num(0, 2),
+                          num(crc, 4), num(guardado.length, 4), num(datos.length, 4), num(nombre.length, 2), num(0, 2));
+      partes.push(new Uint8Array(cab), nombre, guardado);
+      central.push(new Uint8Array([].concat(num(0x02014b50, 4), num(20, 2), num(20, 2), num(0x0800, 2), num(metodo, 2), num(0, 2), num(0, 2),
+                   num(crc, 4), num(guardado.length, 4), num(datos.length, 4), num(nombre.length, 2), num(0, 2), num(0, 2),
                    num(0, 2), num(0, 2), num(0, 4), num(offset, 4))), nombre);
-      offset += cab.length + nombre.length + datos.length;
-    });
+      offset += cab.length + nombre.length + guardado.length;
+    }
     var tamCentral = central.reduce(function (s, x) { return s + x.length; }, 0);
     var fin = new Uint8Array([].concat(num(0x06054b50, 4), num(0, 2), num(0, 2), num(archivos.length, 2), num(archivos.length, 2),
                                        num(tamCentral, 4), num(offset, 4), num(0, 2)));
     return new Blob(partes.concat(central, [fin]), { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
   }
+
 
   // ---- 2. Ayudantes para escribir celdas ----
   function xml(t) {
@@ -3263,7 +3576,7 @@
     var h = nuevaHoja(nombre);
     var desde = pedazos[0].desde, hasta = pedazos[pedazos.length - 1].hasta;
     var f = 0;
-    poner(h, f++, 0, { v: "💰 My Money — Flujo de caja — " + titulo, s: E.titulo });
+    poner(h, f++, 0, { v: "💰 My Money" + (ajustes.nombre ? " de " + ajustes.nombre : "") + " — Flujo de caja — " + titulo, s: E.titulo });
     poner(h, f++, 0, { v: "Montos en soles (los dólares se convierten a S/ " + tipoCambio + " por $1). Las transferencias entre tus cuentas no cuentan como ingreso ni gasto.", s: E.nota });
     f++;
 
@@ -3276,17 +3589,19 @@
     poner(h, f, 0, { v: "RESUMEN", s: E.cabecera }); poner(h, f, 1, { v: "S/", s: E.cabecera }); f++;
     var fR = f;
     poner(h, f, 0, { v: "Saldo inicial", s: E.negrita });               poner(h, f++, 1, { v: inicial, s: E.soles });
+    var ajNeto = tot.ajPos - tot.ajNeg, neto = tot.ingresos - tot.gastos + ajNeto;
     poner(h, f, 0, { v: "+ Ingresos" });                                poner(h, f++, 1, { v: tot.ingresos, s: E.soles });
     poner(h, f, 0, { v: "− Gastos" });                                  poner(h, f++, 1, { v: tot.gastos, s: E.soles });
-    poner(h, f, 0, { v: "= Flujo neto", s: E.negrita });                poner(h, f++, 1, { f: "B" + (fR + 2) + "-B" + (fR + 3), v: tot.ingresos - tot.gastos, s: E.soles });
-    poner(h, f, 0, { v: "± Ajustes y diferencia de cambio" });          poner(h, f++, 1, { v: final - inicial - (tot.ingresos - tot.gastos), s: E.soles });
-    poner(h, f, 0, { v: "Saldo final", s: E.totalTxt });                poner(h, f++, 1, { f: "B" + (fR + 1) + "+B" + (fR + 4) + "+B" + (fR + 5), v: final, s: E.total });
-    poner(h, f, 0, { v: "Tasa de ahorro" });
-    poner(h, f++, 1, { f: "IF(B" + (fR + 2) + "=0,0,B" + (fR + 4) + "/B" + (fR + 2) + ")", v: tot.ingresos ? (tot.ingresos - tot.gastos) / tot.ingresos : 0, s: E.porcentaje });
+    poner(h, f, 0, { v: "± Ajustes de saldo" });                        poner(h, f++, 1, { v: ajNeto, s: E.soles });
+    poner(h, f, 0, { v: "= Flujo neto", s: E.negrita });                poner(h, f++, 1, { f: "B" + (fR + 2) + "-B" + (fR + 3) + "+B" + (fR + 4), v: neto, s: E.soles });
+    poner(h, f, 0, { v: "± Diferencia de tipo de cambio" });            poner(h, f++, 1, { v: final - inicial - neto, s: E.soles });
+    poner(h, f, 0, { v: "Saldo final", s: E.totalTxt });                poner(h, f++, 1, { f: "B" + (fR + 1) + "+B" + (fR + 5) + "+B" + (fR + 6), v: final, s: E.total });
+    poner(h, f, 0, { v: "Tasa de ahorro (ingresos − gastos)" });
+    poner(h, f++, 1, { f: "IF(B" + (fR + 2) + "=0,0,(B" + (fR + 2) + "-B" + (fR + 3) + ")/B" + (fR + 2) + ")", v: tot.ingresos ? (tot.ingresos - tot.gastos) / tot.ingresos : 0, s: E.porcentaje });
     f++;
 
     // FLUJO POR PERIODO
-    ["Periodo", "Ingresos", "Gastos", "Flujo neto", "Saldo"].forEach(function (t, i) { poner(h, f, i, { v: t, s: E.cabecera }); });
+    ["Periodo", "Ingresos", "Gastos", "Ajustes", "Flujo neto", "Saldo"].forEach(function (t, i) { poner(h, f, i, { v: t, s: E.cabecera }); });
     var fCab = f; f++;
     var fIni = f, ing = [], gas = [], sal = [], etq = [];
     pedazos.forEach(function (p) {
@@ -3294,17 +3609,18 @@
       poner(h, f, 0, { v: p.etiqueta });
       poner(h, f, 1, { v: r.ingresos, s: E.soles });
       poner(h, f, 2, { v: r.gastos, s: E.soles });
-      poner(h, f, 3, { f: "B" + (f + 1) + "-C" + (f + 1), v: r.ingresos - r.gastos, s: E.soles });
-      poner(h, f, 4, { v: s, s: E.soles });
+      poner(h, f, 3, { v: r.ajPos - r.ajNeg, s: E.soles });
+      poner(h, f, 4, { f: "B" + (f + 1) + "-C" + (f + 1) + "+D" + (f + 1), v: r.ingresos - r.gastos + r.ajPos - r.ajNeg, s: E.soles });
+      poner(h, f, 5, { v: s, s: E.soles });
       ing.push(r.ingresos); gas.push(r.gastos); sal.push(s); etq.push(p.etiqueta);
       f++;
     });
     var fFin = f - 1;
     poner(h, f, 0, { v: "TOTAL", s: E.totalTxt });
-    ["B", "C", "D"].forEach(function (L, i) {
-      poner(h, f, i + 1, { f: "SUM(" + L + (fIni + 1) + ":" + L + (fFin + 1) + ")", v: [tot.ingresos, tot.gastos, tot.ingresos - tot.gastos][i], s: E.total });
+    ["B", "C", "D", "E"].forEach(function (L, i) {
+      poner(h, f, i + 1, { f: "SUM(" + L + (fIni + 1) + ":" + L + (fFin + 1) + ")", v: [tot.ingresos, tot.gastos, ajNeto, neto][i], s: E.total });
     });
-    poner(h, f, 4, { v: final, s: E.total });
+    poner(h, f, 5, { v: final, s: E.total });
     f += 2;
 
     h.graficos.push({ tipo: "barras", titulo: "Ingresos vs gastos", hoja: h,
@@ -3313,7 +3629,7 @@
                { nombre: "Gastos",   celdaNombre: { col: 2, fila: fCab }, col: 2, f1: fIni, f2: fFin, valores: gas, color: "DC2626" }] });
     h.graficos.push({ tipo: "linea", titulo: "Evolución del saldo", hoja: h,
       cats: { col: 0, f1: fIni, f2: fFin, valores: etq },
-      series: [{ nombre: "Saldo", celdaNombre: { col: 4, fila: fCab }, col: 4, f1: fIni, f2: fFin, valores: sal, color: "2563EB" }] });
+      series: [{ nombre: "Saldo", celdaNombre: { col: 5, fila: fCab }, col: 5, f1: fIni, f2: fFin, valores: sal, color: "2563EB" }] });
 
     // GASTOS E INGRESOS POR CATEGORÍA
     function tablaCategorias(tipo, tituloTabla, total, conGrafico) {
@@ -3379,8 +3695,8 @@
   }
 
   // ---- 5. Armar todo el libro y descargarlo ----
-  function exportarExcel() {
-    cerrarTodo();
+  // Arma el archivo Excel y lo devuelve (sin descargarlo todavía)
+  async function construirExcel() {
     var hojas = [];
     var fechas = movimientos.map(function (m) { return m.fecha; }).sort();
     var primerMes = fechas.length ? fechas[0].slice(0, 7) : hoyTexto().slice(0, 7);
@@ -3429,6 +3745,15 @@
     filasMovimientos(hm, 2, movimientos);
     hojas.push(hm);
 
+    // Hoja ESCONDIDA "Respaldo": guarda todos tus datos para poder importarlos en otro celular
+    var hr = nuevaHoja("Respaldo");
+    hr.oculta = true;
+    poner(hr, 0, 0, { v: "MYMONEY_RESPALDO_V1" });
+    // Los acentos y emojis se guardan como códigos (\u00e1…) para que no se dañen
+    var json = datosRespaldo().replace(/[\u007f-\uffff]/g, function (c) { return "\\u" + ("000" + c.charCodeAt(0).toString(16)).slice(-4); });
+    for (var t = 0, fila = 1; t < json.length; t += 30000, fila++) poner(hr, fila, 0, { v: json.slice(t, t + 30000) });
+    hojas.push(hr);
+
     // ---- Archivos del .xlsx ----
     var archivos = [], tipos = [], relsLibro = [], hojasLibro = [], nGraf = 0, nDib = 0;
     hojas.forEach(function (h, i) {
@@ -3436,7 +3761,7 @@
       archivos.push({ nombre: "xl/worksheets/sheet" + n + ".xml", texto: hojaXML(h, conDibujo) });
       tipos.push('<Override PartName="/xl/worksheets/sheet' + n + '.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>');
       relsLibro.push('<Relationship Id="rId' + n + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet' + n + '.xml"/>');
-      hojasLibro.push('<sheet name="' + xml(h.nombre) + '" sheetId="' + n + '" r:id="rId' + n + '"/>');
+      hojasLibro.push('<sheet name="' + xml(h.nombre) + '" sheetId="' + n + '"' + (h.oculta ? ' state="hidden"' : '') + ' r:id="rId' + n + '"/>');
       if (!conDibujo) return;
       nDib++;
       archivos.push({ nombre: "xl/worksheets/_rels/sheet" + n + ".xml.rels", texto:
@@ -3493,14 +3818,978 @@
         '</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>' }
     );
 
-    // Descargar
-    var blob = crearZip(archivos);
+    return await crearZip(archivos);
+  }
+
+  // ---- ¿Qué hacemos con el Excel? Guardar, WhatsApp, correo u otras apps ----
+  function nombreExcel() { return "MyMoney_" + hoyTexto() + ".xlsx"; }
+
+  function exportarExcel() {
+    cerrarTodo();
+    // ¿Este celular deja compartir archivos Excel directo a otras apps?
+    var prueba = new File(["x"], "prueba.xlsx", { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    puedeCompartir = !!(navigator.canShare && navigator.canShare({ files: [prueba] }));
+    document.getElementById("btnOtrasApps").style.display = puedeCompartir ? "block" : "none";
+    document.getElementById("exportarAviso").textContent = "";
+    document.getElementById("exportar").classList.add("abierto");
+  }
+  var puedeCompartir = false;
+  function cerrarExportar() { document.getElementById("exportar").classList.remove("abierto"); }
+
+  function descargarExcel(blob) {
     var enlace = document.createElement("a");
     enlace.href = URL.createObjectURL(blob);
-    enlace.download = "MyMoney_" + hoyTexto() + ".xlsx";
+    enlace.download = nombreExcel();
     document.body.appendChild(enlace);
     enlace.click();
-    setTimeout(function () { URL.revokeObjectURL(enlace.href); enlace.remove(); }, 1000);
+    setTimeout(function () { URL.revokeObjectURL(enlace.href); enlace.remove(); }, 1500);
+  }
+
+  async function enviarExcel(destino) {
+    var avisoPrevio = document.getElementById("exportarAviso");
+    avisoPrevio.textContent = "⏳ Preparando tu Excel…";
+    var blob = await construirExcel();
+    var texto = "💰 My Money – mis finanzas al " + hoyTexto().split("-").reverse().join("/");
+    var avisoEl = document.getElementById("exportarAviso");
+
+    // 1) Guardar en el teléfono / computadora
+    if (destino === "guardar") {
+      descargarExcel(blob);
+      avisoEl.innerHTML = "✅ Guardado en tu carpeta <b>Descargas</b> como <b>" + nombreExcel() + "</b>.";
+      return;
+    }
+
+    // 2) Si el celular lo permite: abre el menú "Compartir" con el archivo adjunto
+    //    (ahí eliges WhatsApp, Gmail, Drive…)
+    if (puedeCompartir) {
+      var archivo = new File([blob], nombreExcel(), { type: blob.type });
+      navigator.share({ files: [archivo], title: "My Money", text: texto })
+        .then(function () { cerrarExportar(); })
+        .catch(function () {});   // si cancela, no pasa nada
+      return;
+    }
+
+    // 3) Si no lo permite: se descarga y abrimos WhatsApp o el correo para que lo adjuntes
+    descargarExcel(blob);
+    var pasos = "📎 El archivo <b>" + nombreExcel() + "</b> se guardó en <b>Descargas</b>.<br>";
+    if (destino === "whatsapp") {
+      avisoEl.innerHTML = pasos + "En WhatsApp, elige el chat, toca <b>📎 → Documento</b> y escoge el archivo.";
+      setTimeout(function () { window.open("https://wa.me/?text=" + encodeURIComponent(texto), "_blank"); }, 900);
+    }
+    if (destino === "correo") {
+      avisoEl.innerHTML = pasos + "En tu correo, toca <b>📎 Adjuntar</b> y escoge el archivo.";
+      setTimeout(function () {
+        location.href = "mailto:?subject=" + encodeURIComponent("My Money – respaldo " + hoyTexto()) +
+                        "&body=" + encodeURIComponent(texto + "\n\nAdjunto mi archivo de My Money (" + nombreExcel() + ").");
+      }, 900);
+    }
+  }
+
+
+  // =========================================================
+  //  TUTORIAL GUIADO: ilumina cada botón y dice "toca aquí para…"
+  //  (sale solo la primera vez · luego en ⋮ → Tutorial o ☰ → Tutorial)
+  // =========================================================
+  // Cada paso: e = emoji, t = título, x = texto, sel = qué iluminar (null = mensaje al centro),
+  // antes = algo que hacer antes de mostrarlo (por ejemplo, abrir el menú)
+  var pasosTutorial = [
+    { e: "💰", t: "¡Bienvenido a My Money!", sel: null,
+      x: "Te voy a mostrar <b>dónde está cada cosa</b>. Toca <b>Siguiente</b> para empezar.<div class='tip'>🔒 Tus datos se guardan solo en tu celular.</div>" },
+    { e: "☰", t: "El menú", sel: "#btnMenu", antes: cerrarTodo,
+      x: "👆 <b>Toca aquí</b> para abrir el menú con todas las secciones." },
+    { e: "💳", t: "Tus cuentas", sel: "#menuCuentas", antes: abrirMenu,
+      x: "👆 <b>Toca aquí</b> para crear, borrar y ordenar tus cuentas (billetera, bancos, ahorros…).<div class='tip'>⭐ Es lo primero que debes hacer.</div>" },
+    { e: "📋", t: "Movimientos", sel: "#menuMovs", antes: abrirMenu,
+      x: "👆 <b>Toca aquí</b> para ver todos los ingresos, gastos y transferencias del mes." },
+    { e: "🏷️", t: "Categorías", sel: "#menuCategorias", antes: abrirMenu,
+      x: "👆 <b>Toca aquí</b> para crear o cambiar categorías y subcategorías (Alimentación › Calle…)." },
+    { e: "🔁", t: "Movimientos fijos", sel: "#menuFijos", antes: abrirMenu,
+      x: "👆 <b>Toca aquí</b> para ver lo que se repite cada mes (sueldo, pensión…). Se crean marcando <b>🔁 Repetir cada mes</b> al anotar." },
+    { e: "📊", t: "Reportes", sel: "#menuReportes", antes: abrirMenu,
+      x: "👆 <b>Toca aquí</b> para ver estadísticas con gráficos del mes, del año o de todo, ¡y del combustible! ⛽" },
+    { e: "⚙️", t: "Ajustes", sel: "#menuAjustes", antes: abrirMenu,
+      x: "👆 <b>Toca aquí</b> para poner tu meta de ahorro, un PIN 🔒, modo oscuro 🌙 y más." },
+    { e: "📅", t: "Cambiar de mes", sel: "#selectorMes", antes: cerrarTodo,
+      x: "👆 <b>Toca las flechitas ‹ ›</b> para ver otros meses." },
+    { e: "⋮", t: "Más opciones", sel: "#btnPuntos", antes: cerrarTodo,
+      x: "👆 <b>Toca aquí</b> para abrir más opciones: Excel, instalar, compartir y <b>volver a ver este tutorial</b>." },
+    { e: "📤", t: "Exportar y respaldo", sel: "#menuExportar", antes: mostrarPuntos,
+      x: "👆 <b>Toca aquí</b> para sacar tu Excel con hojas por mes, año y gráficos. Puedes <b>guardarlo</b> o <b>enviarlo por WhatsApp o correo</b>." +
+         "<div class='tip'>💾 Ese Excel también es tu <b>respaldo</b>: guárdalo cada mes por si cambias de celular.</div>" },
+    { e: "📥", t: "Importar Excel", sel: "#menuImportar", antes: mostrarPuntos,
+      x: "👆 <b>Toca aquí</b> en tu celular nuevo y elige el Excel que exportaste: <b>recupera todos tus datos</b>." +
+         "<div class='tip'><b>Reemplazar todo</b> = celular nuevo · <b>Combinar</b> = juntar datos de dos equipos.</div>" },
+    { e: "📲", t: "Instálala como app", sel: "#menuInstalar", antes: mostrarPuntos,
+      x: "👆 <b>Toca aquí</b> para ponerla en tu pantalla de inicio con su ícono 💰. Así abre como app y <b>funciona sin internet</b>." +
+         "<div class='tip'>También: en Chrome <b>⋮ → Instalar app</b> · en iPhone (Safari) <b>Compartir → Agregar a inicio</b>.</div>" },
+    { e: "🔗", t: "Compártela", sel: "#menuCompartir", antes: mostrarPuntos,
+      x: "👆 <b>Toca aquí</b> para enviarle el enlace de My Money a un amigo o familiar por WhatsApp. ¡Es gratis!" +
+         "<div class='tip'>🔒 Solo se comparte la app, <b>nunca tus datos</b>.</div>" },
+    { e: "📈", t: "Tu saldo", sel: '[data-seccion="grafico"]',
+      x: "Aquí ves tu saldo <b>inicial</b>, el <b>actual</b> y el <b>previsto</b> a fin de mes (según lo que sueles gastar)." },
+    { e: "🟩", t: "Resumen del mes", sel: '[data-seccion="casillas"]',
+      x: "Tus <b>ingresos</b>, <b>gastos</b>, <b>transferencias</b> y lo que <b>ahorraste</b>, en soles y en dólares." },
+    { e: "🙋", t: "Límite personal", sel: "#btnAsignar",
+      x: "👆 <b>Toca aquí</b> para decidir cuánto te das <b>para ti</b> cada mes. Los gastos con ámbito <b>Personal</b> se descuentan de aquí." },
+    { e: "🏦", t: "Entra a una cuenta", sel: "#listaCuentas .cuenta",
+      x: "👆 <b>Toca una cuenta</b> para ver sus movimientos.<div class='tip'>Adentro, con <b>⋮ → Ajustar saldo</b> pones cuánto tienes hoy. ¡Hazlo al empezar!</div>" },
+    { e: "➕", t: "Anotar un movimiento", sel: ".fab",
+      x: "👆 <b>Toca el +</b> para anotar un <b>ingreso</b>, un <b>gasto</b> o una <b>transferencia</b>. Tiene calculadora 🧮.<div class='tip'>✏️ Para corregir algo, toca el movimiento en la lista.</div>" },
+    { e: "💧", t: "Gráficos", sel: '[data-seccion="flujo"]',
+      x: "Más abajo tienes tu <b>flujo de caja</b>, tu <b>economía mensual</b>, curvas y la dona de gastos." },
+    { e: "💬", t: "Alertas y consejos", sel: '[data-seccion="alertas"]',
+      x: "Aquí la app te avisa si estás gastando de más 🚨 o te felicita si vas ahorrando bien 🎉." },
+    { e: "🚀", t: "¡Listo para empezar!", sel: null, antes: cerrarTodo,
+      x: "<ul><li>1️⃣ <b>Instálala</b> en tu pantalla de inicio (⋮ → Instalar como app).</li><li>2️⃣ Arma tus cuentas (☰ → Cuentas).</li>" +
+         "<li>3️⃣ Ajusta el saldo de cada una.</li><li>4️⃣ Anota todo con el <b>+</b>.</li></ul>" +
+         "<div class='tip'>Puedes repetir este tutorial en <b>⋮ → Tutorial</b>.</div>" }
+  ];
+  var pasoActual = 0;
+
+  function abrirTutorial() {
+    pasoActual = 0;
+    document.getElementById("tutorial").classList.add("abierto");
+    mostrarPasoTutorial();
+  }
+  function cerrarTutorial() {
+    document.getElementById("tutorial").classList.remove("abierto");
+    cerrarTodo();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    try { localStorage.setItem("mymoney_tutorial_visto", "1"); } catch (e) {}
+  }
+  function pasoTutorial(direccion) {
+    pasoActual += direccion;
+    if (pasoActual >= pasosTutorial.length) { cerrarTutorial(); return; }
+    if (pasoActual < 0) pasoActual = 0;
+    // Si el botón de este paso no está visible (por ejemplo, una sección oculta), saltarlo
+    var p = pasosTutorial[pasoActual];
+    if (p.antes) p.antes();
+    if (p.sel && !elementoVisible(p.sel)) { pasoTutorial(direccion); return; }
+    mostrarPasoTutorial();
+  }
+  function elementoVisible(sel) {
+    var el = document.querySelector(sel);
+    return el && el.offsetParent !== null || (el && getComputedStyle(el).position === "fixed" && getComputedStyle(el).display !== "none");
+  }
+
+  function mostrarPasoTutorial() {
+    var p = pasosTutorial[pasoActual];
+    if (p.antes) p.antes();
+    document.getElementById("tutoEmoji").textContent = p.e;
+    document.getElementById("tutoTitulo").textContent = p.t;
+    document.getElementById("tutoTexto").innerHTML = p.x;
+    document.getElementById("tutoContador").textContent = (pasoActual + 1) + " / " + pasosTutorial.length;
+    document.getElementById("tutoAtras").style.visibility = pasoActual === 0 ? "hidden" : "visible";
+    document.getElementById("tutoSiguiente").textContent = pasoActual === pasosTutorial.length - 1 ? "¡Empezar! 🎉" : "Siguiente →";
+
+    var luz = document.getElementById("tutoLuz"), globo = document.getElementById("tutoGlobo");
+    if (!p.sel) {
+      // Mensaje al centro, sin iluminar nada
+      luz.style.display = "none";
+      document.getElementById("tutorial").classList.add("oscuro-fondo");
+      globo.className = "tuto-globo centro";
+      globo.style.left = ""; globo.style.top = "";
+      return;
+    }
+    document.getElementById("tutorial").classList.remove("oscuro-fondo");
+    var el = document.querySelector(p.sel);
+    // Si el elemento no es fijo, lo traemos a la vista
+    if (getComputedStyle(el).position !== "fixed" && !el.closest(".menu-lateral") && !el.closest(".barra"))
+      el.scrollIntoView({ block: "center", behavior: "smooth" });
+    globo.style.opacity = "0";
+    setTimeout(function () { ubicarTutorial(el); }, 380);
+  }
+
+  // Coloca el "foco de luz" sobre el botón y el globito con el texto arriba o abajo
+  function ubicarTutorial(el) {
+    var r = el.getBoundingClientRect(), m = 6;
+    var luz = document.getElementById("tutoLuz"), globo = document.getElementById("tutoGlobo");
+    luz.style.display = "block";
+    luz.style.left = (r.left - m) + "px";
+    luz.style.top = (r.top - m) + "px";
+    luz.style.width = (r.width + m * 2) + "px";
+    luz.style.height = (r.height + m * 2) + "px";
+
+    globo.className = "tuto-globo";
+    var gW = Math.min(340, window.innerWidth - 24), gH = globo.offsetHeight;
+    var x = Math.max(12, Math.min(window.innerWidth - gW - 12, r.left + r.width / 2 - gW / 2));
+    var abajo = r.bottom + m + 14 + gH < window.innerHeight;
+    var arriba = r.top - m - 14 - gH > 0;
+    var y;
+    if (abajo)       { y = r.bottom + m + 14; globo.classList.add("flecha-arriba"); }
+    else if (arriba) { y = r.top - m - 14 - gH; globo.classList.add("flecha-abajo"); }
+    else             { y = Math.max(12, window.innerHeight - gH - 12); }
+    globo.style.width = gW + "px";
+    globo.style.left = x + "px";
+    globo.style.top = y + "px";
+    // La flechita apunta al centro del botón
+    globo.style.setProperty("--flecha-x", Math.max(18, Math.min(gW - 18, r.left + r.width / 2 - x)) + "px");
+    globo.style.opacity = "1";
+  }
+  // Si giras el celular o cambia el tamaño, reacomodar
+  window.addEventListener("resize", function () {
+    if (document.getElementById("tutorial").classList.contains("abierto")) mostrarPasoTutorial();
+  });
+
+  // La primera vez que alguien abre la app, el tutorial sale solo
+  function tutorialPrimeraVez() {
+    var visto = null;
+    try { visto = localStorage.getItem("mymoney_tutorial_visto"); } catch (e) {}
+    if (!visto) abrirTutorial();
+  }
+
+
+  // =========================================================
+  //  PORTADA: "My Money · una creación de eddijiro" + frase peruana
+  // =========================================================
+  // 364 frases peruanas: cada vez que abres la app sale una al azar
+  var frasesPeruanas = [
+    "¡Cuida tus lucas, causa! 💸",
+    "Plata que no se anota, se va volando, pe'.",
+    "No llegues misio a fin de mes, compadre.",
+    "Al toque anotas, al toque ahorras. ¡Chévere!",
+    "Cada sol cuenta, causita. 🇵🇪",
+    "Chamba duro, gasta piola, ahorra bacán. 😎",
+    "Ni un sencillo se te escapa, mi pata.",
+    "Ordena tu billete y vive tranqui, pe'.",
+    "La quincena vuela… ¡pero tú la controlas!",
+    "Ahorrar también es de bravos, causa. 💪",
+    "Sol a sol se llena la alcancía, causa. 🐷",
+    "Antes de gastar, piénsalo dos veces, pe'.",
+    "El que anota, no llora a fin de mes.",
+    "¡Habla, ahorrador! ¿Qué gastaste hoy?",
+    "Que tu billetera no esté más flaca que fideo.",
+    "No seas aguja, mi pata: anota y ahorra.",
+    "Gasta en lo que vale, no en lo que brilla.",
+    "Un menú menos de chifa, un sol más pa'l chanchito.",
+    "La yapa también se cuenta, caserito. 😉",
+    "Si no lo anotas, ¿cómo sabes a dónde se fue? 🤔",
+    "Tu yo del futuro te dirá: ¡gracias, causa!",
+    "Pide la yapa, pero anota el gasto.",
+    "¡Qué tal palta llegar sin sencillo a fin de mes!",
+    "Más vale ahorro en mano que deuda volando.",
+    "Primero págate a ti, luego al resto.",
+    "¡Mostro! Hoy es buen día pa' ahorrar.",
+    "El billete no crece en los árboles, pe'. 🌳",
+    "Yapeaste, plineaste… ¡anótalo al toque!",
+    "Controla tu plata antes que ella te controle a ti.",
+    "De sol en sol se hace el millón, causita.",
+    "El que ahorra hoy, viaja mañana. ✈️",
+    "No te hagas roche con tu bolsillo.",
+    "¡Asu mare, qué bien vas este mes!",
+    "Chamba y ahorro: la fórmula bacán.",
+    "Gastar es fácil; ahorrar es de campeones. 🏆",
+    "¿Antojo? Respira, cuenta hasta diez y anota.",
+    "Hoy sí, hoy no, pero siempre anotado.",
+    "La plata es como el agua: si no la cuidas, se escurre.",
+    "¡Ponte las pilas con tus lucas, compadre!",
+    "No es tacañería, es inteligencia financiera. 🧠",
+    "Pequeños gastos, grandes huecos. ¡Ojo ahí!",
+    "El sencillo de hoy es el ahorro de mañana.",
+    "Más vale una alcancía llena que un bolsillo roto.",
+    "¡Bacán! Otro día controlando tus lucas.",
+    "El que no anota, se jala en finanzas.",
+    "Ahorra como si mañana hubiera gratificación… pero no la hubiera.",
+    "Tu billetera también merece descanso, pe'.",
+    "Que la CTS no se te vaya en una semana, causa.",
+    "¡Arriba Perú y arriba tus ahorros! 🇵🇪",
+    "Cuenta tus soles como cuentas los goles. ⚽",
+    "Si te alcanza, ahorra; si no te alcanza, ajusta.",
+    "No hay gasto chiquito cuando se repite diario.",
+    "¿Pollo a la brasa otra vez? Anótalo, causa. 🍗",
+    "Más ceviche casero, menos delivery. 🐟",
+    "El que regatea en el mercado también ahorra.",
+    "¡De una! Hoy anotas todo.",
+    "Cuida tu plata como cuidas tu celular. 📱",
+    "Ahorro chiquito, felicidad grandaza.",
+    "Disfruta hoy, pero sin quedarte calato mañana.",
+    "Que tu quincena dure más que una telenovela.",
+    "Nada de florearte con plata que no tienes.",
+    "Un cachuelo extra, un ahorro extra. 💼",
+    "La caserita te fía, pero igual hay que pagar, pe'.",
+    "No te endeudes por apariencias, causa.",
+    "¡Alucina lo que vas a ahorrar si anotas todo!",
+    "El orden en tus lucas es paz en tu jato. 🏠",
+    "Gasta piola, vive tranquilo.",
+    "Meta clara, billetera feliz. 🎯",
+    "¿Ya anotaste el pasaje del colectivo? 🚐",
+    "Mototaxi, combi o colectivo: todo suma.",
+    "Ahorrar no es dejar de vivir, es vivir mejor.",
+    "Que tu sueldo no llegue y se vaya como visita.",
+    "Hoy un sol, mañana un viaje a Máncora. 🏖️",
+    "No dejes que el antojo maneje tu billetera.",
+    "Tu plata, tus reglas, tu futuro.",
+    "¡Habla causa! Tu alcancía te extraña.",
+    "Lo barato sale caro si no lo necesitas.",
+    "Primero lo necesario, luego lo antojado.",
+    "El que ahorra, nunca está aguja.",
+    "Disciplina hoy, tranquilidad mañana.",
+    "¡Paja! Ya llevas varios días anotando.",
+    "Gastar menos de lo que ganas: el secreto mejor guardado.",
+    "La plata bien contada, rinde más.",
+    "Un emoliente en casa sale más a cuenta. ☕",
+    "No hay chamba fácil, por eso cuida lo que ganas.",
+    "¡Pucha! Ese gasto hormiga ya parece elefante. 🐜",
+    "Hasta el sencillo del vuelto cuenta.",
+    "Cada boleta guardada es un gasto controlado. 🧾",
+    "Ser ahorrativo está de moda, causa.",
+    "Más vale prevenir que andar prestando.",
+    "Que no te agarren sin sencillo para el pasaje.",
+    "Si lo compras por impulso, lo pagas con arrepentimiento.",
+    "Las lucas no se pierden, se gastan sin darte cuenta.",
+    "Ahorra hoy pa' que mañana no te prestes.",
+    "¡Qué chévere ver crecer tu ahorro!",
+    "Del sueldo, una parte pa' ti siempre.",
+    "Anota, revisa, ajusta, repite. 🔁",
+    "El presupuesto es tu mejor pata.",
+    "Menos salchipapa de la calle, más ahorro en la alcancía.",
+    "Tu bolsillo te lo agradecerá, compadre.",
+    "Ni pituco ni misio: ordenado.",
+    "No compres bamba pensando que ahorras.",
+    "Con orden, hasta el sueldo mínimo rinde más.",
+    "¡Al toque, anota ese gasto antes que se te olvide!",
+    "Haz que tu plata chambee para ti.",
+    "Ahorrar es como ir al gym: cuesta al inicio, luego es costumbre. 🏋️",
+    "Gasto que se repite, gasto que se revisa.",
+    "Hoy es un buen día pa' no gastar de más.",
+    "El que se organiza, no se apura a fin de mes.",
+    "Tus metas valen más que tus antojos.",
+    "¡Firme con tus finanzas, causa!",
+    "La gratificación es pa' avanzar, no pa' tirar.",
+    "Cuida tus cocos, que el dólar no está regalado. 💵",
+    "Que tu ahorro crezca como el arroz con la olla. 🍚",
+    "Gasta con cabeza, no con el estómago.",
+    "¡Así se hace! Un día más con las cuentas claras.",
+    "Las cuentas claras y el chocolate espeso. 🍫",
+    "Con plata anotada no hay sorpresas.",
+    "El ahorro no se nota hoy, pero se siente mañana.",
+    "Al mal tiempo, buen presupuesto.",
+    "¿Fiado otra vez? Mejor ahorra y paga al contado.",
+    "Que no te gane la tentación del ofertón.",
+    "El que guarda, siempre tiene.",
+    "Tu alcancía es tu mejor inversión de hoy.",
+    "¡Bravazo! Vas cumpliendo tu meta de ahorro.",
+    "Ni el cobrador de la combi cuenta tan bien como tú. 🚌",
+    "Más jugo en casa, menos gasto afuera. 🧃",
+    "Piensa en grande, ahorra en pequeño.",
+    "Una lista antes del mercado vale oro. 📝",
+    "Cada gasto tiene su categoría, y cada sol su lugar.",
+    "Si no lo necesitas, no es oferta.",
+    "La plata que se presta, a veces no regresa. Ojo ahí.",
+    "¡Qué tal ahorro, mi king! 👑",
+    "Gasta en experiencias, no en caprichos.",
+    "Con buenas cuentas se duerme mejor. 😴",
+    "Ahorra pa' tus sueños, no solo pa' emergencias.",
+    "Un fondo de emergencia es un abrazo pa' tu futuro.",
+    "No te dejes llevar por el floro del vendedor.",
+    "Hoy anotas, mañana disfrutas.",
+    "Que tu sueldo tenga plan, no solo destino.",
+    "¡Sigue así, causa, vas con todo!",
+    "Las deudas son como el tráfico de Lima: mejor evitarlas. 🚗",
+    "Ahorra en la semana, disfruta en el finde.",
+    "Primero las cuentas, después la chela. 🍺",
+    "Si te sobra, guárdalo; si te falta, revisa.",
+    "El dinero ama el orden, causa.",
+    "No hay sueldo grande sin orden pequeño.",
+    "¡Yapa de consejo! Ahorra el 10% de todo lo que ganes.",
+    "Tu billetera no es piñata, pe'. 🪅",
+    "Cuenta tus gastos como cuentas tus likes.",
+    "Lo que no se mide, no se mejora.",
+    "Gasta como chibolo con propina: con cuidado. 🧒",
+    "Mañana es tarde; anota hoy.",
+    "Las lucas se cuidan, no se botan.",
+    "Ahorrar es quererte bonito. ❤️",
+    "¡Habla, campeón del ahorro! 🏅",
+    "Más vale ser previsor que andar pidiendo prestado.",
+    "Que tus gastos no superen tus ingresos, así de simple.",
+    "Cuida el sol como si fuera el último.",
+    "¡Te pasaste de bacán con tu presupuesto!",
+    "Revisa tu límite personal antes de darte un gustito.",
+    "Un gustito está bien; diez, ya es hueco.",
+    "¿Te sobró? ¡Mándalo al chanchito! 🐖",
+    "Sé el jefe de tu plata, no su empleado.",
+    "El ahorro empieza con una decisión.",
+    "La plata llama a la plata cuando está ordenada.",
+    "Hoy no hay antojo que valga, causa.",
+    "Menos compras de madrugada, más ahorro de día. 🌙",
+    "Controla, no te controles demasiado: equilibrio.",
+    "Ni tan tacaño ni tan gastador: piola.",
+    "Paso a paso se llega lejos, sol a sol también.",
+    "¡Qué orgullo ver tus cuentas en verde! 💚",
+    "El rojo en tus cuentas es una alerta, no una sentencia.",
+    "Un mal mes no define tu año. ¡Ánimo!",
+    "Corrige el gasto, no te castigues.",
+    "Si te equivocaste, edita y sigue, causa. ✏️",
+    "¡Vamos que se puede, causa!",
+    "Tu meta está más cerca de lo que crees.",
+    "Mira tus reportes y siéntete orgulloso.",
+    "El combustible sube, tu control también. ⛽",
+    "Cuida la moto y cuida tus lucas. 🏍️",
+    "Un mantenimiento a tiempo ahorra una reparación cara.",
+    "La calculadora es tu pata del día a día. 🧮",
+    "Suma, resta y anota: matemática de vida.",
+    "Si sale dólar, que entre ahorro. 💱",
+    "Tipo de cambio bajo: buen momento pa' tus cocos.",
+    "No guardes la plata debajo del colchón, guárdala con orden.",
+    "Un sol ahorrado es un sol ganado.",
+    "Gastar sin saber es como manejar sin luces.",
+    "Ahorra con alegría, no con pena.",
+    "Hasta los grandes empresarios empezaron anotando.",
+    "Que tu billetera tenga más fotos de ahorro que de gastos.",
+    "¡Chamba cumplida, ahorro asegurado!",
+    "No hay mejor inversión que en tu tranquilidad.",
+    "Si no te alcanza, no es tu sueldo: es tu plan.",
+    "Los gastos fijos primero, los antojos después.",
+    "Pagar la luz y el agua a tiempo también es ahorrar. 💡",
+    "Moras e intereses: los enemigos silenciosos.",
+    "Paga tu crédito y libérate, causa.",
+    "Dinero prestado, dinero vigilado.",
+    "A tu pata le prestas, pero anotas. 🤝",
+    "Más vale un ahorro tímido que una deuda atrevida.",
+    "¡Asu! Ese ranking de gastos te habla, escúchalo.",
+    "Que la dona de gastos no se coma tu sueldo. 🍩",
+    "Mira el flujo de caja como miras el clima: cada día.",
+    "Hoy toca revisar tus categorías, causa.",
+    "Lo que más gastas, lo primero que revisas.",
+    "Un buen hábito vale más que un buen sueldo.",
+    "¿Ya pusiste tu meta de ahorro? ¡Dale!",
+    "El que planifica, disfruta sin culpa.",
+    "Gasto planificado, gasto disfrutado.",
+    "Que tus lucas trabajen más que tú.",
+    "Unas zapatillas nuevas pueden esperar un mes. 👟",
+    "La ropa de marca no paga tu pensión.",
+    "Si lo vas a comprar, que sea por necesidad y no por pose.",
+    "Viajar es rico; viajar con ahorro, más rico. 🧳",
+    "Un souvenir menos, un recuerdo igual de bonito.",
+    "Regala con cariño, no con deudas. 🎁",
+    "El mejor obsequio es una cuenta sin deudas.",
+    "Las aves comen, la moto toma, y tú… ¡ahorras! 🐔",
+    "Cada sol en su categoría, como debe ser.",
+    "Tu jato también necesita presupuesto. 🏠",
+    "Hogar ordenado, plata ordenada.",
+    "Que el mercado no te sorprenda: lleva lista.",
+    "Un buen regateo es arte peruano. 🤑",
+    "¡Arriba los que anotan hasta el pan de la mañana! 🥖",
+    "El pan de cada día, también cuenta.",
+    "Cocinar en casa es ahorrar con sabor. 🍲",
+    "Táper al trabajo, sol a la alcancía. 🥡",
+    "Almuerzo en táper, billetera contenta.",
+    "Cuidar la plata no es egoísmo, es responsabilidad.",
+    "Tu familia agradece tus finanzas ordenadas. 👨‍👩‍👦",
+    "Que los chicos aprendan a ahorrar viéndote a ti.",
+    "El ahorro también se enseña con el ejemplo.",
+    "Educación es inversión, no gasto. 🎓",
+    "Estudia, chambea y ahorra: combo ganador.",
+    "La maestría pasa, el hábito de ahorrar se queda.",
+    "Invierte en ti y cuida tus lucas.",
+    "Pide boleta y anota el gasto, compadre.",
+    "Revisa tus comisiones bancarias, que suman.",
+    "Tu banco no te regala nada; tú cuida lo tuyo.",
+    "Comisión que no ves, plata que se va.",
+    "Lee la letra chiquita antes de firmar. 🔍",
+    "No todo lo que dice gratis es gratis.",
+    "Desconfía del préstamo fácil.",
+    "Las tarjetas no son plata extra, causa. 💳",
+    "Paga el total de tu tarjeta y duerme tranquilo.",
+    "Lo que se paga en cuotas, se paga dos veces.",
+    "Con ahorro, el aguinaldo es premio y no rescate.",
+    "Cuando llegue la grati, primero ahorra y luego celebra.",
+    "Fiestas Patrias con alegría y con presupuesto. 🇵🇪",
+    "Navidad bonita no es Navidad endeudada. 🎄",
+    "Año Nuevo, cuentas nuevas, metas claras. 🎆",
+    "Enero cuesta, por eso diciembre se planifica.",
+    "Marzo y la matrícula: ¡prepárate desde antes!",
+    "Que el Día de la Madre no te deje en rojo. 💐",
+    "Día del Padre: el mejor regalo es estar sin deudas.",
+    "Halloween o Canción Criolla: celebra sin gastar de más. 🎶",
+    "Cada mes es una nueva oportunidad de mejorar.",
+    "Lunes de anotar, viernes de disfrutar.",
+    "Martes de revisar tu límite personal.",
+    "Miércoles: ¿cómo va tu flujo de caja?",
+    "Jueves de ajustar los gastos hormiga.",
+    "Viernes de juerga, pero con presupuesto.",
+    "Sábado de mercado, con lista en mano.",
+    "Domingo de revisar la semana y planear la otra.",
+    "Fin de mes sin estrés: ese es el plan.",
+    "Inicio de mes: ¡a separar el ahorro primero!",
+    "Media quincena, ¿cómo vamos, causa?",
+    "La plata no da la felicidad, pero ayuda bastante.",
+    "Contar soles también es contar sueños.",
+    "Cada movimiento registrado es un paso al futuro.",
+    "Tus números no mienten, escúchalos.",
+    "Si tu saldo baja, que sea por algo que valga la pena.",
+    "La previsión es la madre de la tranquilidad.",
+    "Tu saldo previsto te avisa: ¡hazle caso!",
+    "Inicial, saldo y previsto: tus tres patas de confianza.",
+    "¡Ni la abuelita contaba tan bien las monedas! 👵",
+    "Como decía la abuela: guarda pa' cuando no haya.",
+    "El que guarda en verano, come en invierno.",
+    "Poco a poco se anda lejos.",
+    "Gota a gota se llena el balde. 💧",
+    "Camarón que se duerme, se lo lleva la corriente; plata que no se cuida, también.",
+    "No hay mal que dure cien años ni deuda que no se pague.",
+    "Al que madruga, Dios le ayuda; al que anota, el bolsillo también.",
+    "Más sabe el ahorrador por ahorrador que por sabio.",
+    "Dime en qué gastas y te diré cuánto ahorras.",
+    "Ojos que no ven, gastos que no se controlan.",
+    "Quien mucho abarca, poco ahorra.",
+    "En casa de herrero, cuchillo de palo; en tu casa, cuentas claras.",
+    "Piedra que rueda no junta musgo; sol que rueda no junta ahorro.",
+    "A buen ahorrador, pocas palabras.",
+    "Hoy por ti, mañana por tu alcancía.",
+    "No dejes para mañana el ahorro que puedes hacer hoy.",
+    "Cría ahorros y te darán tranquilidad.",
+    "El que ríe al último, ríe con ahorro.",
+    "Plata en mano, ojo al gasto.",
+    "Quien guarda, halla.",
+    "Lo que no se anota, se lo lleva el viento. 🌬️",
+    "¡Alerta de gasto hormiga a la vista! 🐜",
+    "Una golosina diaria al año es un buen fondo.",
+    "El café de la esquina, sumado al mes, es un almuerzo de lujo.",
+    "Un taxi menos y una caminata más: plata y salud. 🚶",
+    "Camina más, gasta menos en pasajes.",
+    "Bici al trabajo, sol al bolsillo. 🚲",
+    "Comparte el taxi y divide el gasto.",
+    "Revisa tus suscripciones: algunas ni las usas. 📺",
+    "Apaga la luz que no usas, causa. 💡",
+    "Desenchufa y ahorra en el recibo.",
+    "Agua que no usas, agua que no pagas. 🚿",
+    "El ahorro también vive en los recibos.",
+    "Que tu plan de celular no sea más caro que tu uso.",
+    "Recarga lo justo, ni un sol más.",
+    "Arreglar antes que comprar nuevo.",
+    "Lo que tienes, cuídalo; dura más y ahorras.",
+    "Vende lo que no usas y suma a tu ahorro.",
+    "Una cachina en casa puede darte un extra. 🛍️",
+    "Los cachuelos de hoy son el capital de mañana.",
+    "Emprende con orden y tus lucas crecerán.",
+    "Si tienes negocio, separa tu plata de la del negocio.",
+    "La caja chica también se anota.",
+    "Ventas sin registro, ganancias sin control.",
+    "Ingreso que llega, ingreso que se anota.",
+    "Celebra cada ingreso, pero no lo gastes al toque.",
+    "Un convenio cobrado es una oportunidad de ahorrar.",
+    "Devoluciones también son ingresos: ¡anótalas!",
+    "Si te pagaron, primero la meta, luego el gusto.",
+    "Ahorrar es decirle sí a tus sueños.",
+    "Tu futuro se construye con lo que haces hoy.",
+    "No compares tu bolsillo con el de otros.",
+    "Cada quien con su presupuesto, causa.",
+    "Vive acorde a tus lucas, no a las del vecino.",
+    "El que aparenta, se endeuda.",
+    "Más vale humilde con ahorro que pituco con deudas.",
+    "Tu tranquilidad no tiene precio, pero sí presupuesto.",
+    "Que tus finanzas sean tan sólidas como Machu Picchu. 🏔️",
+    "Más firme que el Misti, así de firme tu ahorro. 🌋",
+    "Que tu ahorro crezca como las olas de Máncora. 🌊",
+    "Tus finanzas, tan ricas como un ceviche bien hecho.",
+    "Ahorra con sabor a Perú. 🇵🇪",
+    "Sol peruano, sol cuidado.",
+    "Con orden, hasta el lunes se siente viernes.",
+    "¡Ánimo, causa! Cada día lo haces mejor.",
+    "Ya eres pro anotando, ¿o no? 😎",
+    "¡Lo estás haciendo de lujo!",
+    "Tú puedes con tus finanzas, mi pata.",
+    "Un día a la vez, un sol a la vez.",
+    "¡My Money te acompaña, causa!",
+    "Antes de yapear, pregúntate si lo necesitas. 📲",
+    "Plinea con cabeza, causa.",
+    "¡Qué roche quedarse sin pasaje! Mejor anota.",
+    "Ahorra como hormiguita y vive como cigarra en vacaciones.",
+    "Ni el tío del pandero es tan ordenado como tú.",
+    "La junta del barrio también es ahorro: ¡anótala!",
+    "Pollo a la brasa el domingo, presupuesto toda la semana.",
+    "Más anticucho en casa, menos en la esquina. 🍢",
+    "Inca Kola en la mesa, ahorro en la mesa también. 🥤",
+    "Un chifa al mes está bien; uno por semana, revísalo.",
+    "El jale del día: no gastar en lo que no necesitas.",
+    "¡Manyas que ya ahorraste más que el mes pasado!",
+    "Tu plata no es de jebe, no se estira. Cuídala.",
+    "Ahorrar es de faites, causa. 💪",
+    "Que no te falte pa' la combi ni pa' la alcancía.",
+    "¡Eddijiro aprueba tu ahorro de hoy! ✅"
+    ];
+  function mostrarPortada() {
+    // Cada vez que abres la app sale una frase distinta
+    document.getElementById("portadaFrase").textContent =
+      frasesPeruanas[Math.floor(Math.random() * frasesPeruanas.length)];
+    setTimeout(cerrarPortada, 2600);
+  }
+  function cerrarPortada() {
+    var p = document.getElementById("portada");
+    p.classList.add("chau");                       // se desvanece
+    setTimeout(function () { p.style.display = "none"; }, 500);
+  }
+
+
+  // =========================================================
+  //  IMPORTAR DESDE EXCEL (restaurar todo en otro celular)
+  // =========================================================
+  // El Excel que exporta My Money trae una hoja escondida llamada "Respaldo"
+  // con TODOS tus datos. Al importarlo, la app lee esa hoja y recupera todo.
+
+  // Arma el texto del respaldo (todo lo que la app recuerda)
+  function datosRespaldo() {
+    return JSON.stringify({
+      app: "MyMoney", version: 1, fecha: hoyTexto(),
+      movimientos: movimientos, cuentas: cuentas,
+      categorias: { gasto: categoriasGasto, ingreso: categoriasIngreso },
+      limite: limitePersonal, tipoCambio: tipoCambio, ajustes: ajustes, fijos: fijos
+    });
+  }
+
+  function abrirImportar() {
+    cerrarTodo();
+    document.getElementById("archivoImportar").value = "";
+    document.getElementById("archivoImportar").click();   // abre el selector de archivos
+  }
+
+  // ---- Leer un .xlsx (que es un ZIP) ----
+  async function leerZip(buffer) {
+    var v = new DataView(buffer), bytes = new Uint8Array(buffer), archivos = {};
+    // Buscar el "final del índice" del ZIP (está al final del archivo)
+    var fin = -1;
+    for (var i = bytes.length - 22; i >= Math.max(0, bytes.length - 66000); i--) {
+      if (v.getUint32(i, true) === 0x06054b50) { fin = i; break; }
+    }
+    if (fin < 0) throw new Error("No parece un archivo Excel (.xlsx).");
+    var total = v.getUint16(fin + 10, true), pos = v.getUint32(fin + 16, true);
+    var dec = new TextDecoder();
+    for (var k = 0; k < total; k++) {
+      var metodo = v.getUint16(pos + 10, true), tam = v.getUint32(pos + 20, true);
+      var largoNombre = v.getUint16(pos + 28, true), extra = v.getUint16(pos + 30, true), coment = v.getUint16(pos + 32, true);
+      var local = v.getUint32(pos + 42, true);
+      var nombre = dec.decode(bytes.subarray(pos + 46, pos + 46 + largoNombre));
+      var inicio = local + 30 + v.getUint16(local + 26, true) + v.getUint16(local + 28, true);
+      archivos[nombre] = { metodo: metodo, datos: bytes.subarray(inicio, inicio + tam) };
+      pos += 46 + largoNombre + extra + coment;
+    }
+    return {
+      // Devuelve el texto de un archivo de adentro (descomprimiéndolo si hace falta)
+      texto: async function (nombre) {
+        var f = archivos[nombre];
+        if (!f) return null;
+        if (f.metodo === 0) return dec.decode(f.datos);
+        var flujo = new Blob([f.datos]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+        return dec.decode(await new Response(flujo).arrayBuffer());
+      }
+    };
+  }
+
+  // ---- Encontrar la hoja "Respaldo" y juntar su contenido ----
+  async function leerRespaldoDeExcel(buffer) {
+    var zip = await leerZip(buffer), dp = new DOMParser();
+    var libro = dp.parseFromString(await zip.texto("xl/workbook.xml") || "", "application/xml");
+    var rels = dp.parseFromString(await zip.texto("xl/_rels/workbook.xml.rels") || "", "application/xml");
+    var hoja = Array.prototype.filter.call(libro.getElementsByTagName("sheet"), function (h) { return h.getAttribute("name") === "Respaldo"; })[0];
+    if (!hoja) throw new Error("Este Excel no tiene respaldo de My Money. Usa un Excel exportado desde la app (⋮ → Exportar a Excel).");
+    var rid = hoja.getAttribute("r:id") || hoja.getAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships", "id");
+    var rel = Array.prototype.filter.call(rels.getElementsByTagName("Relationship"), function (r) { return r.getAttribute("Id") === rid; })[0];
+    var ruta = rel.getAttribute("Target").replace(/^\//, "");
+    if (ruta.indexOf("xl/") !== 0) ruta = "xl/" + ruta;
+
+    // Si Excel guardó los textos aparte ("sharedStrings"), los leemos
+    var compartidos = [];
+    var ss = await zip.texto("xl/sharedStrings.xml");
+    if (ss) {
+      var doc = dp.parseFromString(ss, "application/xml");
+      compartidos = Array.prototype.map.call(doc.getElementsByTagName("si"), function (si) {
+        return Array.prototype.map.call(si.getElementsByTagName("t"), function (t) { return t.textContent; }).join("");
+      });
+    }
+    var hojaDoc = dp.parseFromString(await zip.texto(ruta), "application/xml");
+    var textos = [];
+    Array.prototype.forEach.call(hojaDoc.getElementsByTagName("c"), function (c) {
+      var ref = c.getAttribute("r") || "";
+      if (!/^A\d+$/.test(ref)) return;                       // solo la columna A
+      var fila = Number(ref.slice(1)), valor;
+      if (c.getAttribute("t") === "s") valor = compartidos[Number(c.getElementsByTagName("v")[0].textContent)];
+      else valor = Array.prototype.map.call(c.getElementsByTagName("t"), function (t) { return t.textContent; }).join("") ||
+                   (c.getElementsByTagName("v")[0] || {}).textContent || "";
+      textos[fila] = valor;
+    });
+    if (textos[1] !== "MYMONEY_RESPALDO_V1") throw new Error("El respaldo está dañado o fue modificado.");
+    var json = "";
+    for (var r = 2; r < textos.length; r++) if (textos[r]) json += textos[r];
+    return JSON.parse(json);
+  }
+
+  var respaldoLeido = null;
+
+  async function archivoElegido(input) {
+    var archivo = input.files[0];
+    if (!archivo) return;
+    try {
+      respaldoLeido = await leerRespaldoDeExcel(await archivo.arrayBuffer());
+    } catch (e) {
+      alert("😕 No se pudo importar.\n\n" + e.message);
+      return;
+    }
+    // Mostrar qué trae y preguntar cómo importar
+    var r = respaldoLeido;
+    var nuevos = r.movimientos.filter(function (m) { return !movimientos.some(function (x) { return x.id === m.id; }); }).length;
+    document.getElementById("importarInfo").innerHTML =
+      "📄 <b>" + limpio(archivo.name) + "</b><br>Respaldo del <b>" + r.fecha.split("-").reverse().join("/") + "</b>" +
+      "<ul><li>" + r.movimientos.length + " movimientos (" + nuevos + " que no tienes aquí)</li>" +
+      "<li>" + r.cuentas.length + " cuentas</li>" +
+      "<li>" + (r.categorias.gasto.length + r.categorias.ingreso.length) + " categorías</li></ul>";
+    document.getElementById("importar").classList.add("abierto");
+  }
+
+  function cerrarImportar() { document.getElementById("importar").classList.remove("abierto"); respaldoLeido = null; }
+
+  // modo = "reemplazar" (todo como en el Excel) o "combinar" (agrega lo que falta)
+  function aplicarImportar(modo) {
+    var r = respaldoLeido;
+    if (!r) return;
+    if (modo === "reemplazar") {
+      if (!confirm("Se reemplazará TODO lo que hay en este celular por lo del Excel. ¿Continuar?")) return;
+      movimientos = r.movimientos;
+      cuentas = r.cuentas;
+      categoriasGasto = r.categorias.gasto;
+      categoriasIngreso = r.categorias.ingreso;
+      limitePersonal = r.limite;
+      tipoCambio = r.tipoCambio;
+      var pinActual = ajustes.pin;
+      for (var k in r.ajustes) ajustes[k] = r.ajustes[k];
+      ajustes.pin = pinActual;            // el PIN de este celular no se cambia
+      if (r.fijos) fijos = r.fijos;
+    } else {
+      // Agregar solo lo que no existe todavía
+      r.movimientos.forEach(function (m) { if (!movimientos.some(function (x) { return x.id === m.id; })) movimientos.push(m); });
+      r.cuentas.forEach(function (c) { if (!buscarCuenta(c.nombre)) cuentas.push(c); });
+      ["gasto", "ingreso"].forEach(function (tipo) {
+        var lista = tipo === "gasto" ? categoriasGasto : categoriasIngreso;
+        r.categorias[tipo].forEach(function (c) {
+          var existe = lista.filter(function (x) { return x.nombre === c.nombre; })[0];
+          if (!existe) lista.push(c);
+          else c.subs.forEach(function (s) { if (existe.subs.indexOf(s) === -1) existe.subs.push(s); });
+        });
+      });
+    }
+    guardarTodo(); guardarCuentas(); guardarCategorias(); guardarFijos();
+    try {
+      localStorage.setItem("mymoney_limite", limitePersonal);
+      localStorage.setItem("mymoney_tc", tipoCambio);
+      localStorage.setItem("mymoney_ajustes", JSON.stringify(ajustes));
+    } catch (e) {}
+    var cuantos = movimientos.length;
+    cerrarImportar();
+    aplicarAjustes();
+    refrescar();
+    alert("✅ ¡Listo! Ahora tienes " + cuantos + " movimientos.");
+  }
+
+
+  // =========================================================
+  //  NOMBRE DEL USUARIO Y SALUDO
+  // =========================================================
+  var nombrePrimeraVez = false;
+  function abrirNombre(primeraVez) {
+    nombrePrimeraVez = !!primeraVez;
+    document.getElementById("inputNombre").value = ajustes.nombre || "";
+    document.getElementById("nombreError").textContent = "";
+    document.getElementById("ventanaNombre").classList.add("abierto");
+  }
+  function guardarNombre() {
+    var n = document.getElementById("inputNombre").value.trim();
+    if (!n) { document.getElementById("nombreError").textContent = "Escribe tu nombre 🙂"; return; }
+    ajustes.nombre = n;
+    try { localStorage.setItem("mymoney_ajustes", JSON.stringify(ajustes)); } catch (e) {}
+    document.getElementById("ventanaNombre").classList.remove("abierto");
+    mostrarSaludo();
+    if (nombrePrimeraVez) tutorialPrimeraVez();   // después del nombre, el tutorial
+  }
+  // "¡Buenos días, Edinson! 👋" según la hora
+  function mostrarSaludo() {
+    var h = new Date().getHours();
+    var saludo = h < 12 ? "¡Buenos días" : h < 19 ? "¡Buenas tardes" : "¡Buenas noches";
+    var emoji = h < 12 ? "☀️" : h < 19 ? "👋" : "🌙";
+    var fecha = new Date().toLocaleDateString("es-PE", { weekday: "long", day: "numeric", month: "long" });
+    document.getElementById("saludo").innerHTML = ajustes.nombre
+      ? '<div class="hola">' + saludo + ', ' + limpio(ajustes.nombre) + '! ' + emoji + '</div><div class="fecha-hoy">' + fecha + '</div>'
+      : '';
+  }
+
+
+  // =========================================================
+  //  MOVIMIENTOS FIJOS (se repiten solos cada mes: sueldo, pensión, internet…)
+  // =========================================================
+  // Cada fijo: { id, plantilla: {tipo, monto, cuenta, categoria…}, dia, ultimoMes: "2026-11", activo }
+  var fijos = [];
+  try { var gf = localStorage.getItem("mymoney_fijos"); if (gf) fijos = JSON.parse(gf); } catch (e) {}
+  function guardarFijos() { try { localStorage.setItem("mymoney_fijos", JSON.stringify(fijos)); } catch (e) {} }
+
+  function mesSiguiente(t) {   // "2026-12" → "2027-01"
+    var a = Number(t.slice(0, 4)), m = Number(t.slice(5, 7)) + 1;
+    if (m > 12) { m = 1; a++; }
+    return a + "-" + String(m).padStart(2, "0");
+  }
+
+  // Al abrir la app: crea los movimientos fijos que ya "tocaban" y aún no estaban
+  function generarFijos() {
+    var hoy = hoyTexto(), creados = 0, base = Date.now();
+    var usados = {}; movimientos.forEach(function (m) { usados[m.id] = true; });
+    fijos.forEach(function (f) {
+      if (!f.activo) return;
+      var mes = mesSiguiente(f.ultimoMes), vueltas = 0;
+      while (mes <= hoy.slice(0, 7) && vueltas < 36) {          // máximo 3 años de "ponerse al día"
+        var dias = new Date(Number(mes.slice(0, 4)), Number(mes.slice(5, 7)), 0).getDate();
+        var fecha = mes + "-" + String(Math.min(f.dia, dias)).padStart(2, "0");
+        if (fecha > hoy) break;                                   // todavía no llega ese día
+        var id = base + creados; while (usados[id]) id++; usados[id] = true;
+        var m = JSON.parse(JSON.stringify(f.plantilla));
+        m.id = id; m.fecha = fecha; m.fijo = f.id;
+        movimientos.push(m);
+        f.ultimoMes = mes; creados++; vueltas++;
+        mes = mesSiguiente(mes);
+      }
+    });
+    if (creados) { guardarTodo(); guardarFijos(); }
+    return creados;
+  }
+
+  function abrirFijos() {
+    cerrarTodo();
+    document.getElementById("pantallaFijos").classList.add("abierta");
+    document.querySelector(".fab").style.display = "none";
+    mostrarFijos();
+  }
+  function cerrarFijos() {
+    document.getElementById("pantallaFijos").classList.remove("abierta");
+    document.querySelector(".fab").style.display = "";
+    refrescar();
+  }
+  function mostrarFijos() {
+    var html = '<div class="tarjeta"><div class="aviso" style="text-align:left;margin:0">' +
+      'Para crear uno: toca <b>+</b>, llena el movimiento y marca <b>🔁 Repetir cada mes</b>. ' +
+      'La app lo anotará solita cada mes en ese día.</div></div>';
+    if (!fijos.length) {
+      html += '<div class="tarjeta"><div class="vacio">Aún no tienes movimientos fijos.<br>Ej: sueldo, pensión, internet, AFP.</div></div>';
+    } else {
+      html += '<div class="tarjeta">' + fijos.map(function (f, i) {
+        var p = f.plantilla, mon = simbolo(monedaDe(p.cuenta));
+        var titulo = p.tipo === "transferencia" ? "Transferencia " + p.cuenta + " → " + p.destino : nombreCategoria(p);
+        var color = { ingreso: "#16a34a", gasto: "#dc2626", transferencia: "#ca8a04" }[p.tipo];
+        return '<div class="admin-cuenta' + (f.activo ? '' : ' apagada') + '">' +
+          '<div class="ico" style="background:' + color + ';color:white;font-weight:bold">' + { ingreso: "+", gasto: "−", transferencia: "⇄" }[p.tipo] + '</div>' +
+          '<div class="nombre">' + limpio(titulo) + '<small>' + mon + plata(p.monto) + ' · ' + limpio(p.cuenta) + ' · día ' + f.dia + ' de cada mes</small></div>' +
+          interruptor(f.activo, "fijos[" + i + "].activo=this.checked; guardarFijos(); mostrarFijos()") +
+          '<button class="borrar" onclick="borrarFijo(' + i + ')">🗑️</button></div>';
+      }).join("") + '</div>';
+    }
+    document.getElementById("contenidoFijos").innerHTML = html;
+  }
+  function borrarFijo(i) {
+    if (!confirm("¿Dejar de repetir este movimiento?\n\nLos que ya se anotaron se quedan.")) return;
+    fijos.splice(i, 1);
+    guardarFijos();
+    mostrarFijos();
+  }
+
+
+  // =========================================================
+  //  PRESUPUESTOS POR CATEGORÍA (se ponen en ☰ → Categorías)
+  // =========================================================
+  // Devuelve [{cat, gastado, presupuesto, pct}] del mes que estás mirando
+  function estadoPresupuestos() {
+    var lista = categoriasGasto.filter(function (c) { return c.presupuesto > 0; });
+    return lista.map(function (c) {
+      var g = 0;
+      movimientos.forEach(function (m) {
+        if (m.tipo === "gasto" && m.categoria === c.nombre && m.fecha.slice(0, 7) === mesTexto())
+          g += enSoles(m.monto, monedaDe(m.cuenta));
+      });
+      return { cat: c, gastado: g, presupuesto: c.presupuesto, pct: g / c.presupuesto * 100 };
+    });
+  }
+  function mostrarPresupuestos() {
+    var est = estadoPresupuestos(), caja = document.getElementById("listaPresupuestos");
+    if (!est.length) {
+      caja.innerHTML = '<div class="aviso" style="text-align:left">Ponle un tope mensual a tus categorías: ' +
+        '<b>☰ → Categorías</b>, toca una categoría y llena <b>🎯 Presupuesto mensual</b>.</div>';
+      return;
+    }
+    caja.innerHTML = est.sort(function (a, b) { return b.pct - a.pct; }).map(function (e) {
+      var color = e.pct >= 100 ? "#dc2626" : e.pct >= ajustes.alertaLimite ? "#eab308" : "#16a34a";
+      var queda = e.presupuesto - e.gastado;
+      return '<div class="rank"><div class="rank-txt"><span>' + e.cat.icono + ' ' + limpio(e.cat.nombre) + '</span>' +
+             '<b>S/ ' + plata(e.gastado) + ' <small>/ ' + plata(e.presupuesto) + '</small></b></div>' +
+             '<div class="barrita"><div style="width:' + Math.min(e.pct, 100) + '%;background:' + color + '"></div></div>' +
+             '<div class="aviso" style="text-align:right;margin-top:2px;color:' + (queda < 0 ? '#dc2626' : '') + '">' +
+             (queda >= 0 ? 'Te quedan S/ ' + plata(queda) : '⚠️ Te pasaste S/ ' + plata(-queda)) + '</div></div>';
+    }).join("");
+  }
+
+
+  // =========================================================
+  //  BUSCAR MOVIMIENTOS
+  // =========================================================
+  // Quita tildes y mayúsculas para buscar "alimentacion" y encontrar "Alimentación"
+  function normal(t) { return String(t || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); }
+  function coincide(m, texto) {
+    var tipoTxt = { ingreso: "ingreso", gasto: "gasto", transferencia: "transferencia", ajuste: "ajuste" }[m.tipo];
+    var todo = normal([m.categoria, m.subcategoria, m.nota, m.cuenta, m.destino, tipoTxt, m.ambito, m.tipoGasto, m.monto].join(" "));
+    return normal(texto).split(/\s+/).every(function (palabra) { return todo.indexOf(palabra) !== -1; });
+  }
+
+
+  // =========================================================
+  //  INSTALAR, COMPARTIR Y ACERCA DE
+  // =========================================================
+  var ENLACE_APP = "https://eddijiro-code.github.io/my-money/";
+  var VERSION = "1.0";
+  function enlaceApp() { return location.protocol === "https:" ? location.origin + location.pathname.replace(/index\.html$/, "") : ENLACE_APP; }
+
+  // Chrome (Android/PC) avisa cuando la app se puede instalar: guardamos ese aviso para usarlo con el botón
+  var avisoInstalar = null;
+  window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); avisoInstalar = e; });
+  function yaInstalada() {
+    return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  }
+
+  function instalarApp() {
+    cerrarTodo();
+    if (yaInstalada()) { mostrarComoInstalar("✅ ¡Ya la tienes instalada! Estás usando My Money como app."); return; }
+    if (avisoInstalar) {                          // Android / PC con Chrome: ventana oficial de instalar
+      avisoInstalar.prompt();
+      avisoInstalar.userChoice.then(function () { avisoInstalar = null; });
+      return;
+    }
+    var iphone = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    mostrarComoInstalar(iphone
+      ? "<b>En iPhone (Safari):</b><ol><li>Toca el botón <b>Compartir</b> (cuadrito con flecha ⬆️) abajo.</li>" +
+        "<li>Baja y toca <b>Agregar a inicio</b>.</li><li>Toca <b>Agregar</b>. ¡Listo! 💰</li></ol>"
+      : "<b>En Android (Chrome):</b><ol><li>Toca los <b>tres puntitos ⋮</b> de Chrome (arriba a la derecha).</li>" +
+        "<li>Toca <b>Instalar app</b> o <b>Agregar a pantalla de inicio</b>.</li><li>Confirma con <b>Instalar</b>. ¡Listo! 💰</li></ol>" +
+        "<b>En iPhone:</b> ábrela en Safari → <b>Compartir ⬆️ → Agregar a inicio</b>." +
+        "<div class='tip'>Primero ábrela desde el enlace de internet (no desde un archivo descargado).</div>");
+  }
+  function mostrarComoInstalar(html) {
+    document.getElementById("textoInstalar").innerHTML = html;
+    document.getElementById("ventanaInstalar").classList.add("abierto");
+  }
+
+  function compartirApp() {
+    cerrarTodo();
+    var texto = "💰 Te recomiendo *My Money*: una app GRATIS para controlar tus gastos en soles y dólares. " +
+                "Funciona sin internet y tus datos se quedan solo en tu celular. By EddiJiro 🇵🇪";
+    if (navigator.share) {                         // menú "Compartir" del celular (WhatsApp, Telegram, correo…)
+      navigator.share({ title: "My Money", text: texto, url: enlaceApp() }).catch(function () {});
+    } else {                                       // computadora sin menú compartir: abrir WhatsApp Web
+      try { navigator.clipboard.writeText(texto + " " + enlaceApp()); } catch (e) {}
+      window.open("https://wa.me/?text=" + encodeURIComponent(texto + "\n👉 " + enlaceApp()), "_blank");
+    }
+  }
+
+  function abrirAcerca() {
+    cerrarTodo();
+    document.getElementById("textoAcerca").innerHTML =
+      "Versión " + VERSION + " · by <b>EddiJiro</b><br><br>" +
+      "Tienes <b>" + movimientos.length + "</b> movimientos, <b>" + cuentas.length + "</b> cuentas y <b>" + fijos.length + "</b> fijos.<br>" +
+      "🔒 Tus datos se guardan solo en este celular.<br><br>" +
+      "<a href='" + enlaceApp() + "' target='_blank'>" + enlaceApp() + "</a>";
+    document.getElementById("ventanaAcerca").classList.add("abierto");
   }
 
 
@@ -3598,6 +4887,14 @@
         lista.push(["bien", "🙌 Vas muy bien con tu gasto personal: usaste el " + Math.round(uso * 100) + "% y ya pasó el " + Math.round(avanceMes * 100) + "% del mes."]);
     }
 
+    // 7. Presupuestos por categoría
+    estadoPresupuestos().forEach(function (e) {
+      if (e.pct >= 100)
+        lista.push(["alerta", "🎯 Pasaste tu presupuesto de " + e.cat.icono + " " + e.cat.nombre + ": llevas S/ " + plata(e.gastado) + " de S/ " + plata(e.presupuesto) + "."]);
+      else if (e.pct >= ajustes.alertaLimite)
+        lista.push(["cuidado", "🎯 Ya usaste el " + Math.round(e.pct) + "% de tu presupuesto de " + e.cat.icono + " " + e.cat.nombre + ". Te quedan S/ " + plata(e.presupuesto - e.gastado) + "."]);
+    });
+
     // Primero las alertas, luego los "cuidado", al final las buenas noticias
     var orden = { alerta: 0, cuidado: 1, bien: 2 };
     lista.sort(function (a, b) { return orden[a[0]] - orden[b[0]]; });
@@ -3614,14 +4911,25 @@
     calcular();
     mostrarLimite();
     mostrarCuentas();
+    mostrarPresupuestos();
     mostrarGraficosGenerales();
     if (cuentaAbierta) mostrarCuentaAbierta();
     if (pantallaMovsAbierta) mostrarMovimientosMes();
   }
 
   aplicarAjustes();   // modo oscuro y secciones
+  generarFijos();     // anota solos los movimientos fijos que ya tocaban
   refrescar();        // ¡Encender todo al abrir la app!
   mostrarBloqueo();   // pide el PIN si tienes uno
+  mostrarSaludo();
+  if (!ajustes.nombre) abrirNombre(true);   // la primera vez pregunta el nombre…
+  else tutorialPrimeraVez();                // …y luego muestra el tutorial
+  mostrarPortada();     // la portada con frase peruana (va encima de todo)
+
+  // El "guardián" (service worker): guarda una copia de la app en el celular para abrirla sin internet
+  if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+    navigator.serviceWorker.register("sw.js").catch(function () {});
+  }
 </script>
 </body>
 </html>
