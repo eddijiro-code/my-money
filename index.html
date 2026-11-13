@@ -1407,6 +1407,7 @@
     movimientos.forEach(function (m) {
       if (m.fecha.slice(0, 7) !== mesTexto()) return;   // otro mes: no cuenta
       if (!t[m.tipo]) return;                            // los ajustes no van en las casillas
+      if (!cuentaEnGraficos(m)) return;                  // AFP, seguros… (no suman al total) tampoco
       t[m.tipo][monedaDe(m.cuenta)] += m.monto;
     });
 
