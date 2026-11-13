@@ -9,9 +9,9 @@
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="My Money 2">
+<meta name="apple-mobile-web-app-title" content="My Money">
 <!-- Nombre que sale en la pestañita del navegador -->
-<title>My Money 2</title>
+<title>My Money</title>
 
 <!-- ============ CSS = LA PINTURA (colores, tamaños) ============ -->
 <style>
@@ -532,6 +532,8 @@
   .rank-txt { display: flex; justify-content: space-between; font-size: 14px; gap: 8px; }
   .rank-txt small { color: #6b7280; font-weight: normal; }
   .rank .barrita { height: 8px; margin-top: 4px; }
+  .msj-importar { position: fixed; left: 50%; top: 40%; transform: translate(-50%, -50%); z-index: 200; background: #16a34a; color: white;
+    padding: 18px 22px; border-radius: 16px; font-weight: bold; text-align: center; max-width: 80%; box-shadow: 0 10px 30px rgba(0,0,0,.3); }
 </style>
 </head>
 
@@ -685,6 +687,12 @@
   <div class="tarjeta" data-seccion="dona">
     <h3>🍩 Gastos por categoría</h3>
     <div id="donaGeneral"></div>
+  </div>
+
+  <!-- DONA DE INGRESOS POR CATEGORÍA -->
+  <div class="tarjeta" data-seccion="donaIng">
+    <h3>🍩 Ingresos por categoría</h3>
+    <div id="donaIngresos"></div>
   </div>
 
   <!-- 7. MENSAJES: alertas y motivación -->
@@ -856,7 +864,7 @@
     <div id="importarInfo" class="tuto-texto"></div>
     <p class="aviso" style="text-align:left">¿Cómo quieres importarlo?</p>
     <button class="btn-grande" style="margin-bottom:8px" onclick="aplicarImportar('combinar')">➕ Combinar<br><small style="font-weight:normal">Agrega lo que no tienes aquí, sin borrar nada</small></button>
-    <button class="btn-peligro" style="margin-bottom:8px" onclick="aplicarImportar('reemplazar')">🔄 Reemplazar todo<br><small style="font-weight:normal">Deja la app igual que en el Excel (ideal para celular nuevo)</small></button>
+    <button id="btnReemplazar" class="btn-peligro" style="margin-bottom:8px" onclick="aplicarImportar('reemplazar')">🔄 Reemplazar todo<br><small style="font-weight:normal">Deja la app igual que en el Excel (ideal para celular nuevo)</small></button>
     <button class="btn-cancelar" style="width:100%;padding:12px;border:none;border-radius:10px;font-size:16px" onclick="cerrarImportar()">Cancelar</button>
   </div>
 </div>
@@ -1139,11 +1147,11 @@
 
   // Si editaste tus cuentas, la app usa la versión guardada
   try {
-    var gc = localStorage.getItem("mymoney2_cuentas");
+    var gc = localStorage.getItem("mymoney_cuentas");
     if (gc) cuentas = JSON.parse(gc);
   } catch (e) {}
   function guardarCuentas() {
-    try { localStorage.setItem("mymoney2_cuentas", JSON.stringify(cuentas)); } catch (e) {}
+    try { localStorage.setItem("mymoney_cuentas", JSON.stringify(cuentas)); } catch (e) {}
   }
 
   // --- Tus movimientos ---
@@ -1153,24 +1161,24 @@
   // Las transferencias además tienen:  destino: "Interbank", montoDestino: 15
   var movimientos = [];
   try {
-    var g = localStorage.getItem("mymoney2_movimientos");
+    var g = localStorage.getItem("mymoney_movimientos");
     if (g) movimientos = JSON.parse(g);
   } catch (e) {}
 
   function guardarTodo() {
-    try { localStorage.setItem("mymoney2_movimientos", JSON.stringify(movimientos)); } catch (e) {}
+    try { localStorage.setItem("mymoney_movimientos", JSON.stringify(movimientos)); } catch (e) {}
   }
 
   // --- Límite de uso personal (se guarda en tu navegador) ---
   var limitePersonal = 500;
   try {
-    var gl = localStorage.getItem("mymoney2_limite");
+    var gl = localStorage.getItem("mymoney_limite");
     if (gl !== null) limitePersonal = Number(gl);
   } catch (e) {}
 
   var tipoCambio = 3.75;     // 1 dólar = 3.75 soles (la app recuerda el último que uses)
   try {
-    var gtc = localStorage.getItem("mymoney2_tc");
+    var gtc = localStorage.getItem("mymoney_tc");
     if (gtc) tipoCambio = Number(gtc);
   } catch (e) {}
 
@@ -1188,7 +1196,7 @@
     ocultas: []           // secciones escondidas de la vista general
   };
   try {
-    var gaj = localStorage.getItem("mymoney2_ajustes");
+    var gaj = localStorage.getItem("mymoney_ajustes");
     if (gaj) { gaj = JSON.parse(gaj); for (var k in gaj) ajustes[k] = gaj[k]; }
   } catch (e) {}
 
@@ -1242,7 +1250,7 @@
 
   // Si editaste las categorías desde la app, se usa la versión guardada
   try {
-    var gcat = localStorage.getItem("mymoney2_categorias");
+    var gcat = localStorage.getItem("mymoney_categorias");
     if (gcat) {
       gcat = JSON.parse(gcat);
       categoriasGasto = gcat.gasto;
@@ -1251,7 +1259,7 @@
   } catch (e) {}
   function guardarCategorias() {
     try {
-      localStorage.setItem("mymoney2_categorias", JSON.stringify({ gasto: categoriasGasto, ingreso: categoriasIngreso }));
+      localStorage.setItem("mymoney_categorias", JSON.stringify({ gasto: categoriasGasto, ingreso: categoriasIngreso }));
     } catch (e) {}
   }
 
@@ -1547,7 +1555,7 @@
     var valor = Number(document.getElementById("nuevoLimite").value);
     if (isNaN(valor) || valor < 0) return;
     limitePersonal = valor;
-    try { localStorage.setItem("mymoney2_limite", valor); } catch (e) {}
+    try { localStorage.setItem("mymoney_limite", valor); } catch (e) {}
     document.getElementById("editarLimite").classList.remove("abierto");
     mostrarLimite();
   }
@@ -2067,7 +2075,7 @@
         m.tipoCambio = Number(document.getElementById("fTipoCambio").value);
         // Recordar este tipo de cambio para la próxima vez
         tipoCambio = m.tipoCambio;
-        try { localStorage.setItem("mymoney2_tc", tipoCambio); } catch (e) {}
+        try { localStorage.setItem("mymoney_tc", tipoCambio); } catch (e) {}
       } else {
         m.montoDestino = monto;
       }
@@ -2083,7 +2091,7 @@
         if (precio > 0) {
           m.precioComb = precio; m.unidadComb = unidadComb;
           ajustes.precioComb = precio; ajustes.unidadComb = unidadComb;    // recordar para la próxima vez
-          try { localStorage.setItem("mymoney2_ajustes", JSON.stringify(ajustes)); } catch (e) {}
+          try { localStorage.setItem("mymoney_ajustes", JSON.stringify(ajustes)); } catch (e) {}
         }
         if (odo > 0) m.odometro = odo;
         m.tanqueLleno = document.getElementById("fLleno").checked;
@@ -2275,7 +2283,7 @@
     if (vistaDetalle === "ajustar") {
       html = '<div class="tarjeta">' +
         cajitas([["Saldo en la app", s + plata(saldoDe(c.nombre))]]) +
-        '<p class="aviso" style="text-align:left">Escribe cuánto tienes de verdad en esta cuenta. Si es más de lo que dice la app, se registra un "Ajuste positivo"; si es menos, un "Ajuste negativo".</p>' +
+        '<p class="aviso" style="text-align:left">Escribe cuánto tienes de verdad en esta cuenta. Si es más de lo que dice la app, se anota un <b>ingreso</b>; si es menos, un <b>gasto</b>, ambos en la categoría <b>⚖️ Ajustes</b>.</p>' +
         '<div class="campo"><label>Saldo real (' + s.trim() + ')</label><input type="number" step="0.01" id="aSaldo" value="' + saldoDe(c.nombre).toFixed(2) + '"></div>' +
         '<div class="campo"><label>Fecha</label><input type="date" id="aFecha" value="' + hoyTexto() + '"></div>' +
         '<div class="error" id="aError"></div>' +
@@ -2410,6 +2418,31 @@
     refrescar();
   }
 
+  // ---- Los ajustes se vuelven ingresos o gastos de la categoría "Ajustes" ----
+  function movimientoAjuste(a) {
+    var m = { id: a.id, fecha: a.fecha, tipo: a.monto >= 0 ? "ingreso" : "gasto", monto: Math.abs(a.monto), cuenta: a.cuenta,
+              categoria: "Ajustes", subcategoria: "Ajuste de saldo", nota: a.nota || "Ajuste de saldo" };
+    if (m.tipo === "gasto") { m.ambito = "General"; m.tipoGasto = "Cotidiana"; m.personal = false; }
+    return m;
+  }
+  function asegurarCatAjustes() {
+    [categoriasGasto, categoriasIngreso].forEach(function (lista) {
+      var c = lista.filter(function (x) { return x.nombre === "Ajustes"; })[0];
+      if (!c) lista.push({ nombre: "Ajustes", icono: "⚖️", subs: ["Ajuste de saldo"] });
+      else if (c.subs.indexOf("Ajuste de saldo") === -1) c.subs.push("Ajuste de saldo");
+    });
+  }
+  // Convierte los ajustes antiguos (tipo "ajuste") en ingresos/gastos — se hace una sola vez
+  function convertirAjustes() {
+    var hubo = false;
+    movimientos = movimientos.map(function (m) {
+      if (m.tipo !== "ajuste") return m;
+      hubo = true;
+      return movimientoAjuste(m);
+    });
+    if (hubo) { asegurarCatAjustes(); guardarTodo(); guardarCategorias(); }
+  }
+
   // ---- Guardar el ajuste de saldo ----
   function guardarAjuste() {
     var real = Number(document.getElementById("aSaldo").value);
@@ -2417,8 +2450,10 @@
     if (isNaN(real) || document.getElementById("aSaldo").value === "") { document.getElementById("aError").textContent = "Escribe el saldo real."; return; }
     var diferencia = Math.round((real - saldoDe(cuentaAbierta)) * 100) / 100;
     if (diferencia !== 0) {
-      movimientos.push({ id: Date.now(), fecha: fecha || hoyTexto(), tipo: "ajuste", monto: diferencia, cuenta: cuentaAbierta, nota: "" });
-      guardarTodo();
+      // El ajuste se anota como INGRESO (si sube) o GASTO (si baja), categoría "Ajustes"
+      movimientos.push(movimientoAjuste({ id: Date.now(), fecha: fecha || hoyTexto(), monto: diferencia, cuenta: cuentaAbierta }));
+      asegurarCatAjustes();
+      guardarTodo(); guardarCategorias();
     }
     cerrarDetalle();
     refrescar();
@@ -2438,7 +2473,7 @@
     // ajPos / ajNeg = ajustes positivos y negativos (cuentan en el FLUJO DE CAJA)
     var r = { ingresos: 0, gastos: 0, ajPos: 0, ajNeg: 0 };
     movimientos.forEach(function (m) {
-      if (m.fecha < desde || m.fecha > hasta) return;
+      if (m.fecha < desde || m.fecha > hasta || !cuentaEnGraficos(m)) return;   // AFP, seguros… no cuentan
       var v = enSoles(m.monto, monedaDe(m.cuenta));
       if (m.tipo === "ingreso") r.ingresos += v;
       if (m.tipo === "gasto")   r.gastos   += v;
@@ -2547,6 +2582,45 @@
     return d;
   }
 
+  // Cómo se llega del saldo inicial al saldo final (para que cuadren los gráficos)
+  // Saldo de una moneda (solo cuentas que suman al total)
+  function saldoMoneda(mon, hasta) {
+    var t = 0;
+    cuentas.forEach(function (c) { if (sumaAlTotal(c) && (c.moneda === "USD" ? "USD" : "PEN") === mon) t += saldoDe(c.nombre, hasta); });
+    return t;
+  }
+  // Cómo se llega del saldo inicial al final, en SOLES y en DÓLARES por separado
+  function cuadreSaldo(desde, hasta) {
+    var d0 = new Date(desde + "T12:00:00"); d0.setDate(d0.getDate() - 1);
+    var antes = d0.getFullYear() + "-" + String(d0.getMonth() + 1).padStart(2, "0") + "-" + String(d0.getDate()).padStart(2, "0");
+    var x = {};
+    ["PEN", "USD"].forEach(function (mon) {
+      var r = { ini: saldoMoneda(mon, antes), fin: saldoMoneda(mon, hasta), ing: 0, gas: 0 };
+      movimientos.forEach(function (m) {
+        if (m.fecha < desde || m.fecha > hasta || !cuentaEnGraficos(m)) return;
+        if ((monedaDe(m.cuenta) === "USD" ? "USD" : "PEN") !== mon) return;
+        if (m.tipo === "ingreso") r.ing += m.monto;
+        if (m.tipo === "gasto")   r.gas += m.monto;
+      });
+      r.otros = r.fin - r.ini - r.ing + r.gas;   // cambios de moneda y transferencias a cuentas fuera del total
+      x[mon] = r;
+    });
+    function fila(t, a, b, neg) {
+      if (Math.abs(a) < 0.005) a = 0; if (Math.abs(b) < 0.005) b = 0;   // evita "-0.00"
+      return '<tr' + (neg ? ' style="font-weight:bold"' : '') + '><td>' + t + '</td><td style="text-align:right">S/ ' + plata(a) + '</td>' +
+             '<td style="text-align:right">$ ' + plata(b) + '</td></tr>';
+    }
+    var hayOtros = Math.abs(x.PEN.otros) >= 0.01 || Math.abs(x.USD.otros) >= 0.01;
+    return '<table class="tabla cuadre" style="margin-top:8px;font-size:13px">' +
+      '<tr><td></td><td style="text-align:right">' + banderaHTML("PE") + ' Soles</td><td style="text-align:right">' + banderaHTML("US") + ' Dólares</td></tr>' +
+      fila("Saldo al inicio", x.PEN.ini, x.USD.ini) +
+      fila("+ Ingresos", x.PEN.ing, x.USD.ing) +
+      fila("− Gastos", -x.PEN.gas, -x.USD.gas) +
+      (hayOtros ? fila("± Cambios de moneda / transferencias", x.PEN.otros, x.USD.otros) : "") +
+      fila("= Saldo al final", x.PEN.fin, x.USD.fin, true) + '</table>' +
+      '<div class="aviso">Todo junto en soles: S/ ' + plata(x.PEN.fin + x.USD.fin * tipoCambio) + ' (con $1 = S/ ' + tipoCambio + ')</div>';
+  }
+
   function mostrarCurvasYDona() {
     // ---- Pedacitos del periodo ----
     var pz = [], hoyT = hoyTexto();
@@ -2586,45 +2660,32 @@
       '</div>' +
       cajitas([["🟢 Ingresos", "S/ " + plata(periodoCurvas === "mes" ? ing[u] : ing.reduce(function (a, b) { return a + b; }, 0)), "#16a34a"],
                ["🔴 Gastos",   "S/ " + plata(periodoCurvas === "mes" ? gas[u] : gas.reduce(function (a, b) { return a + b; }, 0)), "#dc2626"],
-               ["🔵 Saldo",    "S/ " + plata(sal[u]), "#2563eb"]]) +
+               ["🔵 Saldo",    "S/ " + plata(saldoMoneda("PEN", pz[u].hasta)) + '<br><small>$ ' + plata(saldoMoneda("USD", pz[u].hasta)) + '</small>', "#2563eb"]]) +
       dibujo +
-      '<div class="aviso">' + (periodoCurvas === "mes" ? "Ingresos y gastos acumulados día a día" : "Ingresos y gastos de cada mes") + ' · Saldo de todas tus cuentas</div>';
+      '<div class="aviso">' + (periodoCurvas === "mes" ? "Ingresos y gastos acumulados día a día" : "Ingresos y gastos de cada mes") + ' · La curva azul es tu saldo total pasado a soles (dólares × ' + tipoCambio + ')</div>' +
+      cuadreSaldo(pz[0].desde, pz[pz.length - 1].hasta);
 
-    // ---- DONA DE GASTOS POR CATEGORÍA ----
+    // ---- DONAS DE GASTOS E INGRESOS POR CATEGORÍA (tocar = ver sus movimientos) ----
     var rg = periodoCurvas === "mes" ? [mesTexto() + "-01", mesTexto() + "-31"] : [anioActual + "-01-01", anioActual + "-12-31"];
-    var porCat = {}, totalG = 0;
-    movimientos.forEach(function (m) {
-      if (m.tipo !== "gasto" || m.fecha < rg[0] || m.fecha > rg[1]) return;
-      var v = enSoles(m.monto, monedaDe(m.cuenta));
-      porCat[m.categoria] = (porCat[m.categoria] || 0) + v;
-      totalG += v;
-    });
-    var cats = Object.keys(porCat).sort(function (a, b) { return porCat[b] - porCat[a]; });
-    var colores = ["#2563eb", "#dc2626", "#16a34a", "#f97316", "#9333ea", "#0891b2", "#ca8a04", "#db2777", "#65a30d", "#6b7280", "#7c3aed"];
-
-    var html = "";
-    if (!cats.length) {
-      html = '<div class="vacio">No hay gastos en ' + (periodoCurvas === "mes" ? meses[mesActual] + " " + anioActual : "el año " + anioActual) + '.</div>';
-    } else {
-      var R = 60, C = 2 * Math.PI * R, avance = 0, aros = "";
-      cats.forEach(function (cat, i) {
-        var parte = porCat[cat] / totalG * C;
-        aros += '<circle cx="90" cy="90" r="' + R + '" fill="none" stroke="' + colores[i % colores.length] + '" stroke-width="26"' +
-                ' stroke-dasharray="' + parte + ' ' + (C - parte) + '" stroke-dashoffset="' + (-avance) + '" transform="rotate(-90 90 90)"/>';
-        avance += parte;
+    var nomP = periodoCurvas === "mes" ? meses[mesActual] + " " + anioActual : "Año " + anioActual;
+    function donaDe(tipo) {
+      var porCat = {}, total = 0;
+      movimientos.forEach(function (m) {
+        if (m.tipo !== tipo || m.fecha < rg[0] || m.fecha > rg[1] || !cuentaEnGraficos(m)) return;
+        var v = enSoles(m.monto, monedaDe(m.cuenta));
+        porCat[m.categoria] = (porCat[m.categoria] || 0) + v;
+        total += v;
       });
-      html = '<div class="dona"><svg viewBox="0 0 180 180">' + aros +
-               '<text x="90" y="84" text-anchor="middle" font-size="11" fill="#6b7280">Total</text>' +
-               '<text x="90" y="104" text-anchor="middle" font-size="17" font-weight="bold" fill="#1d2433">S/ ' + Math.round(totalG).toLocaleString("es-PE") + '</text>' +
-             '</svg></div>' +
-             '<div class="leyenda">' + cats.map(function (cat, i) {
-               return '<div><span class="punto" style="background:' + colores[i % colores.length] + '"></span>' +
-                      '<span class="cat">' + limpio(cat) + '</span><b>S/ ' + plata(porCat[cat]) + '</b>' +
-                      '<small>' + Math.round(porCat[cat] / totalG * 100) + '%</small></div>';
-             }).join("") + '</div>';
+      var lista = Object.keys(porCat).sort(function (a, b) { return porCat[b] - porCat[a]; }).map(function (cat) {
+        var c = buscarCategoria(cat, tipo);
+        return [(c ? c.icono + " " : "") + limpio(cat), porCat[cat], accionCategoria(cat, tipo, rg[0], rg[1], nomP)];
+      });
+      var cab = '<div class="aviso" style="margin:-4px 0 8px">' + nomP + '</div>';
+      if (!lista.length) return cab + '<div class="vacio">No hay ' + (tipo === "gasto" ? "gastos" : "ingresos") + ' en ' + nomP + '.</div>';
+      return cab + donaHTML(lista, total) + '<div class="aviso">👆 Toca una categoría para ver sus movimientos con fecha</div>';
     }
-    document.getElementById("donaGeneral").innerHTML =
-      '<div class="aviso" style="margin:-4px 0 8px">' + (periodoCurvas === "mes" ? meses[mesActual] + " " + anioActual : "Año " + anioActual) + '</div>' + html;
+    document.getElementById("donaGeneral").innerHTML = donaDe("gasto");
+    document.getElementById("donaIngresos").innerHTML = donaDe("ingreso");
   }
 
 
@@ -2633,6 +2694,8 @@
   // =========================================================
   // ¿Esta cuenta se suma al total? (si nunca lo elegiste, sí se suma)
   function sumaAlTotal(c) { return c.enTotal !== false; }
+  // ¿Este movimiento cuenta en los gráficos y reportes? (no, si su cuenta no se suma al total: AFP, seguros…)
+  function cuentaEnGraficos(m) { var c = buscarCuenta(m.cuenta); return !c || sumaAlTotal(c); }
 
   function abrirAdminCuentas() {
     cerrarTodo();
@@ -2746,11 +2809,13 @@
 
   // ---- Ver los movimientos de una categoría (desde Reportes) ----
   var filtroCatMovs = null;
-  function accionCategoria(nombre, tipo) {
-    return "verCategoriaMovs('" + String(nombre).replace(/'/g, "\\'").replace(/"/g, "&quot;") + "','" + tipo + "')";
+  // desde/hasta/etiqueta (opcionales): para ver un año entero o todo el historial
+  function accionCategoria(nombre, tipo, desde, hasta, etiqueta) {
+    function t(x) { return "'" + String(x == null ? "" : x).replace(/'/g, "\\'").replace(/"/g, "&quot;") + "'"; }
+    return "verCategoriaMovs(" + [t(nombre), t(tipo), t(desde), t(hasta), t(etiqueta)].join(",") + ")";
   }
-  function verCategoriaMovs(nombre, tipo) {
-    filtroCatMovs = { nombre: nombre, tipo: tipo };
+  function verCategoriaMovs(nombre, tipo, desde, hasta, etiqueta) {
+    filtroCatMovs = { nombre: nombre, tipo: tipo, desde: desde || "", hasta: hasta || "", etiqueta: etiqueta || "" };
     filtroMovs = "todos";
     document.getElementById("buscarMovs").value = "";
     document.getElementById("buscarTodo").checked = false;
@@ -2801,7 +2866,9 @@
     if (texto) base = base.filter(function (m) { return coincide(m, texto); });
     // Filtro por categoría (cuando vienes de tocar una categoría en Reportes)
     if (filtroCatMovs) {
-      base = (enTodo ? movimientos : delMes).filter(function (m) { return m.categoria === filtroCatMovs.nombre && m.tipo === filtroCatMovs.tipo; });
+      var fc = filtroCatMovs;
+      base = (fc.desde ? movimientos.filter(function (m) { return m.fecha >= fc.desde && m.fecha <= fc.hasta; }) : enTodo ? movimientos : delMes)
+        .filter(function (m) { return m.categoria === fc.nombre && m.tipo === fc.tipo && cuentaEnGraficos(m); });
       if (texto) base = base.filter(function (m) { return coincide(m, texto); });
     }
 
@@ -2821,7 +2888,7 @@
       var sumaC = 0; lista.forEach(function (m) { sumaC += enSoles(m.monto, monedaDe(m.cuenta)); });
       var cat = buscarCategoria(filtroCatMovs.nombre, filtroCatMovs.tipo);
       rb.innerHTML = '<div class="filtro-cat"><span>' + (cat ? cat.icono + ' ' : '🏷️ ') + '<b>' + limpio(filtroCatMovs.nombre) + '</b> · ' +
-        (enTodo ? 'todos los meses' : meses[mesActual] + ' ' + anioActual) + '<br>' + lista.length + ' movimiento(s) · <b>S/ ' + plata(sumaC) + '</b></span>' +
+        (filtroCatMovs.desde ? limpio(filtroCatMovs.etiqueta) : enTodo ? 'todos los meses' : meses[mesActual] + ' ' + anioActual) + '<br>' + lista.length + ' movimiento(s) · <b>S/ ' + plata(sumaC) + '</b></span>' +
         '<button onclick="quitarFiltroCat()">✕ Quitar</button></div>';
     } else if (texto) {
       var sg = 0, si = 0;
@@ -3038,11 +3105,12 @@
     ["economia", "🐷 Economía mensual"],
     ["curvas",   "📈 Ingresos, gastos y saldo"],
     ["dona",     "🍩 Gastos por categoría"],
+    ["donaIng",  "🍩 Ingresos por categoría"],
     ["alertas",  "💬 Mis alertas y consejos"]
   ];
 
   function guardarAjustes() {
-    try { localStorage.setItem("mymoney2_ajustes", JSON.stringify(ajustes)); } catch (e) {}
+    try { localStorage.setItem("mymoney_ajustes", JSON.stringify(ajustes)); } catch (e) {}
     avisoGuardado();
   }
   // Mensajito "Guardado ✓" abajo de la pantalla
@@ -3162,13 +3230,13 @@
   function cambiarTipoCambio(v) {
     v = Number(v); if (!(v > 0)) return;
     tipoCambio = v;
-    try { localStorage.setItem("mymoney2_tc", v); } catch (e) {}
+    try { localStorage.setItem("mymoney_tc", v); } catch (e) {}
     avisoGuardado();
   }
   function cambiarLimite(v) {
     v = Number(v); if (isNaN(v) || v < 0) return;
     limitePersonal = v;
-    try { localStorage.setItem("mymoney2_limite", v); } catch (e) {}
+    try { localStorage.setItem("mymoney_limite", v); } catch (e) {}
     avisoGuardado();
   }
   function mostrarSeccion(id, visible) {
@@ -3233,8 +3301,8 @@
     var palabra = prompt("Para confirmar, escribe BORRAR en mayúsculas:");
     if (palabra !== "BORRAR") { alert("No se borró nada."); return; }
     try {
-      ["mymoney2_movimientos", "mymoney2_cuentas", "mymoney2_categorias", "mymoney2_limite", "mymoney2_tc", "mymoney2_ajustes"]
-        .concat(["mymoney2_tutorial_visto", "mymoney2_fijos"]).forEach(function (k) { localStorage.removeItem(k); });
+      ["mymoney_movimientos", "mymoney_cuentas", "mymoney_categorias", "mymoney_limite", "mymoney_tc", "mymoney_ajustes"]
+        .concat(["mymoney_tutorial_visto", "mymoney_fijos"]).forEach(function (k) { localStorage.removeItem(k); });
     } catch (e) {}
     location.reload();
   }
@@ -3257,6 +3325,65 @@
     document.querySelector(".fab").style.display = "";
   }
   function elegirPeriodoReporte(p) { periodoReporte = p; mostrarReportes(); }
+
+  // ---- REPORTES: dona de cuentas y evolución de las cuentas que no suman ----
+  var repCuentas = "suman";      // "suman", "no" o "todas"
+  var repEvo = "cada";           // "cada" (una curva por cuenta) o "suma" (una sola curva)
+  function elegirRepCuentas(v) { repCuentas = v; mostrarReportes(); }
+  function elegirRepEvo(v) { repEvo = v; mostrarReportes(); }
+  function seccionCuentasReporte(pz, hasta) {
+    var hoyT = hoyTexto(), corte = hasta < hoyT ? hasta : hoyT;
+    var colores = ["#2563eb", "#dc2626", "#16a34a", "#f97316", "#9333ea", "#0891b2", "#ca8a04", "#db2777", "#65a30d", "#6b7280", "#7c3aed"];
+    function boton(v, txt, actual, fn) {
+      return '<button class="' + (actual === v ? "on" : "") + '" onclick="' + fn + '(\'' + String(v).replace(/'/g, "\\'") + '\')">' + txt + '</button>';
+    }
+    // 1) DONA: saldo de cada cuenta (en soles) al final del periodo
+    var lista = cuentas.filter(function (c) {
+      return repCuentas === "todas" || (repCuentas === "suman" ? sumaAlTotal(c) : !sumaAlTotal(c));
+    }).map(function (c) {
+      return [(c.icono ? c.icono + " " : "") + limpio(c.nombre) + (c.moneda === "USD" ? " ($)" : ""), enSoles(saldoDe(c.nombre, corte), c.moneda)];
+    });
+    var negativas = lista.filter(function (x) { return x[1] < 0; });
+    var positivas = lista.filter(function (x) { return x[1] > 0.004; }).sort(function (a, b) { return b[1] - a[1]; });
+    var total = positivas.reduce(function (a, x) { return a + x[1]; }, 0);
+    var html = '<div class="tarjeta"><h3>🏦 Saldo por cuenta</h3>' +
+      '<div class="periodos">' + boton("suman", "Suman al total", repCuentas, "elegirRepCuentas") +
+        boton("no", "No suman", repCuentas, "elegirRepCuentas") + boton("todas", "Todas", repCuentas, "elegirRepCuentas") + '</div>' +
+      '<div class="aviso" style="margin:-2px 0 8px">Saldo al ' + corte.split("-").reverse().join("/") + ' · los dólares en soles (× ' + tipoCambio + ')</div>' +
+      (positivas.length ? donaHTML(positivas, total) : '<div class="vacio">No hay cuentas con saldo en este grupo.</div>') +
+      (negativas.length ? '<div class="aviso">⚠️ Con saldo negativo (no entran en la dona): ' +
+        negativas.map(function (x) { return x[0] + " S/ " + plata(x[1]); }).join(" · ") + '</div>' : '') +
+      '</div>';
+
+    // 2) EVOLUCIÓN de las cuentas que NO suman
+    var fuera = cuentas.filter(function (c) { return !sumaAlTotal(c); });
+    html += '<div class="tarjeta"><h3>🔒 Evolución de cuentas que no suman</h3>';
+    if (!fuera.length) return html + '<div class="vacio">Todas tus cuentas suman al total.<br>Para excluir una (AFP, seguros…), ve a ☰ → Cuentas.</div></div>';
+    if (repEvo !== "suma") repEvo = "cada";
+    var hastaHoy = pz.filter(function (x) { return x.desde <= hoyT; });
+    if (!hastaHoy.length) hastaHoy = [pz[0]];
+    var etiquetas = pz.map(function (x) { return x.etiqueta; });
+    function serie(c) { return hastaHoy.map(function (x) { return enSoles(saldoDe(c.nombre, x.hasta < hoyT ? x.hasta : hoyT), c.moneda); }); }
+    var series = [], cols = [], nombres = [];
+    if (repEvo === "suma") {
+      var suma = hastaHoy.map(function () { return 0; });
+      fuera.forEach(function (c) { serie(c).forEach(function (v, i) { suma[i] += v; }); });
+      series = [suma]; cols = ["#7c3aed"]; nombres = ["Todas (suma)"];
+    } else {
+      fuera.forEach(function (c, i) {
+        if (repEvo !== "cada" && c.nombre !== repEvo) return;
+        series.push(serie(c)); cols.push(colores[i % colores.length]); nombres.push(c.nombre);
+      });
+    }
+    var finales = series.map(function (s) { return s[s.length - 1]; });
+    html += '<div class="periodos">' + boton("cada", "Cada una", repEvo, "elegirRepEvo") +
+        boton("suma", "Todas (suma)", repEvo, "elegirRepEvo") + '</div>' +
+      graficoLineas(series, cols, etiquetas, series.length === 1, nombres) +
+      '<div class="leyenda-mini">' + nombres.map(function (n, i) {
+        return '<span><i style="background:' + cols[i] + '"></i>' + limpio(n) + ': S/ ' + plata(finales[i]) + '</span>'; }).join("") + '</div>' +
+      '<div class="aviso">Saldo de cada ' + (periodoReporte === "mes" ? "día" : "mes") + ' en soles. Estas cuentas no entran en tus ingresos, gastos ni saldo total.</div></div>';
+    return html;
+  }
 
   // Pedacitos del periodo para TODAS las cuentas: días (mes), meses (año), meses (acumulado)
   function pedazosGlobal(p) {
@@ -3316,7 +3443,7 @@
     var pz = pedazosGlobal(p);
     var desde = pz[0].desde, hasta = pz[pz.length - 1].hasta;
     var etiquetas = pz.map(function (x) { return x.etiqueta; });
-    var enRango = movimientos.filter(function (m) { return m.fecha >= desde && m.fecha <= hasta; });
+    var enRango = movimientos.filter(function (m) { return m.fecha >= desde && m.fecha <= hasta && cuentaEnGraficos(m); });
     var html = "";
 
     // ---- Selector Mes / Año / Acumulado ----
@@ -3406,11 +3533,11 @@
       var detalle = subs.length ? '<div class="subs-rep">' + subs.map(function (s) {
         return '<span>' + limpio(s[0]) + ': S/ ' + plata(s[1]) + '</span>';
       }).join("") + '</div>' : '';
-      return [conIcono(x[0], "gasto"), x[1], detalle, accionCategoria(x[0], "gasto")];
+      return [conIcono(x[0], "gasto"), x[1], detalle, accionCategoria(x[0], "gasto", desde, hasta, nombrePeriodoReporte())];
     });
 
     html += '<div class="tarjeta"><h3>🏷️ Gastos por categoría</h3>' +
-      donaHTML(ordenar(porCat).map(function (x) { return [conIcono(x[0], "gasto"), x[1], accionCategoria(x[0], "gasto")]; }), tot.gastos) +
+      donaHTML(ordenar(porCat).map(function (x) { return [conIcono(x[0], "gasto"), x[1], accionCategoria(x[0], "gasto", desde, hasta, nombrePeriodoReporte())]; }), tot.gastos) +
       '<h3 style="margin-top:16px">🏆 Ranking con subcategorías</h3>' +
       barrasRanking(listaCat, tot.gastos, "#dc2626") + '</div>';
     html += '<div class="tarjeta"><h3>🎯 Por ámbito</h3>' +
@@ -3418,8 +3545,14 @@
       '<h3 style="margin-top:14px">🧭 Por tipo</h3>' +
       barrasRanking(ordenar(porTipo).map(function (x) { var t = tiposGasto.filter(function (y) { return y.nombre === x[0]; })[0]; return [(t ? t.icono + " " : "") + x[0], x[1]]; }), tot.gastos, "#9333ea") +
       '</div>';
+    var listaIng = ordenar(porIng).map(function (x) { return [conIcono(x[0], "ingreso"), x[1], accionCategoria(x[0], "ingreso", desde, hasta, nombrePeriodoReporte())]; });
     html += '<div class="tarjeta"><h3>💰 Ingresos por categoría</h3>' +
-      barrasRanking(ordenar(porIng).map(function (x) { return [conIcono(x[0], "ingreso"), x[1], "", accionCategoria(x[0], "ingreso")]; }), tot.ingresos, "#16a34a") + '</div>';
+      (listaIng.length ? donaHTML(listaIng, tot.ingresos, "#16a34a") +
+        '<div class="aviso">👆 Toca un ingreso para ver sus movimientos con fecha</div>' +
+        '<h3 style="margin-top:16px">🏆 Ranking de ingresos</h3>' +
+        barrasRanking(listaIng.map(function (x) { return [x[0], x[1], "", x[2]]; }), tot.ingresos, "#16a34a")
+        : '<div class="vacio">No hay ingresos en este periodo.</div>') + '</div>';
+    html += seccionCuentasReporte(pz, hasta);
 
     // =====================================================
     // 3. COMBUSTIBLE
@@ -3550,7 +3683,7 @@
   // Varias curvas suaves en un mismo gráfico
   // Dona: lista = [[nombre, monto], ...] ordenada de mayor a menor
   function donaHTML(lista, total) {
-    if (!lista.length || !total) return '<div class="vacio">No hay gastos en este periodo.</div>';
+    if (!lista.length || !total) return '<div class="vacio">No hay movimientos en este periodo.</div>';
     var colores = ["#2563eb", "#dc2626", "#16a34a", "#f97316", "#9333ea", "#0891b2", "#ca8a04", "#db2777", "#65a30d", "#6b7280", "#7c3aed"];
     var R = 60, C = 2 * Math.PI * R, avance = 0, aros = "";
     lista.forEach(function (x, i) {
@@ -3800,7 +3933,7 @@
         g.series.map(function (s, i) {
           return serie(s, i, '<c:spPr><a:ln w="31750" cap="rnd"><a:solidFill><a:srgbClr val="' + s.color + '"/></a:solidFill></a:ln></c:spPr>' +
                        '<c:marker><c:symbol val="circle"/><c:size val="4"/><c:spPr><a:solidFill><a:srgbClr val="' + s.color + '"/></a:solidFill></c:spPr></c:marker>',
-                       '<c:smooth val="1"/>');
+                       '<c:smooth val="' + (g.recta ? 0 : 1) + '"/>');
         }).join("") + '<c:marker val="1"/><c:axId val="5001"/><c:axId val="5002"/></c:lineChart>' + ejes(g.min), g.series.length > 1 ? "b" : null);
     }
     // dona
@@ -3856,7 +3989,7 @@
     poner(h, f, 0, { v: "− Gastos" });                                  poner(h, f++, 1, { v: tot.gastos, s: E.soles });
     poner(h, f, 0, { v: "± Ajustes de saldo" });                        poner(h, f++, 1, { v: ajNeto, s: E.soles });
     poner(h, f, 0, { v: "= Flujo neto", s: E.negrita });                poner(h, f++, 1, { f: "B" + (fR + 2) + "-B" + (fR + 3) + "+B" + (fR + 4), v: neto, s: E.soles });
-    poner(h, f, 0, { v: "± Diferencia de tipo de cambio" });            poner(h, f++, 1, { v: final - inicial - neto, s: E.soles });
+    poner(h, f, 0, { v: "± Tipo de cambio y transferencias a cuentas fuera del total" });            poner(h, f++, 1, { v: final - inicial - neto, s: E.soles });
     poner(h, f, 0, { v: "Saldo final", s: E.totalTxt });                poner(h, f++, 1, { f: "B" + (fR + 1) + "+B" + (fR + 5) + "+B" + (fR + 6), v: final, s: E.total });
     poner(h, f, 0, { v: "Tasa de ahorro (ingresos − gastos)" });
     poner(h, f++, 1, { f: "IF(B" + (fR + 2) + "=0,0,(B" + (fR + 2) + "-B" + (fR + 3) + ")/B" + (fR + 2) + ")", v: tot.ingresos ? (tot.ingresos - tot.gastos) / tot.ingresos : 0, s: E.porcentaje });
@@ -3897,7 +4030,7 @@
     function tablaCategorias(tipo, tituloTabla, total, conGrafico) {
       var porCat = {};
       movimientos.forEach(function (m) {
-        if (m.tipo !== tipo || m.fecha < desde || m.fecha > hasta) return;
+        if (m.tipo !== tipo || m.fecha < desde || m.fecha > hasta || !cuentaEnGraficos(m)) return;
         porCat[m.categoria] = (porCat[m.categoria] || 0) + enSoles(m.monto, monedaDe(m.cuenta));
       });
       var lista = Object.keys(porCat).map(function (k) { return [k, porCat[k]]; }).sort(function (a, b) { return b[1] - a[1]; });
@@ -3921,6 +4054,64 @@
     }
     tablaCategorias("gasto", "Gastos por categoría", tot.gastos, true);
     tablaCategorias("ingreso", "Ingresos por categoría", tot.ingresos, false);
+
+    // CUENTAS QUE NO SUMAN AL TOTAL (AFP, seguros…): saldos aparte
+    var fuera = cuentas.filter(function (c) { return !sumaAlTotal(c); });
+    if (fuera.length) {
+      poner(h, f++, 0, { v: "🔒 CUENTAS QUE NO SUMAN AL TOTAL", s: E.negrita });
+      poner(h, f++, 0, { v: "No entran en ingresos, gastos ni saldo de arriba. Montos en S/ (los dólares × " + tipoCambio + ").", s: E.nota });
+      ["Cuenta", "Saldo inicial", "Entradas", "Salidas", "Saldo final", "%"].forEach(function (t, i) { poner(h, f, i, { v: t, s: E.cabecera }); });
+      var cabF = f; f++;
+      var iniF = f, nomF = [], finF = [], totFin = 0, datosF = [];
+      fuera.forEach(function (c) {
+        var ent = 0, sal = 0;
+        movimientos.forEach(function (m) {
+          if (m.fecha < desde || m.fecha > hasta) return;
+          var e = efecto(m, c.nombre);
+          if (e > 0) ent += e; else sal += -e;
+        });
+        var d = { c: c, ini: enSoles(saldoDe(c.nombre, antes), c.moneda), ent: enSoles(ent, c.moneda), sal: enSoles(sal, c.moneda) };
+        d.fin = d.ini + d.ent - d.sal; totFin += d.fin; datosF.push(d);
+      });
+      datosF.forEach(function (d) {
+        poner(h, f, 0, { v: d.c.nombre + (d.c.moneda === "USD" ? " (US$)" : "") });
+        poner(h, f, 1, { v: d.ini, s: E.soles });
+        poner(h, f, 2, { v: d.ent, s: E.soles });
+        poner(h, f, 3, { v: d.sal, s: E.soles });
+        poner(h, f, 4, { f: "B" + (f + 1) + "+C" + (f + 1) + "-D" + (f + 1), v: d.fin, s: E.soles });
+        poner(h, f, 5, { f: "IFERROR(E" + (f + 1) + "/SUM($E$" + (iniF + 1) + ":$E$" + (iniF + datosF.length) + "),0)", v: totFin ? d.fin / totFin : 0, s: E.porcentaje });
+        nomF.push(d.c.nombre); finF.push(d.fin);
+        f++;
+      });
+      var finFila = f - 1;
+      poner(h, f, 0, { v: "TOTAL", s: E.totalTxt });
+      ["B", "C", "D", "E"].forEach(function (L, i) {
+        poner(h, f, i + 1, { f: "SUM(" + L + (iniF + 1) + ":" + L + (finFila + 1) + ")",
+          v: datosF.reduce(function (a, d) { return a + [d.ini, d.ent, d.sal, d.fin][i]; }, 0), s: E.total });
+      });
+      poner(h, f, 5, { v: totFin ? 1 : 0, s: E.totalPct });
+      f += 2;
+      h.graficos.push({ tipo: "barras", titulo: "Cuentas que no suman: saldo de cada una", hoja: h,
+        cats: { col: 0, f1: iniF, f2: finFila, valores: nomF },
+        series: [{ nombre: "Saldo final", celdaNombre: { col: 4, fila: cabF }, col: 4, f1: iniF, f2: finFila, valores: finF, color: "7C3AED" }] });
+
+      // Evolución del saldo sumado de esas cuentas
+      ["Periodo", "Saldo (suma)"].forEach(function (t, i) { poner(h, f, i, { v: t, s: E.cabecera }); });
+      var cabE = f; f++;
+      var iniE = f, etqE = [], valE = [];
+      pedazos.forEach(function (pz) {
+        var v = 0;
+        fuera.forEach(function (c) { v += enSoles(saldoDe(c.nombre, pz.hasta), c.moneda); });
+        poner(h, f, 0, { v: pz.etiqueta });
+        poner(h, f, 1, { v: v, s: E.soles });
+        etqE.push(pz.etiqueta); valE.push(v);
+        f++;
+      });
+      h.graficos.push({ tipo: "linea", titulo: "Cuentas que no suman: evolución del saldo total", hoja: h, recta: true,
+        cats: { col: 0, f1: iniE, f2: f - 1, valores: etqE },
+        series: [{ nombre: "Saldo (suma)", celdaNombre: { col: 1, fila: cabE }, col: 1, f1: iniE, f2: f - 1, valores: valE, color: "7C3AED" }] });
+      f += 2;
+    }
 
     // DETALLE DE MOVIMIENTOS (solo en las hojas de cada mes)
     if (conDetalle) filasMovimientos(h, f, movimientos.filter(function (m) { return m.fecha >= desde && m.fecha <= hasta; }));
@@ -3963,7 +4154,7 @@
   }
   function fechaCorta(t) { return t.slice(8, 10) + "/" + t.slice(5, 7) + "/" + t.slice(0, 4); }
   function filasDatos() {
-    return movimientos.filter(function (m) { return m.tipo === "gasto" || m.tipo === "ingreso"; })
+    return movimientos.filter(function (m) { return (m.tipo === "gasto" || m.tipo === "ingreso") && cuentaEnGraficos(m); })
       .sort(function (a, b) { return a.fecha < b.fecha ? -1 : a.fecha > b.fecha ? 1 : a.id - b.id; })
       .map(function (m) {
         var carga = esCarga(m), gal = carga && m.galones > 0 ? Number(m.galones) : 0;
@@ -4522,7 +4713,7 @@
     document.getElementById("tutorial").classList.remove("abierto");
     cerrarTodo();
     window.scrollTo({ top: 0, behavior: "smooth" });
-    try { localStorage.setItem("mymoney2_tutorial_visto", "1"); } catch (e) {}
+    try { localStorage.setItem("mymoney_tutorial_visto", "1"); } catch (e) {}
   }
   function pasoTutorial(direccion) {
     pasoActual += direccion;
@@ -4601,7 +4792,7 @@
   // La primera vez que alguien abre la app, el tutorial sale solo
   function tutorialPrimeraVez() {
     var visto = null;
-    try { visto = localStorage.getItem("mymoney2_tutorial_visto"); } catch (e) {}
+    try { visto = localStorage.getItem("mymoney_tutorial_visto"); } catch (e) {}
     if (!visto) abrirTutorial();
   }
 
@@ -5103,14 +5294,38 @@
     document.getElementById("importar").classList.add("abierto");
   }
 
-  function cerrarImportar() { document.getElementById("importar").classList.remove("abierto"); respaldoLeido = null; }
+  function cerrarImportar() { document.getElementById("importar").classList.remove("abierto"); respaldoLeido = null; desarmarReemplazar(); }
+  function desarmarReemplazar() {
+    var b = document.getElementById("btnReemplazar");
+    aplicarImportar.armado = false;
+    if (b && b.dataset.texto) { b.innerHTML = b.dataset.texto; delete b.dataset.texto; }
+  }
+  // Mensaje grande en pantalla (no depende de las ventanitas del navegador)
+  function mensajeImportar(texto) {
+    var d = document.createElement("div");
+    d.className = "msj-importar";
+    d.innerHTML = texto;
+    d.onclick = function () { d.remove(); };
+    document.body.appendChild(d);
+    setTimeout(function () { d.remove(); }, 3500);
+  }
 
   // modo = "reemplazar" (todo como en el Excel) o "combinar" (agrega lo que falta)
   function aplicarImportar(modo) {
     var r = respaldoLeido;
     if (!r) return;
     if (modo === "reemplazar") {
-      if (!confirm("Se reemplazará TODO lo que hay en este celular por lo del Excel. ¿Continuar?")) return;
+      // Algunos celulares bloquean la ventanita "¿Continuar?"; por eso se confirma tocando 2 veces el botón
+      var b = document.getElementById("btnReemplazar");
+      if (!aplicarImportar.armado) {
+        aplicarImportar.armado = true;
+        b.dataset.texto = b.innerHTML;
+        b.innerHTML = "⚠️ ¿Seguro? Toca OTRA VEZ para reemplazar todo<br><small style=\"font-weight:normal\">Se borrará lo de este celular y quedará lo del Excel</small>";
+        clearTimeout(aplicarImportar.reloj);
+        aplicarImportar.reloj = setTimeout(desarmarReemplazar, 6000);
+        return;
+      }
+      desarmarReemplazar();
       movimientos = r.movimientos;
       cuentas = r.cuentas;
       categoriasGasto = r.categorias.gasto;
@@ -5135,17 +5350,19 @@
         });
       });
     }
+    convertirAjustes();
     guardarTodo(); guardarCuentas(); guardarCategorias(); guardarFijos();
     try {
-      localStorage.setItem("mymoney2_limite", limitePersonal);
-      localStorage.setItem("mymoney2_tc", tipoCambio);
-      localStorage.setItem("mymoney2_ajustes", JSON.stringify(ajustes));
+      localStorage.setItem("mymoney_limite", limitePersonal);
+      localStorage.setItem("mymoney_tc", tipoCambio);
+      localStorage.setItem("mymoney_ajustes", JSON.stringify(ajustes));
     } catch (e) {}
     var cuantos = movimientos.length;
     cerrarImportar();
     aplicarAjustes();
     refrescar();
-    alert("✅ ¡Listo! Ahora tienes " + cuantos + " movimientos.");
+    try { if (typeof generarFijos === "function") generarFijos(); } catch (e) {}
+    mensajeImportar("✅ ¡Listo! " + (modo === "reemplazar" ? "Se reemplazó todo." : "Se combinó.") + " Ahora tienes " + cuantos + " movimientos.");
   }
 
 
@@ -5163,7 +5380,7 @@
     var n = document.getElementById("inputNombre").value.trim();
     if (!n) { document.getElementById("nombreError").textContent = "Escribe tu nombre 🙂"; return; }
     ajustes.nombre = n;
-    try { localStorage.setItem("mymoney2_ajustes", JSON.stringify(ajustes)); } catch (e) {}
+    try { localStorage.setItem("mymoney_ajustes", JSON.stringify(ajustes)); } catch (e) {}
     document.getElementById("ventanaNombre").classList.remove("abierto");
     mostrarSaludo();
     if (nombrePrimeraVez) tutorialPrimeraVez();   // después del nombre, el tutorial
@@ -5185,8 +5402,8 @@
   // =========================================================
   // Cada fijo: { id, plantilla: {tipo, monto, cuenta, categoria…}, dia, ultimoMes: "2026-11", activo }
   var fijos = [];
-  try { var gf = localStorage.getItem("mymoney2_fijos"); if (gf) fijos = JSON.parse(gf); } catch (e) {}
-  function guardarFijos() { try { localStorage.setItem("mymoney2_fijos", JSON.stringify(fijos)); } catch (e) {} }
+  try { var gf = localStorage.getItem("mymoney_fijos"); if (gf) fijos = JSON.parse(gf); } catch (e) {}
+  function guardarFijos() { try { localStorage.setItem("mymoney_fijos", JSON.stringify(fijos)); } catch (e) {} }
 
   function mesSiguiente(t) {   // "2026-12" → "2027-01"
     var a = Number(t.slice(0, 4)), m = Number(t.slice(5, 7)) + 1;
@@ -5369,7 +5586,7 @@
   function flujoPorMoneda(desde, hasta) {
     var r = { iPEN: 0, gPEN: 0, iUSD: 0, gUSD: 0 };
     movimientos.forEach(function (m) {
-      if (m.fecha < desde || m.fecha > hasta) return;
+      if (m.fecha < desde || m.fecha > hasta || !cuentaEnGraficos(m)) return;
       var mon = monedaDe(m.cuenta) === "USD" ? "USD" : "PEN";
       if (m.tipo === "ingreso") r["i" + mon] += m.monto;
       if (m.tipo === "gasto")   r["g" + mon] += m.monto;
@@ -5694,7 +5911,7 @@
     ordenarPorGrupo();
     ajustes.migSub1 = true;
     guardarTodo(); guardarCuentas(); guardarFijos();
-    try { localStorage.setItem("mymoney2_ajustes", JSON.stringify(ajustes)); } catch (e) {}
+    try { localStorage.setItem("mymoney_ajustes", JSON.stringify(ajustes)); } catch (e) {}
   }
 
 
@@ -5800,7 +6017,7 @@
       // Detalle por categoría elegida
       var lista = (tipo === "gasto" ? categoriasGasto : categoriasIngreso)
         .filter(function (c) { return !expCats.length || expCats.indexOf(c.nombre) !== -1; })
-        .map(function (c) { return [c.icono + " " + limpio(c.nombre), sumaExp(tipo, pz[0].desde, pz[pz.length - 1].hasta, [c.nombre]), "", accionCategoria(c.nombre, tipo)]; })
+        .map(function (c) { return [c.icono + " " + limpio(c.nombre), sumaExp(tipo, pz[0].desde, pz[pz.length - 1].hasta, [c.nombre]), "", accionCategoria(c.nombre, tipo, pz[0].desde, pz[pz.length - 1].hasta, "periodo elegido")]; })
         .filter(function (x) { return x[1] > 0; }).sort(function (a, b) { return b[1] - a[1]; });
       if (lista.length > 1) html += '<h3 style="margin-top:12px">Detalle</h3>' + barrasRanking(lista, total, color);
     } else {
@@ -5853,7 +6070,7 @@
   function ahorroPorMoneda(desde, hasta) {
     var r = { PEN: 0, USD: 0, ingPEN: 0 };
     movimientos.forEach(function (m) {
-      if (m.fecha < desde || m.fecha > hasta) return;
+      if (m.fecha < desde || m.fecha > hasta || !cuentaEnGraficos(m)) return;
       var mon = monedaDe(m.cuenta) === "USD" ? "USD" : "PEN";
       if (m.tipo === "ingreso") { r[mon] += m.monto; if (mon === "PEN") r.ingPEN += m.monto; }
       if (m.tipo === "gasto") r[mon] -= m.monto;
@@ -5911,7 +6128,7 @@
   //  TARJETAS PLEGABLES (tocar el título para esconder/mostrar)
   // =========================================================
   var plegadas = {};
-  try { plegadas = JSON.parse(localStorage.getItem("mymoney2_plegadas") || "{}"); } catch (e) {}
+  try { plegadas = JSON.parse(localStorage.getItem("mymoney_plegadas") || "{}"); } catch (e) {}
 
   function hacerPlegables(contenedor) {
     Array.prototype.forEach.call(contenedor.querySelectorAll(":scope > .tarjeta"), function (t) {
@@ -5928,7 +6145,7 @@
       h.onclick = function () {
         t.classList.toggle("plegada");
         plegadas[clave] = t.classList.contains("plegada");
-        try { localStorage.setItem("mymoney2_plegadas", JSON.stringify(plegadas)); } catch (e) {}
+        try { localStorage.setItem("mymoney_plegadas", JSON.stringify(plegadas)); } catch (e) {}
       };
     });
   }
@@ -6060,6 +6277,7 @@
 
   aplicarAjustes();   // modo oscuro y secciones
   quitarSubcuentas(); // vuelve a cuentas individuales si había subcuentas
+  convertirAjustes(); // los ajustes antiguos pasan a ser ingresos/gastos "Ajustes"
   generarFijos();     // anota solos los movimientos fijos que ya tocaban
   refrescar();        // ¡Encender todo al abrir la app!
   mostrarBloqueo();   // pide el PIN si tienes uno
