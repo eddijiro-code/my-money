@@ -9,9 +9,9 @@
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="My Money">
+<meta name="apple-mobile-web-app-title" content="My Money 2">
 <!-- Nombre que sale en la pestañita del navegador -->
-<title>My Money</title>
+<title>My Money 2</title>
 
 <!-- ============ CSS = LA PINTURA (colores, tamaños) ============ -->
 <style>
@@ -302,6 +302,60 @@
   .oscuro .selector-mes button { color: #93c5fd; }
   .fila em { font-style: normal; }
   @media (max-width: 380px) { .fila em { display: none; } }   /* en celulares angostos solo se ve la banderita */
+  /* Leyenda del gráfico de saldo (soles y dólares) */
+  .leyenda-saldo { display: flex; flex-direction: column; gap: 3px; margin-top: 8px; font-size: 12px; color: #4b5563; }
+  .leyenda-saldo:empty { display: none; }
+  .leyenda-saldo i { display: inline-block; width: 14px; height: 4px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+  .leyenda-saldo small { color: #9ca3af; }
+  .oscuro .leyenda-saldo { color: #cbd5e1; }
+  /* Categorías tocables en Reportes */
+  .rank.clicable, .leyenda div.clicable { cursor: pointer; border-radius: 8px; }
+  .rank.clicable:active, .leyenda div.clicable:active { background: #eef2ff; }
+  .rank .ir { font-style: normal; color: #9ca3af; margin-left: 2px; }
+  .filtro-cat { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: #eef2ff; border-radius: 10px; padding: 8px 10px; margin: 4px 0 8px; font-size: 13.5px; }
+  .filtro-cat button { border: none; background: #1e3a8a; color: white; border-radius: 8px; padding: 6px 10px; font-size: 12.5px; cursor: pointer; white-space: nowrap; }
+  .oscuro .filtro-cat { background: #172554; }
+  /* Tarjetas plegables (Reportes) */
+  .plegable > h3 { cursor: pointer; display: flex; align-items: center; justify-content: space-between; user-select: none; margin-bottom: 8px; }
+  .plegable > h3::after { content: "▴"; font-size: 14px; color: #9ca3af; transition: transform .25s; }
+  .plegable.plegada > h3 { margin-bottom: 0; }
+  .plegable.plegada > h3::after { transform: rotate(180deg); }
+  .cuerpo-plegable { display: grid; grid-template-rows: 1fr; transition: grid-template-rows .3s ease; }
+  .plegada .cuerpo-plegable { grid-template-rows: 0fr; }
+  .interior-plegable { overflow: hidden; min-height: 0; }
+  .toggle-filtros { width: 100%; text-align: left; background: #f1f5f9; border: none; border-radius: 10px; padding: 8px 12px; font-size: 13.5px; color: #1e3a8a; cursor: pointer; margin-bottom: 8px; }
+  .oscuro .toggle-filtros { background: #0f172a; color: #93c5fd; }
+  /* Chips para elegir categorías en los filtros */
+  .chips-sel { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 10px; }
+  .chips-sel button { border: 1px solid #c7d2fe; background: white; color: #1e3a8a; border-radius: 16px; padding: 5px 10px; font-size: 12.5px; cursor: pointer; }
+  .chips-sel button.on { background: #1e3a8a; color: white; border-color: #1e3a8a; }
+  .oscuro .chips-sel button { background: #0f172a; color: #93c5fd; border-color: #334155; }
+  .oscuro .chips-sel button.on { background: #2563eb; color: white; }
+  /* Subcuentas */
+  .cuenta-grupo { display: flex; align-items: center; gap: 12px; padding: 10px 2px 4px; }
+  .cuenta-grupo .ico { width: 36px; height: 36px; border-radius: 10px; border: 1px solid #d1d5db; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .cuenta-grupo .nombre { flex: 1; font-weight: bold; font-size: 15px; }
+  .cuenta-grupo b { font-size: 12px; color: #6b7280; text-align: right; }
+  .cuenta.sub { padding-left: 14px; }
+  .cuenta .rama { width: 24px; color: #9ca3af; font-size: 16px; text-align: center; }
+  /* Precio del combustible */
+  .precio-comb { display: flex; gap: 8px; }
+  .precio-comb input { flex: 1; }
+  .unidad-comb { display: flex; background: #eef2ff; border-radius: 10px; padding: 3px; }
+  .unidad-comb button { border: none; background: none; padding: 8px 10px; border-radius: 8px; font-size: 13px; color: #1e3a8a; cursor: pointer; white-space: nowrap; }
+  .unidad-comb button.on { background: #1e3a8a; color: white; font-weight: bold; }
+  .manual-moto { background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 10px; padding: 10px; margin-bottom: 10px; font-size: 14px; }
+  .oscuro .unidad-comb { background: #0f172a; } .oscuro .unidad-comb button { color: #93c5fd; } .oscuro .unidad-comb button.on { background: #2563eb; color: white; }
+  .oscuro .manual-moto { background: #0f172a; border-color: #334155; }
+  /* Flujo de caja por moneda */
+  svg.bandera { width: 18px; height: 12px; display: inline-block; margin: 0; vertical-align: -1px; border-radius: 2px; }
+  .flujo-mon { margin-top: 8px; }
+  svg.tocable { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .flujo-mon > span { font-size: 12px; font-weight: bold; color: #4b5563; }
+  .flujo-mon .limite-datos { margin-top: 2px; }
+  .leyenda-flujo { display: flex; flex-wrap: wrap; gap: 6px 14px; justify-content: center; font-size: 12px; margin-top: 4px; color: #4b5563; }
+  .leyenda-flujo i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+  .oscuro .flujo-mon > span, .oscuro .leyenda-flujo { color: #cbd5e1; }
   /* Saludo y firma */
   .saludo { margin: 14px 16px 0; cursor: pointer; }
   .saludo .hola { font-size: 21px; font-weight: 800; color: #1e3a8a; }
@@ -546,6 +600,7 @@
       <div><small>Previsto</small><b id="previsto">S/ 0</b></div>
     </div>
     <svg id="grafico" viewBox="0 0 300 110" preserveAspectRatio="none"></svg>
+    <div class="leyenda-saldo" id="leyendaSaldo"></div>
   </div>
 
   <!-- 3. LAS 4 CASILLAS -->
@@ -793,7 +848,8 @@
 </div>
 
 <!-- IMPORTAR EXCEL -->
-<input type="file" id="archivoImportar" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="display:none" onchange="archivoElegido(this)">
+<!-- Sin filtro de tipo: en algunos celulares Android el filtro ".xlsx" deja los archivos en gris y no se pueden elegir -->
+<input type="file" id="archivoImportar" style="display:none" onchange="archivoElegido(this)">
 <div class="modal" id="importar" style="z-index:60">
   <div class="hoja">
     <h3>📥 Importar desde Excel</h3>
@@ -881,6 +937,8 @@
       <div id="formNuevaCuenta" style="display:none">
         <h3>➕ Nueva cuenta</h3>
         <div class="campo"><label>Nombre</label><input id="nNombre" placeholder="Ej: BCP, Caja Piura..."></div>
+        <datalist id="listaGrupos"></datalist>
+        <input type="hidden" id="nSub" value="">
         <div class="campo"><label>Ícono (un emoji)</label><input id="nIcono" value="🏦"></div>
         <div class="campo"><label>Moneda</label>
           <select id="nMoneda"><option value="PEN">🇵🇪 Soles (S/)</option><option value="USD">🇺🇸 Dólares ($)</option></select></div>
@@ -923,7 +981,7 @@
     <div class="campo">
       <label id="etiquetaMonto">Monto</label>
       <div class="monto-fila">
-        <input type="number" id="fMonto" inputmode="decimal" step="0.01" min="0" placeholder="0.00" oninput="editado('sale'); precioGalon()">
+        <input type="number" id="fMonto" inputmode="decimal" step="0.01" min="0" placeholder="0.00" oninput="editado('sale'); calcularCantidad('monto')">
         <button type="button" class="btn-calc" onclick="abrirCalculadora()" title="Calculadora">🧮</button>
       </div>
       <!-- CALCULADORA (aparece al tocar 🧮) -->
@@ -991,16 +1049,32 @@
 
     <!-- Solo para Moto › Combustible -->
     <div id="cajaCombustible" class="combustible">
+      <!-- Precio del combustible: monto + precio → cantidad automática -->
+      <div class="campo">
+        <label>💲 Precio del combustible</label>
+        <div class="precio-comb">
+          <input type="number" id="fPrecioComb" inputmode="decimal" step="0.01" min="0" placeholder="S/ 0.00" oninput="calcularCantidad('precio')">
+          <div class="unidad-comb">
+            <button type="button" id="uGal" onclick="elegirUnidadComb('gal')">por galón</button>
+            <button type="button" id="uL" onclick="elegirUnidadComb('L')">por litro</button>
+          </div>
+        </div>
+      </div>
       <div class="dos-campos">
         <div class="campo">
-          <label>⛽ Galones</label>
-          <input type="number" id="fGalones" inputmode="decimal" step="0.001" min="0" placeholder="0.000" oninput="precioGalon()">
+          <label id="etiquetaCantidad">⛽ Cantidad (galones)</label>
+          <input type="number" id="fCantidad" inputmode="decimal" step="0.001" min="0" placeholder="automático" oninput="calcularCantidad('cantidad')">
         </div>
         <div class="campo">
           <label>🧭 Odómetro (km)</label>
           <input type="number" id="fOdometro" inputmode="numeric" step="1" min="0" placeholder="0">
         </div>
       </div>
+      <div class="aviso" id="textoCantidad" style="text-align:left;margin:-4px 0 8px"></div>
+      <label class="check" style="margin:0 0 6px">
+        <input type="checkbox" id="fLleno" checked onchange="precioGalon()"> ⛽ Llené el tanque
+      </label>
+      <div class="aviso" id="textoTanque" style="text-align:left;margin:-2px 0 6px"></div>
       <div class="aviso" id="textoCombustible" style="text-align:left;margin:-4px 0 10px"></div>
     </div>
 
@@ -1065,11 +1139,11 @@
 
   // Si editaste tus cuentas, la app usa la versión guardada
   try {
-    var gc = localStorage.getItem("mymoney_cuentas");
+    var gc = localStorage.getItem("mymoney2_cuentas");
     if (gc) cuentas = JSON.parse(gc);
   } catch (e) {}
   function guardarCuentas() {
-    try { localStorage.setItem("mymoney_cuentas", JSON.stringify(cuentas)); } catch (e) {}
+    try { localStorage.setItem("mymoney2_cuentas", JSON.stringify(cuentas)); } catch (e) {}
   }
 
   // --- Tus movimientos ---
@@ -1079,24 +1153,24 @@
   // Las transferencias además tienen:  destino: "Interbank", montoDestino: 15
   var movimientos = [];
   try {
-    var g = localStorage.getItem("mymoney_movimientos");
+    var g = localStorage.getItem("mymoney2_movimientos");
     if (g) movimientos = JSON.parse(g);
   } catch (e) {}
 
   function guardarTodo() {
-    try { localStorage.setItem("mymoney_movimientos", JSON.stringify(movimientos)); } catch (e) {}
+    try { localStorage.setItem("mymoney2_movimientos", JSON.stringify(movimientos)); } catch (e) {}
   }
 
   // --- Límite de uso personal (se guarda en tu navegador) ---
   var limitePersonal = 500;
   try {
-    var gl = localStorage.getItem("mymoney_limite");
+    var gl = localStorage.getItem("mymoney2_limite");
     if (gl !== null) limitePersonal = Number(gl);
   } catch (e) {}
 
   var tipoCambio = 3.75;     // 1 dólar = 3.75 soles (la app recuerda el último que uses)
   try {
-    var gtc = localStorage.getItem("mymoney_tc");
+    var gtc = localStorage.getItem("mymoney2_tc");
     if (gtc) tipoCambio = Number(gtc);
   } catch (e) {}
 
@@ -1109,11 +1183,12 @@
     alertaCategoria: 40,  // avisar si una categoría pasa este % de tus gastos
     pin: "",              // PIN de 4 números ("" = sin PIN)
     oscuro: false,        // modo oscuro
+    tanque: 0,            // capacidad del tanque de la moto en galones (0 = sin definir)
     nombre: "",           // nombre del usuario (sale en la pantalla principal)
     ocultas: []           // secciones escondidas de la vista general
   };
   try {
-    var gaj = localStorage.getItem("mymoney_ajustes");
+    var gaj = localStorage.getItem("mymoney2_ajustes");
     if (gaj) { gaj = JSON.parse(gaj); for (var k in gaj) ajustes[k] = gaj[k]; }
   } catch (e) {}
 
@@ -1167,7 +1242,7 @@
 
   // Si editaste las categorías desde la app, se usa la versión guardada
   try {
-    var gcat = localStorage.getItem("mymoney_categorias");
+    var gcat = localStorage.getItem("mymoney2_categorias");
     if (gcat) {
       gcat = JSON.parse(gcat);
       categoriasGasto = gcat.gasto;
@@ -1176,7 +1251,7 @@
   } catch (e) {}
   function guardarCategorias() {
     try {
-      localStorage.setItem("mymoney_categorias", JSON.stringify({ gasto: categoriasGasto, ingreso: categoriasIngreso }));
+      localStorage.setItem("mymoney2_categorias", JSON.stringify({ gasto: categoriasGasto, ingreso: categoriasIngreso }));
     } catch (e) {}
   }
 
@@ -1352,16 +1427,23 @@
     else if (mesTexto() < hoyTexto().slice(0, 7)) hasta = diasDelMes;
     else hasta = 0;
 
-    // Inicial = lo que tenías el último día del mes anterior
-    var inicial = totalEnSoles(mesTexto() + "-00");
+    // CURVA AZUL = solo tus cuentas en SOLES (las de dólares van en la curva verde)
+    function saldoSoles(fecha) {
+      var t = 0;
+      cuentas.forEach(function (c) { if (c.moneda === "PEN" && sumaAlTotal(c)) t += saldoDe(c.nombre, fecha); });
+      return t;
+    }
+    // Inicial = lo que tenías en soles el último día del mes anterior
+    var inicial = saldoSoles(mesTexto() + "-00");
 
     var puntos = [], gastado = 0;
     for (var d = 1; d <= hasta; d++) {
-      puntos.push(totalEnSoles(mesTexto() + "-" + String(d).padStart(2, "0")));
+      puntos.push(saldoSoles(mesTexto() + "-" + String(d).padStart(2, "0")));
     }
+    // Para el "previsto" en soles solo cuentan los gastos hechos desde cuentas en soles
     movimientos.forEach(function (m) {
-      if (m.tipo === "gasto" && m.fecha.slice(0, 7) === mesTexto())
-        gastado += enSoles(m.monto, monedaDe(m.cuenta));
+      if (m.tipo === "gasto" && m.fecha.slice(0, 7) === mesTexto() && monedaDe(m.cuenta) === "PEN")
+        gastado += m.monto;
     });
     var saldo = puntos.length ? puntos[puntos.length - 1] : inicial;
 
@@ -1374,7 +1456,7 @@
       var fm = new Date(anioActual, mesActual - a, 1);
       var tm = fm.getFullYear() + "-" + String(fm.getMonth() + 1).padStart(2, "0");
       var gm = 0;
-      movimientos.forEach(function (m) { if (m.tipo === "gasto" && m.fecha.slice(0, 7) === tm) gm += enSoles(m.monto, monedaDe(m.cuenta)); });
+      movimientos.forEach(function (m) { if (m.tipo === "gasto" && m.fecha.slice(0, 7) === tm && monedaDe(m.cuenta) === "PEN") gm += m.monto; });
       if (gm > 0) { suma += gm; cuantos++; }
     }
     var previsto;
@@ -1388,20 +1470,48 @@
     document.getElementById("saldo").textContent    = "S/ " + Math.round(saldo).toLocaleString("es-PE");
     document.getElementById("previsto").textContent = "S/ " + Math.round(previsto).toLocaleString("es-PE");
 
-    // Convertir saldos en posiciones del dibujo
-    var todos = [inicial].concat(puntos, [previsto]);
+    // ---- Saldo de tus cuentas en DÓLARES (para la curva verde) ----
+    function saldoDolares(fecha) {
+      var t = 0;
+      cuentas.forEach(function (c) { if (c.moneda === "USD" && sumaAlTotal(c)) t += saldoDe(c.nombre, fecha); });
+      return t;
+    }
+    var inicialUSD = saldoDolares(mesTexto() + "-00"), puntosUSD = [];
+    for (var k = 1; k <= hasta; k++) puntosUSD.push(saldoDolares(mesTexto() + "-" + String(k).padStart(2, "0")));
+    var saldoUSD = puntosUSD.length ? puntosUSD[puntosUSD.length - 1] : inicialUSD;
+    var hayDolares = [inicialUSD].concat(puntosUSD).some(function (v) { return v !== 0; });
+
+    // ---- Una sola escala para las dos curvas ----
+    // Los dólares se ubican según cuánto valen en soles (× tipo de cambio), así las dos curvas
+    // no se tapan entre sí y se ve cuál es más grande. El 0 siempre está abajo.
+    var todos = [0, inicial, previsto].concat(puntos);
+    if (hayDolares) todos = todos.concat([inicialUSD].concat(puntosUSD).map(function (v) { return v * tipoCambio; }));
     var max = Math.max.apply(null, todos), min = Math.min.apply(null, todos);
     function x(dia)  { return (dia / diasDelMes) * 300; }
     function y(valor){ return 100 - ((valor - min) / ((max - min) || 1)) * 85; }
 
+    var svg = '';
+    // Curva VERDE (dólares) primero, para que la azul quede encima si se cruzan
+    if (hayDolares) {
+      var lineaU = "M 0 " + y(inicialUSD * tipoCambio);
+      puntosUSD.forEach(function (v, i) { lineaU += " L " + x(i + 1) + " " + y(v * tipoCambio); });
+      svg += '<path d="' + lineaU + '" fill="none" stroke="#16a34a" stroke-width="3.5" stroke-linejoin="round"/>';
+      svg += '<circle cx="' + x(hasta) + '" cy="' + y(saldoUSD * tipoCambio) + '" r="5" fill="#16a34a"/>';
+    }
+    // Curva AZUL (soles)
     var linea = "M 0 " + y(inicial);
     puntos.forEach(function (v, i) { linea += " L " + x(i + 1) + " " + y(v); });
-
-    var svg = '';
-    svg += '<path d="' + linea + ' L ' + x(hasta) + ' 110 L 0 110 Z" fill="#2563eb" opacity="0.12"/>';
-    svg += '<path d="' + linea + '" fill="none" stroke="#2563eb" stroke-width="3" stroke-linejoin="round"/>';
+    svg += '<path d="' + linea + ' L ' + x(hasta) + ' 110 L 0 110 Z" fill="#2563eb" opacity="0.10"/>';
+    svg += '<path d="' + linea + '" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linejoin="round"/>';
     svg += '<path d="M ' + x(hasta) + ' ' + y(saldo) + ' L 300 ' + y(previsto) + '" stroke="#2563eb" stroke-width="2" stroke-dasharray="5 5" fill="none" opacity="0.6"/>';
     svg += '<circle cx="' + x(hasta) + '" cy="' + y(saldo) + '" r="5" fill="#2563eb"/>';
+
+    var leyenda = document.getElementById("leyendaSaldo");
+    leyenda.innerHTML = hayDolares
+      ? '<span><i style="background:#2563eb"></i>Soles: <b>S/ ' + plata(inicial) + '</b> → <b style="color:#2563eb">S/ ' + plata(saldo) + '</b></span>' +
+        '<span><i style="background:#16a34a"></i>Dólares: <b>$ ' + plata(inicialUSD) + '</b> → <b style="color:#16a34a">$ ' + plata(saldoUSD) + '</b>' +
+        ' <small>(≈ S/ ' + plata(saldoUSD * tipoCambio) + ')</small></span>'
+      : "";
     document.getElementById("grafico").innerHTML = svg;
   }
 
@@ -1437,30 +1547,51 @@
     var valor = Number(document.getElementById("nuevoLimite").value);
     if (isNaN(valor) || valor < 0) return;
     limitePersonal = valor;
-    try { localStorage.setItem("mymoney_limite", valor); } catch (e) {}
+    try { localStorage.setItem("mymoney2_limite", valor); } catch (e) {}
     document.getElementById("editarLimite").classList.remove("abierto");
     mostrarLimite();
   }
 
   // ---- Lista de cuentas con su saldo de hoy ----
   function mostrarCuentas() {
-    var html = "", totalPEN = 0, totalUSD = 0;
-    cuentas.forEach(function (c, i) {
+    var html = "", totalPEN = 0, totalUSD = 0, grupoHecho = {};
+    function fila(c, i, esSub) {
       var saldo = saldoDe(c.nombre);
       var texto = c.moneda === "USD" ? "Dólares" : "Soles";
-      html += '<div class="cuenta' + (sumaAlTotal(c) ? '' : ' apagada') + '" onclick="abrirCuenta(' + i + ')">' +
-                '<div class="ico" style="' + fondo(c.color) + '">' + c.icono + '</div>' +
-                '<div class="nombre">' + c.nombre + '<small>' + texto + (sumaAlTotal(c) ? '' : ' · no suma al total') + '</small></div>' +
-                '<b style="color:' + (saldo < 0 ? '#dc2626' : '#1d2433') + '">' + simbolo(c.moneda) + plata(saldo) + '</b>' +
-                '<span class="flechita">›</span>' +
-              '</div>';
+      return '<div class="cuenta' + (esSub ? ' sub' : '') + (sumaAlTotal(c) ? '' : ' apagada') + '" onclick="abrirCuenta(' + i + ')">' +
+               (esSub ? '<span class="rama">└</span>' : '<div class="ico" style="' + fondo(c.color) + '">' + c.icono + '</div>') +
+               '<div class="nombre">' + limpio(esSub ? c.sub : c.nombre) + '<small>' + texto + (sumaAlTotal(c) ? '' : ' · no suma al total') + '</small></div>' +
+               '<b style="color:' + (saldo < 0 ? '#dc2626' : '#1d2433') + '">' + simbolo(c.moneda) + plata(saldo) + '</b>' +
+               '<span class="flechita">›</span>' +
+             '</div>';
+    }
+    cuentas.forEach(function (c, i) {
+      if (c.grupo) {
+        if (!grupoHecho[c.grupo]) {
+          grupoHecho[c.grupo] = true;
+          // Cabecera del grupo con sus totales por moneda
+          var tPEN = 0, tUSD = 0, hayPEN = false, hayUSD = false;
+          cuentas.forEach(function (x) {
+            if (x.grupo !== c.grupo) return;
+            if (x.moneda === "USD") { tUSD += saldoDe(x.nombre); hayUSD = true; } else { tPEN += saldoDe(x.nombre); hayPEN = true; }
+          });
+          html += '<div class="cuenta-grupo"><div class="ico" style="' + fondo(c.color) + '">' + c.icono + '</div>' +
+                  '<div class="nombre">' + limpio(c.grupo) + '</div><b>' +
+                  (hayPEN ? 'S/ ' + plata(tPEN) : '') + (hayPEN && hayUSD ? '<br>' : '') + (hayUSD ? '$ ' + plata(tUSD) : '') + '</b></div>';
+        }
+        html += fila(c, i, true);
+      } else {
+        html += fila(c, i, false);
+      }
       if (!sumaAlTotal(c)) return;          // esta cuenta no se suma
+      var saldo = saldoDe(c.nombre);
       if (c.moneda === "USD") totalUSD += saldo; else totalPEN += saldo;
     });
     document.getElementById("listaCuentas").innerHTML = html;
     document.getElementById("totalSoles").textContent   = "S/ " + plata(totalPEN);
     document.getElementById("totalDolares").textContent = "$ "  + plata(totalUSD);
   }
+
 
 
   // =========================================================
@@ -1480,7 +1611,7 @@
 
   function mostrarCuentaAbierta() {
     var c = buscarCuenta(cuentaAbierta);
-    document.getElementById("tituloCuenta").textContent = c.icono + " " + c.nombre;
+    document.getElementById("tituloCuenta").textContent = c.icono + " " + (c.grupo ? c.grupo + " › " + c.sub : c.nombre);
     document.getElementById("saldoCuentaTexto").textContent = simbolo(c.moneda) + plata(saldoDe(c.nombre));
 
     // Solo los movimientos de esta cuenta, del más nuevo al más antiguo
@@ -1548,9 +1679,7 @@
   // =========================================================
   function abrirFormulario() {
     // Llenar las listas de cuentas
-    var opciones = cuentas.map(function (c) {
-      return '<option value="' + c.nombre + '">' + c.icono + ' ' + c.nombre + ' (' + simbolo(c.moneda).trim() + ')</option>';
-    }).join("");
+    var opciones = opcionesCuentas();
     document.getElementById("fCuenta").innerHTML  = opciones;
     document.getElementById("fDestino").innerHTML = opciones;
 
@@ -1565,8 +1694,12 @@
     document.getElementById("fTipoCambio").value = tipoCambio;
     ultimas = ["tc"];
     document.getElementById("fNota").value = "";
-    document.getElementById("fGalones").value = "";
+    document.getElementById("fCantidad").value = "";
+    // Siempre arranca con el último precio y unidad que usaste
+    unidadComb = ajustes.unidadComb || "gal";
+    document.getElementById("fPrecioComb").value = ajustes.precioComb || "";
     document.getElementById("fOdometro").value = "";
+    document.getElementById("fLleno").checked = true;
     // Llenar ámbitos y tipos (empiezan en General y Cotidiana)
     document.getElementById("fAmbito").innerHTML = ambitos.map(function (a) {
       return '<option value="' + a.nombre + '">' + a.icono + ' ' + a.nombre + '</option>';
@@ -1630,8 +1763,15 @@
         document.getElementById("fTipoGasto").value = tipoDe(m);
       }
       mostrarCombustible();
-      if (m.galones)  document.getElementById("fGalones").value = m.galones;
+      if (m.galones) {
+        unidadComb = m.unidadComb || "gal";
+        var precioGal = m.precioComb ? (m.unidadComb === "L" ? m.precioComb * LITROS_GAL : m.precioComb) : m.monto / m.galones;
+        document.getElementById("fPrecioComb").value = (unidadComb === "L" ? precioGal / LITROS_GAL : precioGal).toFixed(2);
+        document.getElementById("fCantidad").value = (unidadComb === "L" ? m.galones * LITROS_GAL : m.galones).toFixed(3);
+        pintarUnidadComb();
+      }
       if (m.odometro) document.getElementById("fOdometro").value = m.odometro;
+      document.getElementById("fLleno").checked = m.tanqueLleno !== false;
       precioGalon();
     }
   }
@@ -1681,8 +1821,7 @@
 
   // ---- COMBUSTIBLE: galones y odómetro ----
   function esCombustible() {
-    return tipoElegido === "gasto" &&
-           document.getElementById("fCategoria").value === "Moto" &&
+    return tipoElegido === "gasto" &&                        // cualquier vehículo: Moto, Auto…
            document.getElementById("cajaSub").style.display !== "none" &&
            document.getElementById("fSub").value === "Combustible";
   }
@@ -1690,41 +1829,144 @@
     var ver = esCombustible();
     document.getElementById("cajaCombustible").style.display = ver ? "block" : "none";
     if (ver) {
-      var ult = ultimoOdometro();
+      var ult = ultimoOdometro(document.getElementById("fCategoria").value);
       document.getElementById("fOdometro").placeholder = ult ? "Último: " + ult.toLocaleString("es-PE") : "0";
-      precioGalon();
+      pintarUnidadComb();
+      calcularCantidad("precio");
     }
   }
   // Muestra cuánto costó cada galón mientras escribes
-  function precioGalon() {
-    var monto = Number(document.getElementById("fMonto").value);
-    var gal = Number(document.getElementById("fGalones").value);
-    document.getElementById("textoCombustible").textContent =
-      (monto > 0 && gal > 0) ? "💲 Precio por galón: S/ " + plata(monto / gal) : "";
+  // ---- Combustible: precio, galón/litro y cantidad automática ----
+  var LITROS_GAL = 3.78541;          // 1 galón = 3.785 litros
+  var unidadComb = "gal";
+
+  function elegirUnidadComb(u) {
+    // Al cambiar de unidad, convertimos el precio que ya estaba escrito
+    var precio = Number(document.getElementById("fPrecioComb").value);
+    if (precio > 0 && u !== unidadComb)
+      document.getElementById("fPrecioComb").value = (u === "L" ? precio / LITROS_GAL : precio * LITROS_GAL).toFixed(2);
+    unidadComb = u;
+    pintarUnidadComb();
+    calcularCantidad("precio");
   }
+  function pintarUnidadComb() {
+    document.getElementById("uGal").className = unidadComb === "gal" ? "on" : "";
+    document.getElementById("uL").className   = unidadComb === "L" ? "on" : "";
+    document.getElementById("etiquetaCantidad").textContent = "⛽ Cantidad (" + (unidadComb === "L" ? "litros" : "galones") + ")";
+  }
+  // Monto ÷ precio = cantidad (o, si escribes la cantidad, monto ÷ cantidad = precio)
+  function calcularCantidad(origen) {
+    if (document.getElementById("cajaCombustible").style.display === "none") return;
+    var monto = Number(document.getElementById("fMonto").value);
+    var precio = Number(document.getElementById("fPrecioComb").value);
+    var cant = Number(document.getElementById("fCantidad").value);
+    if (origen === "cantidad") {
+      if (monto > 0 && cant > 0) document.getElementById("fPrecioComb").value = (monto / cant).toFixed(2);
+    } else if (monto > 0 && precio > 0) {
+      document.getElementById("fCantidad").value = (monto / precio).toFixed(3);
+    }
+    precioGalon();
+  }
+  function precioGalon() {
+    var cant = Number(document.getElementById("fCantidad").value);
+    var gal = unidadComb === "L" ? cant / LITROS_GAL : cant, litros = gal * LITROS_GAL;
+    var precio = Number(document.getElementById("fPrecioComb").value);
+    var precioGal = unidadComb === "L" ? precio * LITROS_GAL : precio;
+    document.getElementById("textoCantidad").innerHTML = gal > 0
+      ? "= <b>" + litros.toFixed(2) + " litros</b> · <b>" + gal.toFixed(3) + " galones</b>" +
+        (precio > 0 ? " · S/ " + plata(precioGal) + "/gal · S/ " + plata(precioGal / LITROS_GAL) + "/L" : "")
+      : "Escribe el monto y el precio: la cantidad sale sola.";
+    document.getElementById("textoCombustible").textContent = "";
+    // Avisos con la capacidad del tanque (del manual, en Reportes)
+    var t = document.getElementById("textoTanque"), lleno = document.getElementById("fLleno").checked;
+    var ref = refMoto(document.getElementById("fFecha").value.slice(0, 7) || mesTexto(), document.getElementById("fCategoria").value);
+    var tanqueL = ref.tanqueL;
+    if (!tanqueL) t.innerHTML = 'Capacidad del tanque: ponla en <b>☰ → Reportes → Combustible</b>';
+    else if (litros > tanqueL + 0.05) t.innerHTML = '⚠️ Cargaste más (' + litros.toFixed(2) + ' L) que la capacidad del tanque (' + tanqueL + ' L). Revisa el dato.';
+    else if (lleno && litros > 0) t.innerHTML = '🛢️ Tanque de ' + tanqueL + ' L · antes de cargar le quedaban ≈ <b>' + (tanqueL - litros).toFixed(2) + ' L</b>';
+    else t.innerHTML = '🛢️ Tanque de ' + tanqueL + ' L (' + (tanqueL / LITROS_GAL).toFixed(2) + ' gal)';
+  }
+
+  // Datos del manual de la moto, por mes: { "2026-11": { kmL: 42, tanqueL: 13.5 } }
+  // Si un mes no tiene datos, usa los del último mes que sí tenga.
+  // ajustes.motoRef = { "Moto": { "2026-11": { kmL, tanqueL } }, "Auto": {...} }
+  function tablaRef(cat) {
+    ajustes.motoRef = ajustes.motoRef || {};
+    // Formato antiguo (solo meses) → pasa a ser de "Moto"
+    var claves = Object.keys(ajustes.motoRef);
+    if (claves.length && /^\d{4}-\d{2}$/.test(claves[0])) { var viejo = ajustes.motoRef; ajustes.motoRef = { "Moto": viejo }; }
+    return ajustes.motoRef[cat] || {};
+  }
+  function refMoto(mes, cat) {
+    cat = cat || combCat;
+    var tabla = tablaRef(cat), claves = Object.keys(tabla).filter(function (k) { return k <= mes; }).sort();
+    if (claves.length) return tabla[claves[claves.length - 1]];
+    var otras = Object.keys(tabla).sort();
+    if (otras.length) return tabla[otras[0]];
+    return { kmL: 0, tanqueL: cat === "Moto" && ajustes.tanque ? Math.round(ajustes.tanque * LITROS_GAL * 10) / 10 : 0 };
+  }
+  function guardarRefMoto(campo, valor) {
+    var actual = refMoto(mesTexto(), combCat);
+    tablaRef(combCat);
+    ajustes.motoRef[combCat] = ajustes.motoRef[combCat] || {};
+    ajustes.motoRef[combCat][mesTexto()] = { kmL: actual.kmL || 0, tanqueL: actual.tanqueL || 0 };
+    ajustes.motoRef[combCat][mesTexto()][campo] = Number(valor) || 0;
+    guardarAjustes();
+    mostrarReportes();
+  }
+  // Vehículos = categorías de gasto que tienen la subcategoría "Combustible" (o cargas registradas)
+  var combCat = "Moto";
+  function vehiculos() {
+    var lista = categoriasGasto.filter(function (c) { return c.subs.indexOf("Combustible") !== -1; }).map(function (c) { return c.nombre; });
+    movimientos.forEach(function (m) { if (esCarga(m) && lista.indexOf(m.categoria) === -1) lista.push(m.categoria); });
+    return lista.length ? lista : ["Moto"];
+  }
+
+
+
   // El odómetro más alto que registraste
-  function ultimoOdometro() {
+  function ultimoOdometro(cat) {
     var max = 0;
-    movimientos.forEach(function (m) { if (m.odometro > max) max = m.odometro; });
+    movimientos.forEach(function (m) { if (m.odometro > max && (!cat || m.categoria === cat)) max = m.odometro; });
     return max;
   }
   // Texto para la lista: "⛽ 1.500 gal · 🧭 12,345 km · S/ 16.00/gal · 🚀 45.2 km/gal"
+  // ¿Esta carga llenó el tanque? (las antiguas, sin dato, se toman como llenas)
+  function fueLleno(m) { return m.tanqueLleno !== false; }
+
+  // RENDIMIENTO (método tanque lleno → tanque lleno):
+  //   km entre dos cargas LLENAS ÷ galones cargados desde la anterior llena (incluida esta).
+  //   Las cargas parciales se suman a los galones, pero no dan rendimiento por sí solas.
+  function calcularRendimientos(cat) {   // cat = vehículo (categoría); cada uno tiene su odómetro
+    var cargas = movimientos.filter(function (m) { return esCarga(m) && m.odometro > 0 && (!cat || m.categoria === cat); })
+                            .sort(function (a, b) { return a.odometro - b.odometro || a.id - b.id; });
+    var lista = [], ultimaLlena = null, galones = 0;
+    cargas.forEach(function (m) {
+      if (ultimaLlena) galones += m.galones || 0;
+      if (fueLleno(m)) {
+        if (ultimaLlena && galones > 0) {
+          var km = m.odometro - ultimaLlena.odometro;
+          lista.push({ m: m, km: km, gal: galones, rend: km / galones });
+        }
+        ultimaLlena = m; galones = 0;
+      }
+    });
+    return lista;
+  }
+
+  // Texto para la lista: "⛽ 1.5 gal (lleno) · 🧭 12,345 km · S/ 16.00/gal · 🚀 45.2 km/gal"
   function infoCombustible(m) {
     if (!m.galones && !m.odometro) return "";
     var partes = [];
-    if (m.galones)  partes.push("⛽ " + m.galones + " gal");
+    if (m.galones)  partes.push("⛽ " + (m.galones * LITROS_GAL).toFixed(2) + " L / " + Number(m.galones).toFixed(2) + " gal " + (fueLleno(m) ? "(lleno)" : "(parcial)"));
     if (m.odometro) partes.push("🧭 " + m.odometro.toLocaleString("es-PE") + " km");
     if (m.galones)  partes.push("S/ " + plata(enSoles(m.monto, monedaDe(m.cuenta)) / m.galones) + "/gal");
-    // Rendimiento: km desde la carga anterior ÷ galones de esta carga
-    if (m.galones && m.odometro) {
-      var anterior = 0;
-      movimientos.forEach(function (x) {
-        if (x.odometro && x.odometro < m.odometro && x.odometro > anterior) anterior = x.odometro;
-      });
-      if (anterior) partes.push("🚀 " + ((m.odometro - anterior) / m.galones).toFixed(1) + " km/gal");
-    }
+    var r = calcularRendimientos(m.categoria).filter(function (x) { return x.m.id === m.id; })[0];
+    if (r) partes.push("🚀 " + (r.rend / LITROS_GAL).toFixed(1) + " km/L · " + r.rend.toFixed(1) + " km/gal (" + r.km.toLocaleString("es-PE") + " km)");
+    else if (m.galones && fueLleno(m)) partes.push("🚀 rendimiento: desde el próximo tanque lleno");
     return partes.join(" · ");
   }
+
 
   // Si transfieres de dólares a soles (o al revés), pide cuánto llega
   function revisarMonedas() {
@@ -1825,7 +2067,7 @@
         m.tipoCambio = Number(document.getElementById("fTipoCambio").value);
         // Recordar este tipo de cambio para la próxima vez
         tipoCambio = m.tipoCambio;
-        try { localStorage.setItem("mymoney_tc", tipoCambio); } catch (e) {}
+        try { localStorage.setItem("mymoney2_tc", tipoCambio); } catch (e) {}
       } else {
         m.montoDestino = monto;
       }
@@ -1834,10 +2076,17 @@
       if (document.getElementById("cajaSub").style.display !== "none")
         m.subcategoria = document.getElementById("fSub").value;
       if (esCombustible()) {
-        var gal = Number(document.getElementById("fGalones").value);
+        var cant = Number(document.getElementById("fCantidad").value), precio = Number(document.getElementById("fPrecioComb").value);
+        var gal = unidadComb === "L" ? cant / LITROS_GAL : cant;          // siempre guardamos en galones
         var odo = Number(document.getElementById("fOdometro").value);
-        if (gal > 0) m.galones = gal;
+        if (gal > 0) m.galones = Math.round(gal * 1000) / 1000;
+        if (precio > 0) {
+          m.precioComb = precio; m.unidadComb = unidadComb;
+          ajustes.precioComb = precio; ajustes.unidadComb = unidadComb;    // recordar para la próxima vez
+          try { localStorage.setItem("mymoney2_ajustes", JSON.stringify(ajustes)); } catch (e) {}
+        }
         if (odo > 0) m.odometro = odo;
+        m.tanqueLleno = document.getElementById("fLleno").checked;
       }
       if (tipoElegido === "gasto") {
         m.ambito    = document.getElementById("fAmbito").value;      // General o Personal
@@ -1980,45 +2229,7 @@
 
   // ---- Dibujar gráficos de barras / línea (SVG) ----
   // valores: lista de números. tipo: "barras" o "linea"
-  // sinCero = true: la escala no empieza en 0 (útil para el odómetro)
-  function grafico(valores, etiquetas, tipo, colorPos, colorNeg, sinCero) {
-    var W = 320, arriba = 10, abajo = 140, n = valores.length;
-    var max = Math.max.apply(null, sinCero ? valores : valores.concat([0]));
-    var min = Math.min.apply(null, sinCero ? valores : valores.concat([0]));
-    if (max === min) max = min + 1;
-    function y(v) { return arriba + (max - v) / (max - min) * (abajo - arriba); }
-    var paso = W / n, svg = "";
 
-    // Línea del cero
-    svg += '<line x1="0" x2="' + W + '" y1="' + y(0) + '" y2="' + y(0) + '" stroke="#d1d5db" stroke-width="1"/>';
-
-    if (tipo === "barras") {
-      valores.forEach(function (v, i) {
-        var alto = Math.abs(y(v) - y(0));
-        svg += '<rect x="' + (i * paso + paso * 0.15) + '" y="' + Math.min(y(v), y(0)) + '" width="' + (paso * 0.7) +
-               '" height="' + alto + '" rx="2" fill="' + (v < 0 ? colorNeg : colorPos) + '"/>';
-      });
-    } else {
-      var linea = "";
-      valores.forEach(function (v, i) { linea += (i ? " L " : "M ") + (i * paso + paso / 2) + " " + y(v); });
-      svg += '<path d="' + linea + ' L ' + ((n - 1) * paso + paso / 2) + ' ' + y(min) + ' L ' + (paso / 2) + ' ' + y(min) + ' Z" fill="' + colorPos + '" opacity="0.12"/>';
-      svg += '<path d="' + linea + '" fill="none" stroke="' + colorPos + '" stroke-width="2.5" stroke-linejoin="round"/>';
-      if (n <= 31) valores.forEach(function (v, i) {
-        svg += '<circle cx="' + (i * paso + paso / 2) + '" cy="' + y(v) + '" r="2.5" fill="' + colorPos + '"/>';
-      });
-    }
-
-    // Etiquetas de abajo (no todas, para que no se amontonen)
-    var cada = Math.ceil(n / 8);
-    etiquetas.forEach(function (e, i) {
-      if (i % cada === 0) svg += '<text x="' + (i * paso + paso / 2) + '" y="158" font-size="9" fill="#6b7280" text-anchor="middle">' + e + '</text>';
-    });
-    // Máximo y mínimo a la izquierda
-    svg += '<text x="' + (W - 2) + '" y="' + (arriba + 8) + '" font-size="9" fill="#9ca3af" text-anchor="end">' + Math.round(max).toLocaleString("es-PE") + '</text>';
-    if (min < 0 || sinCero) svg += '<text x="' + (W - 2) + '" y="' + (abajo - 2) + '" font-size="9" fill="#9ca3af" text-anchor="end">' + Math.round(min).toLocaleString("es-PE") + '</text>';
-
-    return '<svg class="graf" viewBox="0 0 ' + W + ' 165">' + svg + '</svg>';
-  }
 
   // Botoncitos Mes / Año / Acumulado
   function selectorPeriodo() {
@@ -2046,6 +2257,7 @@
     if (vistaDetalle === "editar") {
       html = '<div class="tarjeta">' +
         '<div class="campo"><label>Nombre</label><input id="eNombre" value="' + limpio(c.nombre) + '"></div>' +
+        '<input type="hidden" id="eSub" value="">' +
         '<div class="campo"><label>Ícono (un emoji)</label><input id="eIcono" value="' + c.icono + '"></div>' +
         '<div class="campo"><label>Moneda</label><select id="eMoneda">' +
           '<option value="PEN"' + (c.moneda === "PEN" ? " selected" : "") + '>🇵🇪 Soles (S/)</option>' +
@@ -2136,7 +2348,7 @@
       var unidad = periodo === "mes" ? "por día" : "por mes";
       html += '<div class="tarjeta"><h3>📊 Evolución de gastos</h3>' +
              cajitas([["Total", s + plata(tot), "#dc2626"], ["Promedio " + unidad, s + plata(tot / pz.length)], ["Máximo", s + plata(Math.max.apply(null, vals))]]) +
-             grafico(vals, pz.map(function (p) { return p.etiqueta; }), "barras", "#dc2626", "#dc2626") + '</div>';
+             grafico(vals, pz.map(function (p) { return p.etiqueta; }), "barras", "#dc2626", "#dc2626", false, s) + '</div>';
     }
 
     // 6. EVOLUCIÓN DEL SALDO
@@ -2147,7 +2359,7 @@
              cajitas([["Al inicio", s + plata(saldoAntes(c.nombre, pz2[0].desde))],
                       ["Al final", s + plata(vals2[vals2.length - 1]), "#2563eb"],
                       ["Más alto", s + plata(Math.max.apply(null, vals2))]]) +
-             grafico(vals2, pz2.map(function (p) { return p.etiqueta; }), "linea", "#2563eb") + '</div>';
+             grafico(vals2, pz2.map(function (p) { return p.etiqueta; }), "linea", "#2563eb", "#2563eb", false, s) + '</div>';
     }
 
     // 7. FLUJO DE CAJA (lo que entra menos lo que sale)
@@ -2164,7 +2376,7 @@
       html += '<div class="tarjeta"><h3>💧 Flujo de caja</h3>' +
              cajitas([["Entró", s + plata(ent), "#16a34a"], ["Salió", s + plata(sal), "#dc2626"],
                       ["Neto", s + plata(ent - sal), ent - sal < 0 ? "#dc2626" : "#16a34a"]]) +
-             grafico(netos, pz3.map(function (p) { return p.etiqueta; }), "barras", "#16a34a", "#dc2626") +
+             grafico(netos, pz3.map(function (p) { return p.etiqueta; }), "barras", "#16a34a", "#dc2626", false, s) +
              '<div class="aviso">Verde = entró más de lo que salió · Rojo = salió más</div></div>';
     }
 
@@ -2174,19 +2386,18 @@
   // ---- Guardar la edición de la cuenta ----
   function guardarEdicion() {
     var c = buscarCuenta(cuentaAbierta);
-    var nuevo = document.getElementById("eNombre").value.trim();
+    var grupoE = document.getElementById("eNombre").value.trim(), subE = document.getElementById("eSub").value.trim();
+    var nuevo = nombreSubcuenta(grupoE, subE);
     var error = document.getElementById("eError");
-    if (!nuevo) { error.textContent = "Escribe un nombre."; return; }
+    if (!grupoE) { error.textContent = "Escribe un nombre."; return; }
     if (nuevo !== c.nombre && buscarCuenta(nuevo)) { error.textContent = "Ya tienes una cuenta con ese nombre."; return; }
 
     // Si cambió el nombre, también lo cambiamos en sus movimientos
-    if (nuevo !== c.nombre) {
-      movimientos.forEach(function (m) {
-        if (m.cuenta === c.nombre)  m.cuenta = nuevo;
-        if (m.destino === c.nombre) m.destino = nuevo;
-      });
-    }
+    if (nuevo !== c.nombre) renombrarCuentaEnTodo(c.nombre, nuevo);
     c.nombre = nuevo;
+    if (subE) { c.grupo = grupoE; c.sub = subE; } else { delete c.grupo; delete c.sub; }
+    ordenarPorGrupo();
+    guardarFijos();
     c.icono  = document.getElementById("eIcono").value.trim() || "💳";
     c.moneda = document.getElementById("eMoneda").value;
     c.color  = [document.getElementById("eColor1").value];
@@ -2237,34 +2448,18 @@
   }
 
   // Barras dobles: verde hacia arriba (entró) y roja hacia abajo (salió)
-  function graficoDoble(entradas, salidas, etiquetas) {
-    var W = 320, arriba = 10, abajo = 140, n = entradas.length;
-    var max = Math.max.apply(null, entradas.concat([1]));
-    var min = -Math.max.apply(null, salidas.concat([1]));
-    function y(v) { return arriba + (max - v) / (max - min) * (abajo - arriba); }
-    var paso = W / n, svg = '<line x1="0" x2="' + W + '" y1="' + y(0) + '" y2="' + y(0) + '" stroke="#d1d5db"/>';
-    for (var i = 0; i < n; i++) {
-      var x = i * paso + paso * 0.15, w = paso * 0.7;
-      svg += '<rect x="' + x + '" y="' + y(entradas[i]) + '" width="' + w + '" height="' + (y(0) - y(entradas[i])) + '" rx="2" fill="#16a34a"/>';
-      svg += '<rect x="' + x + '" y="' + y(0) + '" width="' + w + '" height="' + (y(-salidas[i]) - y(0)) + '" rx="2" fill="#dc2626"/>';
-    }
-    var cada = Math.ceil(n / 8);
-    etiquetas.forEach(function (e, i) {
-      if (i % cada === 0) svg += '<text x="' + (i * paso + paso / 2) + '" y="158" font-size="9" fill="#6b7280" text-anchor="middle">' + e + '</text>';
-    });
-    svg += '<text x="' + (W - 2) + '" y="' + (arriba + 8) + '" font-size="9" fill="#9ca3af" text-anchor="end">+' + Math.round(max).toLocaleString("es-PE") + '</text>';
-    svg += '<text x="' + (W - 2) + '" y="' + (abajo - 2) + '" font-size="9" fill="#9ca3af" text-anchor="end">' + Math.round(min).toLocaleString("es-PE") + '</text>';
-    return '<svg class="graf" viewBox="0 0 ' + W + ' 165">' + svg + '</svg>';
-  }
+
 
   function mostrarGraficosGenerales() {
-    // ---- FLUJO DE CAJA ----
+    // ---- FLUJO DE CAJA: soles y dólares por separado ----
+    // Mes: por SEMANAS (para que entren las 4 barras con sus banderitas). Año: por meses.
     var pz = [];
     if (periodoFlujo === "mes") {
       var dias = new Date(anioActual, mesActual + 1, 0).getDate();
-      for (var d = 1; d <= dias; d++) {
-        var f = mesTexto() + "-" + String(d).padStart(2, "0");
-        pz.push({ etiqueta: String(d), desde: f, hasta: f });
+      for (var ini = 1, sem = 1; ini <= dias; ini += 7, sem++) {
+        var fin = Math.min(ini + 6, dias);
+        pz.push({ etiqueta: "Sem " + sem, sub: ini + "-" + fin,
+                  desde: mesTexto() + "-" + String(ini).padStart(2, "0"), hasta: mesTexto() + "-" + String(fin).padStart(2, "0") });
       }
     } else {
       for (var i = 0; i < 12; i++) {
@@ -2272,39 +2467,56 @@
         pz.push({ etiqueta: meses[i], desde: mm + "-01", hasta: mm + "-31" });
       }
     }
-    var ent = [], sal = [], te = 0, ts = 0;
-    pz.forEach(function (p) {
-      var r = entradasSalidas(p.desde, p.hasta);
-      var e = r.ingresos + r.ajPos, sa = r.gastos + r.ajNeg;   // los ajustes también son entradas/salidas de caja
-      ent.push(e); sal.push(sa); te += e; ts += sa;
+    var grupos = pz.map(function (p) {
+      var r = flujoPorMoneda(p.desde, p.hasta);
+      r.etiqueta = p.etiqueta; r.sub = p.sub;
+      return r;
     });
+    var t = { iPEN: 0, gPEN: 0, iUSD: 0, gUSD: 0 };
+    grupos.forEach(function (g) { t.iPEN += g.iPEN; t.gPEN += g.gPEN; t.iUSD += g.iUSD; t.gUSD += g.gUSD; });
+    var netoPEN = t.iPEN - t.gPEN, netoUSD = t.iUSD - t.gUSD;
     document.getElementById("flujoGeneral").innerHTML =
       '<div class="periodos">' +
         '<button class="' + (periodoFlujo === "mes" ? "on" : "") + '" onclick="elegirPeriodoFlujo(\'mes\')">' + meses[mesActual] + ' ' + anioActual + '</button>' +
         '<button class="' + (periodoFlujo === "anio" ? "on" : "") + '" onclick="elegirPeriodoFlujo(\'anio\')">Año ' + anioActual + '</button>' +
       '</div>' +
-      cajitas([["Entró", "S/ " + plata(te), "#16a34a"], ["Salió", "S/ " + plata(ts), "#dc2626"],
-               ["Neto", "S/ " + plata(te - ts), te - ts < 0 ? "#dc2626" : "#16a34a"]]) +
-      graficoDoble(ent, sal, pz.map(function (p) { return p.etiqueta; })) +
-      '<div class="aviso">🟩 Entradas (ingresos + ajustes positivos) · 🟥 Salidas (gastos + ajustes negativos) · en soles</div>';
+      '<div class="flujo-mon"><span>' + banderaHTML("PE") + ' Soles</span>' +
+        cajitas([["Entró", "S/ " + plata(t.iPEN), "#16a34a"], ["Salió", "S/ " + plata(t.gPEN), "#dc2626"],
+                 ["Neto", "S/ " + plata(netoPEN), netoPEN < 0 ? "#dc2626" : "#16a34a"]]) + '</div>' +
+      '<div class="flujo-mon"><span>' + banderaHTML("US") + ' Dólares</span>' +
+        cajitas([["Entró", "$ " + plata(t.iUSD), "#16a34a"], ["Salió", "$ " + plata(t.gUSD), "#dc2626"],
+                 ["Neto", "$ " + plata(netoUSD), netoUSD < 0 ? "#dc2626" : "#16a34a"]]) + '</div>' +
+      graficoFlujoMonedas(grupos) +
+      '<div class="leyenda-flujo">' +
+        '<span><i style="background:#dc2626"></i>Gastos</span><span><i style="background:#16a34a"></i>Ingresos</span>' +
+        '<span>' + banderaHTML("PE") + ' Soles</span><span>' + banderaHTML("US") + ' Dólares</span></div>' +
+      '<div class="aviso">Orden en cada grupo: gastos $ · ingresos $ · ingresos S/ · gastos S/. ' +
+        'Incluye ajustes de saldo. La altura de los dólares se compara en soles (× ' + tipoCambio + ').</div>';
 
-    // ---- ECONOMÍA MENSUAL (lo que te sobró cada mes del año) ----
-    var ahorros = [], etiquetas = [], totalAhorro = 0, mejor = null;
+    // ---- ECONOMÍA MENSUAL: soles y dólares por separado ----
+    var grupos = [], totPEN = 0, totUSD = 0, mejor = null;
     for (var k = 0; k < 12; k++) {
       var t = anioActual + "-" + String(k + 1).padStart(2, "0");
-      var r = entradasSalidas(t + "-01", t + "-31");
-      var ahorro = r.ingresos - r.gastos;
-      ahorros.push(ahorro); etiquetas.push(meses[k]); totalAhorro += ahorro;
-      if (r.ingresos > 0 && (mejor === null || ahorro > ahorros[mejor])) mejor = k;
+      var r = ahorroPorMoneda(t + "-01", t + "-31");
+      r.etiqueta = meses[k];
+      grupos.push(r); totPEN += r.PEN; totUSD += r.USD;
+      var valor = r.PEN + r.USD * tipoCambio;
+      if ((r.PEN || r.USD) && (mejor === null || valor > grupos[mejor].PEN + grupos[mejor].USD * tipoCambio)) mejor = k;
     }
-    var rMes = entradasSalidas(mesTexto() + "-01", mesTexto() + "-31");
-    var tasa = rMes.ingresos > 0 ? (rMes.ingresos - rMes.gastos) / rMes.ingresos * 100 : 0;
+    var rMes = grupos[mesActual];
+    var tasa = rMes.ingPEN > 0 ? rMes.PEN / rMes.ingPEN * 100 : 0;
     document.getElementById("economiaGeneral").innerHTML =
-      cajitas([["Ahorro " + meses[mesActual], Math.round(tasa) + "%", tasa < 0 ? "#dc2626" : "#2563eb"],
-               ["Ahorro del año", "S/ " + plata(totalAhorro), totalAhorro < 0 ? "#dc2626" : "#16a34a"],
-               ["Mejor mes", mejor === null ? "—" : meses[mejor]]]) +
-      grafico(ahorros, etiquetas, "barras", "#2563eb", "#dc2626") +
-      '<div class="aviso">🟦 Te sobró dinero · 🟥 Gastaste más de lo que ganaste</div>' +
+      '<div class="flujo-mon"><span>' + banderaHTML("PE") + ' Soles</span>' +
+      cajitas([["Ahorro " + meses[mesActual], "S/ " + plata(rMes.PEN), rMes.PEN < 0 ? "#dc2626" : "#2563eb"],
+               ["Del año", "S/ " + plata(totPEN), totPEN < 0 ? "#dc2626" : "#16a34a"],
+               ["% ahorro", Math.round(tasa) + "%", tasa < 0 ? "#dc2626" : "#2563eb"]]) + '</div>' +
+      '<div class="flujo-mon"><span>' + banderaHTML("US") + ' Dólares</span>' +
+      cajitas([["Ahorro " + meses[mesActual], "$ " + plata(rMes.USD), rMes.USD < 0 ? "#dc2626" : "#2563eb"],
+               ["Del año", "$ " + plata(totUSD), totUSD < 0 ? "#dc2626" : "#16a34a"],
+               ["Mejor mes", mejor === null ? "—" : meses[mejor]]]) + '</div>' +
+      graficoEconomiaMonedas(grupos) +
+      '<div class="leyenda-flujo"><span><i style="background:#2563eb"></i>Te sobró</span><span><i style="background:#dc2626"></i>Gastaste más de lo que entró</span>' +
+      '<span>' + banderaHTML("PE") + ' Soles</span><span>' + banderaHTML("US") + ' Dólares</span></div>' +
       (ajustes.metaValor > 0 ? '<div class="aviso">🎯 Tu meta: ahorrar ' +
         (ajustes.metaTipo === "%" ? ajustes.metaValor + "% de tus ingresos" : "S/ " + plata(ajustes.metaValor)) + ' al mes</div>' : '');
 
@@ -2359,33 +2571,12 @@
       ing.push(r.ingresos); gas.push(r.gastos); sal.push(totalEnSoles(p.hasta));
     });
 
-    // ---- Escala ----
-    var W = 320, arriba = 12, abajo = 140, n = pz.length;
-    var todos = ing.concat(gas, sal, [0]);
-    var max = Math.max.apply(null, todos), min = Math.min.apply(null, todos);
-    if (max === min) max = min + 1;
+    // ---- Dibujo (con eje Y y tocable) ----
+    var n = pz.length;
     var total = periodoCurvas === "mes" ? new Date(anioActual, mesActual + 1, 0).getDate() : 12;
-    function x(i) { return total > 1 ? i / (total - 1) * (W - 10) + 5 : W / 2; }
-    function y(v) { return arriba + (max - v) / (max - min) * (abajo - arriba); }
-
-    var svg = '<line x1="0" x2="' + W + '" y1="' + y(0) + '" y2="' + y(0) + '" stroke="#e5e7eb"/>';
-    [[sal, "#2563eb"], [ing, "#16a34a"], [gas, "#dc2626"]].forEach(function (serie) {
-      var pts = serie[0].map(function (v, i) { return [x(i), y(v)]; });
-      var linea = curvaSuave(pts);
-      // relleno suave debajo de la curva
-      svg += '<path d="' + linea + ' L ' + pts[pts.length - 1][0] + ' ' + y(Math.max(min, 0)) + ' L ' + pts[0][0] + ' ' + y(Math.max(min, 0)) + ' Z" fill="' + serie[1] + '" opacity="0.07"/>';
-      svg += '<path d="' + linea + '" fill="none" stroke="' + serie[1] + '" stroke-width="2.5" stroke-linecap="round"/>';
-      var ult = pts[pts.length - 1];
-      svg += '<circle cx="' + ult[0] + '" cy="' + ult[1] + '" r="4" fill="' + serie[1] + '" stroke="white" stroke-width="1.5"/>';
-    });
-    var etiquetas = periodoCurvas === "mes" ? ["1", "5", "10", "15", "20", "25", String(total)] : null;
-    for (var k = 0; k < total; k++) {
-      var lab = periodoCurvas === "mes" ? String(k + 1) : meses[k];
-      if (periodoCurvas === "anio" ? k % 2 === 0 : etiquetas.indexOf(lab) !== -1)
-        svg += '<text x="' + x(k) + '" y="158" font-size="9" fill="#6b7280" text-anchor="' +
-               (k === 0 ? "start" : k === total - 1 ? "end" : "middle") + '">' + lab + '</text>';
-    }
-    svg += '<text x="' + (W - 2) + '" y="' + (arriba + 2) + '" font-size="9" fill="#9ca3af" text-anchor="end">' + Math.round(max).toLocaleString("es-PE") + '</text>';
+    var etqTodas = [];
+    for (var k = 0; k < total; k++) etqTodas.push(periodoCurvas === "mes" ? String(k + 1) : meses[k]);
+    var dibujo = graficoLineas([sal, ing, gas], ["#2563eb", "#16a34a", "#dc2626"], etqTodas, true, ["Saldo", "Ingresos", "Gastos"]);
 
     var u = n - 1;
     document.getElementById("curvasGeneral").innerHTML =
@@ -2396,7 +2587,7 @@
       cajitas([["🟢 Ingresos", "S/ " + plata(periodoCurvas === "mes" ? ing[u] : ing.reduce(function (a, b) { return a + b; }, 0)), "#16a34a"],
                ["🔴 Gastos",   "S/ " + plata(periodoCurvas === "mes" ? gas[u] : gas.reduce(function (a, b) { return a + b; }, 0)), "#dc2626"],
                ["🔵 Saldo",    "S/ " + plata(sal[u]), "#2563eb"]]) +
-      '<svg class="graf" viewBox="0 0 ' + W + ' 165">' + svg + '</svg>' +
+      dibujo +
       '<div class="aviso">' + (periodoCurvas === "mes" ? "Ingresos y gastos acumulados día a día" : "Ingresos y gastos de cada mes") + ' · Saldo de todas tus cuentas</div>';
 
     // ---- DONA DE GASTOS POR CATEGORÍA ----
@@ -2482,6 +2673,7 @@
     var temporal = cuentas[i];       // intercambiamos las dos cuentas
     cuentas[i] = cuentas[j];
     cuentas[j] = temporal;
+    ordenarPorGrupo();                // las subcuentas siempre quedan juntas
     guardarCuentas();
     mostrarAdminCuentas();
   }
@@ -2510,6 +2702,10 @@
     document.getElementById("formNuevaCuenta").style.display = "block";
     document.getElementById("btnNuevaCuenta").style.display = "none";
     document.getElementById("nNombre").value = "";
+    document.getElementById("nSub").value = "";
+    var grupos = [];
+    cuentas.forEach(function (c) { if (c.grupo && grupos.indexOf(c.grupo) === -1) grupos.push(c.grupo); });
+    document.getElementById("listaGrupos").innerHTML = grupos.map(function (g) { return '<option value="' + limpio(g) + '">'; }).join("");
     document.getElementById("nIcono").value = "🏦";
     document.getElementById("nError").textContent = "";
     document.getElementById("nNombre").focus();
@@ -2519,9 +2715,11 @@
     document.getElementById("btnNuevaCuenta").style.display = "block";
   }
   function guardarNuevaCuenta() {
-    var nombre = document.getElementById("nNombre").value.trim();
+    var grupo = document.getElementById("nNombre").value.trim();
+    var sub = document.getElementById("nSub").value.trim();
+    var nombre = nombreSubcuenta(grupo, sub);
     var error = document.getElementById("nError");
-    if (!nombre) { error.textContent = "Escribe un nombre."; return; }
+    if (!grupo) { error.textContent = "Escribe un nombre."; return; }
     if (buscarCuenta(nombre)) { error.textContent = "Ya tienes una cuenta con ese nombre."; return; }
     var nueva = {
       nombre: nombre,
@@ -2531,7 +2729,9 @@
       enTotal: document.getElementById("nEnTotal").checked
     };
     if (document.getElementById("nDos").checked) nueva.color.push(document.getElementById("nColor2").value);
+    if (sub) { nueva.grupo = grupo; nueva.sub = sub; }
     cuentas.push(nueva);
+    ordenarPorGrupo();                      // queda junto a las otras subcuentas de su grupo
     guardarCuentas();
     cerrarNuevaCuenta();
     mostrarAdminCuentas();
@@ -2544,6 +2744,20 @@
   var filtroMovs = "todos";      // "todos", "ingreso", "gasto" o "transferencia"
   var pantallaMovsAbierta = false;
 
+  // ---- Ver los movimientos de una categoría (desde Reportes) ----
+  var filtroCatMovs = null;
+  function accionCategoria(nombre, tipo) {
+    return "verCategoriaMovs('" + String(nombre).replace(/'/g, "\\'").replace(/"/g, "&quot;") + "','" + tipo + "')";
+  }
+  function verCategoriaMovs(nombre, tipo) {
+    filtroCatMovs = { nombre: nombre, tipo: tipo };
+    filtroMovs = "todos";
+    document.getElementById("buscarMovs").value = "";
+    document.getElementById("buscarTodo").checked = false;
+    abrirMovimientos();
+  }
+  function quitarFiltroCat() { filtroCatMovs = null; mostrarMovimientosMes(); }
+
   function abrirMovimientos() {
     cerrarTodo();
     pantallaMovsAbierta = true;
@@ -2552,6 +2766,7 @@
     mostrarMovimientosMes();
   }
   function cerrarMovimientos() {
+    filtroCatMovs = null;
     pantallaMovsAbierta = false;
     document.getElementById("pantallaMovs").classList.remove("abierta");
   }
@@ -2584,6 +2799,11 @@
     var enTodo = document.getElementById("buscarTodo").checked;
     var base = texto && enTodo ? movimientos : delMes;
     if (texto) base = base.filter(function (m) { return coincide(m, texto); });
+    // Filtro por categoría (cuando vienes de tocar una categoría en Reportes)
+    if (filtroCatMovs) {
+      base = (enTodo ? movimientos : delMes).filter(function (m) { return m.categoria === filtroCatMovs.nombre && m.tipo === filtroCatMovs.tipo; });
+      if (texto) base = base.filter(function (m) { return coincide(m, texto); });
+    }
 
     // ---- Botones de filtro ----
     var ops = [["todos", "Todos"], ["ingreso", "Ingresos"], ["gasto", "Gastos"], ["transferencia", "Transf."]];
@@ -2597,7 +2817,13 @@
 
     // Resumen de lo encontrado
     var rb = document.getElementById("resumenBusqueda");
-    if (texto) {
+    if (filtroCatMovs) {
+      var sumaC = 0; lista.forEach(function (m) { sumaC += enSoles(m.monto, monedaDe(m.cuenta)); });
+      var cat = buscarCategoria(filtroCatMovs.nombre, filtroCatMovs.tipo);
+      rb.innerHTML = '<div class="filtro-cat"><span>' + (cat ? cat.icono + ' ' : '🏷️ ') + '<b>' + limpio(filtroCatMovs.nombre) + '</b> · ' +
+        (enTodo ? 'todos los meses' : meses[mesActual] + ' ' + anioActual) + '<br>' + lista.length + ' movimiento(s) · <b>S/ ' + plata(sumaC) + '</b></span>' +
+        '<button onclick="quitarFiltroCat()">✕ Quitar</button></div>';
+    } else if (texto) {
       var sg = 0, si = 0;
       lista.forEach(function (m) {
         if (m.tipo === "gasto")   sg += enSoles(m.monto, monedaDe(m.cuenta));
@@ -2816,7 +3042,7 @@
   ];
 
   function guardarAjustes() {
-    try { localStorage.setItem("mymoney_ajustes", JSON.stringify(ajustes)); } catch (e) {}
+    try { localStorage.setItem("mymoney2_ajustes", JSON.stringify(ajustes)); } catch (e) {}
     avisoGuardado();
   }
   // Mensajito "Guardado ✓" abajo de la pantalla
@@ -2899,6 +3125,10 @@
         '<button class="btn-guardar" style="width:100%;padding:12px;border:none;border-radius:10px;font-size:16px" onclick="guardarPin()">Guardar PIN</button>' +
       '</div></div>';
 
+    // MOTO: los datos del manual se ponen en Reportes (cambian por mes)
+    html += '<div class="tarjeta"><h3>🏍️ Moto</h3><div class="aviso" style="text-align:left">' +
+      'El rendimiento del manual (km por litro) y la capacidad del tanque se ponen en <b>☰ → Reportes → Combustible</b>, y puedes cambiarlos cada mes.</div></div>';
+
     // TU NOMBRE
     html += '<div class="tarjeta"><h3>👤 Tu nombre</h3>' +
       '<div class="campo"><input maxlength="25" value="' + limpio(a.nombre || "") + '" placeholder="Escribe tu nombre" ' +
@@ -2932,13 +3162,13 @@
   function cambiarTipoCambio(v) {
     v = Number(v); if (!(v > 0)) return;
     tipoCambio = v;
-    try { localStorage.setItem("mymoney_tc", v); } catch (e) {}
+    try { localStorage.setItem("mymoney2_tc", v); } catch (e) {}
     avisoGuardado();
   }
   function cambiarLimite(v) {
     v = Number(v); if (isNaN(v) || v < 0) return;
     limitePersonal = v;
-    try { localStorage.setItem("mymoney_limite", v); } catch (e) {}
+    try { localStorage.setItem("mymoney2_limite", v); } catch (e) {}
     avisoGuardado();
   }
   function mostrarSeccion(id, visible) {
@@ -3003,8 +3233,8 @@
     var palabra = prompt("Para confirmar, escribe BORRAR en mayúsculas:");
     if (palabra !== "BORRAR") { alert("No se borró nada."); return; }
     try {
-      ["mymoney_movimientos", "mymoney_cuentas", "mymoney_categorias", "mymoney_limite", "mymoney_tc", "mymoney_ajustes"]
-        .concat(["mymoney_tutorial_visto", "mymoney_fijos"]).forEach(function (k) { localStorage.removeItem(k); });
+      ["mymoney2_movimientos", "mymoney2_cuentas", "mymoney2_categorias", "mymoney2_limite", "mymoney2_tc", "mymoney2_ajustes"]
+        .concat(["mymoney2_tutorial_visto", "mymoney2_fijos"]).forEach(function (k) { localStorage.removeItem(k); });
     } catch (e) {}
     location.reload();
   }
@@ -3064,8 +3294,8 @@
   }
 
   // ¿Es una carga de combustible?
-  function esCarga(m) {
-    return m.tipo === "gasto" && (m.galones > 0 || (m.categoria === "Moto" && m.subcategoria === "Combustible"));
+  function esCarga(m) {   // cualquier categoría (vehículo) con subcategoría Combustible
+    return m.tipo === "gasto" && (m.galones > 0 || m.subcategoria === "Combustible");
   }
 
   // Barras horizontales de ranking: [[nombre, monto, extra], ...]
@@ -3073,7 +3303,8 @@
     if (!lista.length) return '<div class="vacio">No hay datos en este periodo.</div>';
     var max = lista[0][1];
     return lista.map(function (x, i) {
-      return '<div class="rank"><div class="rank-txt"><span>' + (i + 1) + '. ' + x[0] + '</span><b>S/ ' + plata(x[1]) +
+      // x[3] = qué hacer al tocar (ej. ver los movimientos de esa categoría)
+      return '<div class="rank' + (x[3] ? ' clicable' : '') + '"' + (x[3] ? ' onclick="' + x[3] + '"' : '') + '><div class="rank-txt"><span>' + (i + 1) + '. ' + x[0] + (x[3] ? ' <i class="ir">›</i>' : '') + '</span><b>S/ ' + plata(x[1]) +
              ' <small>(' + Math.round(x[1] / total * 100) + '%)</small></b></div>' +
              '<div class="barrita"><div style="width:' + (x[1] / max * 100) + '%;background:' + color + '"></div></div>' +
              (x[2] || '') + '</div>';
@@ -3090,9 +3321,12 @@
 
     // ---- Selector Mes / Año / Acumulado ----
     var ops = [["mes", "Mes"], ["anio", "Año"], ["todo", "Acumulado"]];
-    html += '<div class="tarjeta"><div class="periodos">' + ops.map(function (o) {
+    html += '<div class="tarjeta"><h3>📅 Periodo</h3><div class="periodos">' + ops.map(function (o) {
       return '<button class="' + (p === o[0] ? "on" : "") + '" onclick="elegirPeriodoReporte(\'' + o[0] + '\')">' + o[1] + '</button>';
     }).join("") + '</div><div class="aviso">' + nombrePeriodoReporte() + ' · montos en soles</div></div>';
+
+    // ---- Filtros y modo comparación ----
+    html += seccionExplorador();
 
     // =====================================================
     // 1. ESTADÍSTICAS GENERALES
@@ -3130,16 +3364,16 @@
         filaDato("📆 " + (p === "mes" ? "Días" : "Meses") + " con gastos", conGasto + " de " + pz.length) +
       '</table>' +
       '<h3 style="margin-top:16px">Ingresos vs gastos</h3>' + graficoDoble(ent, sal, etiquetas) +
-      '<div class="aviso">🟩 Ingresos · 🟥 Gastos</div>' +
-      '<h3 style="margin-top:16px">Ahorro por ' + unidad + '</h3>' + grafico(netos, etiquetas, "barras", "#2563eb", "#dc2626") +
-      '<div class="aviso">🟦 Ahorraste · 🟥 Gastaste más de lo que entró</div></div>';
+      '<div class="aviso">🟩 Ingresos · 🟥 Gastos (lado a lado)</div>' +
+      '<h3 style="margin-top:16px">Ahorro por ' + unidad + '</h3>' + grafico(netos, etiquetas, "barras", "#2563eb", "#dc2626", false, "S/ ", true) +
+      '<div class="aviso">🟦 Ahorraste · 🟥 Gastaste más de lo que entró (la barra roja muestra cuánto faltó)</div></div>';
 
     // Las curvas no bajan a 0 en los días/meses que aún no llegan
     var hastaHoy = pz.filter(function (x) { return x.desde <= hoyTexto(); }).length || 1;
 
     // Evolución de ingresos y gastos en curvas
     html += '<div class="tarjeta"><h3>📈 Evolución de ingresos y gastos</h3>' +
-      graficoLineas([ent.slice(0, hastaHoy), sal.slice(0, hastaHoy)], ["#16a34a", "#dc2626"], etiquetas, true) +
+      graficoLineas([ent.slice(0, hastaHoy), sal.slice(0, hastaHoy)], ["#16a34a", "#dc2626"], etiquetas, true, ["Ingresos", "Gastos"]) +
       '<div class="leyenda-mini"><span><i style="background:#16a34a"></i>Ingresos</span>' +
       '<span><i style="background:#dc2626"></i>Gastos</span></div></div>';
 
@@ -3172,50 +3406,34 @@
       var detalle = subs.length ? '<div class="subs-rep">' + subs.map(function (s) {
         return '<span>' + limpio(s[0]) + ': S/ ' + plata(s[1]) + '</span>';
       }).join("") + '</div>' : '';
-      return [conIcono(x[0], "gasto"), x[1], detalle];
-    });
-
-    // Evolución de las 3 categorías principales
-    var top3 = ordenar(porCat).slice(0, 3).map(function (x) { return x[0]; });
-    var coloresTop = ["#dc2626", "#f97316", "#9333ea"];
-    var series = top3.map(function (cat) {
-      return pz.map(function (x) {
-        var t = 0;
-        gastos.forEach(function (m) { if (m.categoria === cat && m.fecha >= x.desde && m.fecha <= x.hasta) t += enSoles(m.monto, monedaDe(m.cuenta)); });
-        return t;
-      });
+      return [conIcono(x[0], "gasto"), x[1], detalle, accionCategoria(x[0], "gasto")];
     });
 
     html += '<div class="tarjeta"><h3>🏷️ Gastos por categoría</h3>' +
-      donaHTML(ordenar(porCat).map(function (x) { return [conIcono(x[0], "gasto"), x[1]]; }), tot.gastos) +
+      donaHTML(ordenar(porCat).map(function (x) { return [conIcono(x[0], "gasto"), x[1], accionCategoria(x[0], "gasto")]; }), tot.gastos) +
       '<h3 style="margin-top:16px">🏆 Ranking con subcategorías</h3>' +
       barrasRanking(listaCat, tot.gastos, "#dc2626") + '</div>';
-    if (top3.length) {
-      html += '<div class="tarjeta"><h3>📈 Evolución de tus 3 categorías principales</h3>' +
-        graficoLineas(series.map(function (s) { return s.slice(0, hastaHoy); }), coloresTop, etiquetas) +
-        '<div class="leyenda-mini">' + top3.map(function (c, i) {
-          return '<span><i style="background:' + coloresTop[i] + '"></i>' + conIcono(c, "gasto") + '</span>';
-        }).join("") + '</div></div>';
-    }
     html += '<div class="tarjeta"><h3>🎯 Por ámbito</h3>' +
       barrasRanking(ordenar(porAmb).map(function (x) { var a = ambitos.filter(function (y) { return y.nombre === x[0]; })[0]; return [(a ? a.icono + " " : "") + x[0], x[1]]; }), tot.gastos, "#2563eb") +
       '<h3 style="margin-top:14px">🧭 Por tipo</h3>' +
       barrasRanking(ordenar(porTipo).map(function (x) { var t = tiposGasto.filter(function (y) { return y.nombre === x[0]; })[0]; return [(t ? t.icono + " " : "") + x[0], x[1]]; }), tot.gastos, "#9333ea") +
       '</div>';
     html += '<div class="tarjeta"><h3>💰 Ingresos por categoría</h3>' +
-      barrasRanking(ordenar(porIng).map(function (x) { return [conIcono(x[0], "ingreso"), x[1]]; }), tot.ingresos, "#16a34a") + '</div>';
+      barrasRanking(ordenar(porIng).map(function (x) { return [conIcono(x[0], "ingreso"), x[1], "", accionCategoria(x[0], "ingreso")]; }), tot.ingresos, "#16a34a") + '</div>';
 
     // =====================================================
     // 3. COMBUSTIBLE
     // =====================================================
-    var cargas = enRango.filter(esCarga);
+    var listaVeh = vehiculos();
+    if (listaVeh.indexOf(combCat) === -1) combCat = listaVeh[0];
+    var cargas = enRango.filter(function (m) { return esCarga(m) && m.categoria === combCat; });
     var galonesTot = 0, gastoComb = 0;
     cargas.forEach(function (m) { galonesTot += m.galones || 0; gastoComb += enSoles(m.monto, monedaDe(m.cuenta)); });
     var conGal = cargas.filter(function (m) { return m.galones > 0; });
     var gastoConGal = 0; conGal.forEach(function (m) { gastoConGal += enSoles(m.monto, monedaDe(m.cuenta)); });
 
     // Km recorridos: desde el último odómetro ANTES del periodo (o la primera lectura del periodo)
-    var lecturas = movimientos.filter(function (m) { return m.odometro > 0; })
+    var lecturas = movimientos.filter(function (m) { return m.odometro > 0 && m.categoria === combCat; })
                               .sort(function (a, b) { return a.odometro - b.odometro; });
     var dentro = lecturas.filter(function (m) { return m.fecha >= desde && m.fecha <= hasta; });
     var antes = lecturas.filter(function (m) { return m.fecha < desde; });
@@ -3226,7 +3444,11 @@
       // galones usados para recorrer esos km (sin contar la carga que sirvió de punto de partida)
       dentro.forEach(function (m) { if (m !== base) galRend += m.galones || 0; });
     }
-    var rend = galRend > 0 ? km / galRend : 0;
+    // Rendimiento real: solo de tanque lleno a tanque lleno
+    var rends = calcularRendimientos(combCat).filter(function (r) { return r.m.fecha >= desde && r.m.fecha <= hasta; });
+    var kmR = 0, galR = 0;
+    rends.forEach(function (r) { kmR += r.km; galR += r.gal; });
+    var rend = galR > 0 ? kmR / galR : 0;
 
     // Series para los gráficos
     var galPorPz = [], gasPorPz = [], odoPorPz = [], ultimoOdo = antes.length ? antes[antes.length - 1].odometro : null;
@@ -3242,34 +3464,83 @@
     var primera = odoPorPz.filter(function (v) { return v !== null; })[0];
     odoPorPz = odoPorPz.map(function (v) { return v === null ? primera : v; });
 
-    html += '<div class="tarjeta"><h3>⛽ Combustible</h3>';
+    var refM = refMoto(mesTexto());
+    var catV = buscarCategoria(combCat, "gasto");
+    html += '<div class="tarjeta"><h3>⛽ Combustible</h3>' +
+      (listaVeh.length > 1
+        ? '<div class="campo"><label>Vehículo (categoría)</label><select onchange="combCat=this.value; mostrarReportes()">' +
+          listaVeh.map(function (v) { var c = buscarCategoria(v, "gasto"); return '<option value="' + limpio(v) + '"' + (v === combCat ? ' selected' : '') + '>' + (c ? c.icono + ' ' : '') + limpio(v) + '</option>'; }).join("") +
+          '</select></div>'
+        : '<div class="aviso" style="text-align:left;margin:-4px 0 8px">Vehículo: ' + (catV ? catV.icono + ' ' : '') + limpio(combCat) +
+          ' · Para otro vehículo, crea su categoría con la subcategoría <b>Combustible</b>.</div>') +
+      '<div class="manual-moto"><b>📘 Datos del manual · ' + meses[mesActual] + ' ' + anioActual + '</b>' +
+      '<div class="dos-campos" style="margin-top:6px">' +
+        '<div class="campo"><label>Km por litro</label><input type="number" step="0.1" min="0" value="' + (refM.kmL || "") + '" placeholder="Ej: 42" onchange="guardarRefMoto(\'kmL\', this.value)"></div>' +
+        '<div class="campo"><label>Tanque (litros)</label><input type="number" step="0.1" min="0" value="' + (refM.tanqueL || "") + '" placeholder="Ej: 13.5" onchange="guardarRefMoto(\'tanqueL\', this.value)"></div>' +
+      '</div><div class="aviso" style="text-align:left;margin-top:-4px">Se guardan para este mes; los meses siguientes usan estos datos hasta que los cambies.</div></div>';
     if (!cargas.length) {
-      html += '<div class="vacio">No hay cargas de combustible en este periodo.<br>Regístralas como 🏍️ Moto › Combustible.</div>';
+      html += '<div class="vacio">No hay cargas de combustible de ' + limpio(combCat) + ' en este periodo.<br>Regístralas como ' + limpio(combCat) + ' › Combustible.</div>';
     } else {
+      var ref = refMoto(mesTexto()), rendL = rend / LITROS_GAL;
       html += cajitas([["Gasto", "S/ " + plata(gastoComb), "#dc2626"],
-                       ["Galones", galonesTot.toFixed(2) + " gal"],
+                       ["Cantidad", (galonesTot * LITROS_GAL).toFixed(1) + " L<br><small>" + galonesTot.toFixed(2) + " gal</small>"],
                        ["Cargas", String(cargas.length)]]) +
         '<table class="tabla" style="margin-top:12px">' +
-          filaDato("💲 Precio promedio por galón", conGal.length && galonesTot ? "S/ " + plata(gastoConGal / galonesTot) : "—") +
+          filaDato("💲 Precio promedio", conGal.length && galonesTot ? "S/ " + plata(gastoConGal / galonesTot) + "/gal<br>S/ " + plata(gastoConGal / galonesTot / LITROS_GAL) + "/L" : "—") +
           filaDato("🛣️ Km recorridos", km ? km.toLocaleString("es-PE") + " km" : "—") +
-          filaDato("🚀 Rendimiento promedio", rend ? rend.toFixed(1) + " km/gal" : "—") +
+          filaDato("🚀 Rendimiento real", rend ? "<b>" + rendL.toFixed(1) + " km/L</b><br>" + rend.toFixed(1) + " km/gal" : "—") +
+          filaDato("📘 Según manual", ref.kmL ? ref.kmL + " km/L<br>" + (ref.kmL * LITROS_GAL).toFixed(1) + " km/gal" : "—") +
+          filaDato("📊 Real vs manual", rend && ref.kmL ? '<b style="color:' + (rendL >= ref.kmL * 0.9 ? "#16a34a" : "#dc2626") + '">' + Math.round(rendL / ref.kmL * 100) + "%</b> del manual" : "—") +
+          filaDato("🛢️ Tanque", ref.tanqueL ? ref.tanqueL + " L<br>" + (ref.tanqueL / LITROS_GAL).toFixed(2) + " gal" : "—") +
+          filaDato("🗺️ Autonomía tanque lleno", ref.tanqueL && (rend || ref.kmL)
+            ? (rend ? "Real ≈ " + Math.round(rendL * ref.tanqueL).toLocaleString("es-PE") + " km" : "") + (rend && ref.kmL ? "<br>" : "") +
+              (ref.kmL ? "Manual ≈ " + Math.round(ref.kmL * ref.tanqueL).toLocaleString("es-PE") + " km" : "")
+            : "—") +
           filaDato("🪙 Costo por km", km && gastoComb ? "S/ " + (gastoComb / km).toFixed(2) : "—") +
           filaDato("🧭 Último odómetro", lecturas.length ? lecturas[lecturas.length - 1].odometro.toLocaleString("es-PE") + " km" : "—") +
         '</table>' +
-        '<h3 style="margin-top:16px">⛽ Consumo (galones por ' + unidad + ')</h3>' +
-        grafico(galPorPz, etiquetas, "barras", "#0891b2", "#0891b2") +
+        '<h3 style="margin-top:16px">⛽ Consumo (litros y galones por ' + unidad + ')</h3>' +
+        grafico(galPorPz.map(function (g) { return Math.round(g * LITROS_GAL * 100) / 100; }), etiquetas, "barras", "#0891b2", "#0891b2", false, "", false, " litros",
+                { ejeIzq: "L", ejeDer: { factor: 1 / LITROS_GAL, sufijo: "gal" },
+                  lineas: galPorPz.map(function (g) { return g.toFixed(3) + " galones"; }) }) +
+        '<div class="aviso">Izquierda: litros · derecha (celeste): galones</div>' +
         '<h3 style="margin-top:16px">💸 Gasto en combustible (S/ por ' + unidad + ')</h3>' +
-        grafico(gasPorPz, etiquetas, "barras", "#f97316", "#f97316");
-      if (primera !== undefined) {
-        html += '<h3 style="margin-top:16px">🧭 Evolución del odómetro (km)</h3>' +
-                grafico(odoPorPz, etiquetas, "linea", "#9333ea", "#9333ea", true);
+        grafico(gasPorPz, etiquetas, "barras", "#f97316", "#f97316", false, "S/ ", false, "",
+                { lineas: galPorPz.map(function (g) { return g ? (g * LITROS_GAL).toFixed(2) + " L · " + g.toFixed(3) + " gal" : ""; }) });
+      // Gráfico de rendimiento: un punto por cada tanque lleno, con la línea del manual
+      html += '<h3 style="margin-top:16px">🚀 Rendimiento (km por litro)</h3>';
+      if (rends.length) {
+        var reales = rends.map(function (r) { return Math.round(r.rend / LITROS_GAL * 10) / 10; });
+        var series = [reales], colores = ["#ea580c"], nombres = ["Real"];
+        if (ref.kmL) { series.push(reales.map(function () { return ref.kmL; })); colores.push("#64748b"); nombres.push("Manual"); }
+        var extraRend = rends.map(function (r) {
+          return "= " + r.rend.toFixed(1) + " km/gal · " + r.km + " km con " + (r.gal * LITROS_GAL).toFixed(2) + " L (" + r.gal.toFixed(2) + " gal)";
+        });
+        html += graficoLineas(series, colores, rends.map(function (r) { return r.m.fecha.slice(8, 10) + "/" + r.m.fecha.slice(5, 7); }),
+                              false, nombres, "", " km/L", extraRend) +
+                '<div class="leyenda-mini"><span><i style="background:#ea580c"></i>Real</span>' +
+                (ref.kmL ? '<span><i style="background:#64748b"></i>Manual (' + ref.kmL + ' km/L)</span>' : '') + '</div>' +
+                '<div class="aviso">Un punto por cada tanque lleno · promedio ' + rendL.toFixed(1) + ' km/L (' + rend.toFixed(1) + ' km/gal)</div>';
+      } else {
+        html += '<div class="vacio" style="padding:14px 0">Aún no hay datos. Necesitas <b>dos cargas con tanque lleno</b> (con odómetro) para calcular el rendimiento.</div>';
       }
-      if (km && dentro.length === 1 && !antes.length)
-        html += '<div class="aviso">Con una sola lectura de odómetro aún no se puede calcular el rendimiento.</div>';
+      // Odómetro: un punto por cada carga (así se ve bien cómo suben los km)
+      var conOdo = dentro.slice().sort(function (a, b) { return a.fecha < b.fecha ? -1 : a.fecha > b.fecha ? 1 : a.odometro - b.odometro; });
+      if (conOdo.length) {
+        html += '<h3 style="margin-top:16px">🧭 Evolución del odómetro (km)</h3>' +
+                grafico(conOdo.map(function (m) { return m.odometro; }),
+                        conOdo.map(function (m) { return m.fecha.slice(8, 10) + "/" + m.fecha.slice(5, 7); }),
+                        conOdo.length > 1 ? "linea" : "barras", "#9333ea", "#9333ea", true, "", false, " km",
+                        { lineas: conOdo.map(function (m) { return m.galones ? "Carga: " + (m.galones * LITROS_GAL).toFixed(2) + " L · " + Number(m.galones).toFixed(3) + " gal" : ""; }) }) +
+                '<div class="aviso">Un punto por cada carga · de ' + conOdo[0].odometro.toLocaleString("es-PE") + ' a ' +
+                conOdo[conOdo.length - 1].odometro.toLocaleString("es-PE") + ' km</div>';
+      }
+
     }
     html += '</div>';
 
     document.getElementById("contenidoReportes").innerHTML = html;
+    hacerPlegables(document.getElementById("contenidoReportes"));
   }
 
   function filaDato(nombre, valor) {
@@ -3293,34 +3564,13 @@
              '<text x="90" y="104" text-anchor="middle" font-size="17" font-weight="bold" fill="#1d2433">S/ ' + Math.round(total).toLocaleString("es-PE") + '</text>' +
            '</svg></div>' +
            '<div class="leyenda">' + lista.map(function (x, i) {
-             return '<div><span class="punto" style="background:' + colores[i % colores.length] + '"></span>' +
+             return '<div' + (x[2] ? ' class="clicable" onclick="' + x[2] + '"' : '') + '><span class="punto" style="background:' + colores[i % colores.length] + '"></span>' +
                     '<span class="cat">' + x[0] + '</span><b>S/ ' + plata(x[1]) + '</b>' +
                     '<small>' + Math.round(x[1] / total * 100) + '%</small></div>';
            }).join("") + '</div>';
   }
 
-  // relleno = true: pinta suavecito debajo de cada curva
-  function graficoLineas(series, colores, etiquetas, relleno) {
-    var W = 320, arriba = 12, abajo = 140, n = etiquetas.length;
-    var todos = [0]; series.forEach(function (s) { todos = todos.concat(s); });
-    var max = Math.max.apply(null, todos) || 1;
-    function x(i) { return n > 1 ? i / (n - 1) * (W - 10) + 5 : W / 2; }
-    function y(v) { return arriba + (max - v) / max * (abajo - arriba); }
-    var svg = '<line x1="0" x2="' + W + '" y1="' + y(0) + '" y2="' + y(0) + '" stroke="#e5e7eb"/>';
-    series.forEach(function (s, k) {
-      var pts = s.map(function (v, i) { return [x(i), y(v)]; });
-      if (relleno && pts.length > 1)
-        svg += '<path d="' + curvaSuave(pts) + ' L ' + pts[pts.length - 1][0] + ' ' + y(0) + ' L ' + pts[0][0] + ' ' + y(0) + ' Z" fill="' + colores[k] + '" opacity="0.08"/>';
-      svg += '<path d="' + curvaSuave(pts) + '" fill="none" stroke="' + colores[k] + '" stroke-width="2.5" stroke-linecap="round"/>';
-      if (n <= 31) pts.forEach(function (pt) { svg += '<circle cx="' + pt[0] + '" cy="' + pt[1] + '" r="2" fill="' + colores[k] + '"/>'; });
-    });
-    var cada = Math.ceil(n / 7);
-    etiquetas.forEach(function (e, i) {
-      if (i % cada === 0) svg += '<text x="' + x(i) + '" y="158" font-size="9" fill="#6b7280" text-anchor="' + (i === 0 ? "start" : "middle") + '">' + e + '</text>';
-    });
-    svg += '<text x="' + (W - 2) + '" y="' + (arriba + 2) + '" font-size="9" fill="#9ca3af" text-anchor="end">' + Math.round(max).toLocaleString("es-PE") + '</text>';
-    return '<svg class="graf" viewBox="0 0 ' + W + ' 165">' + svg + '</svg>';
-  }
+
 
 
   // =========================================================
@@ -3457,10 +3707,11 @@
     return s;
   }
   // Estilos (ver styles.xml más abajo)
-  var E = { normal: 0, titulo: 1, cabecera: 2, soles: 3, total: 4, negrita: 5, porcentaje: 6, totalTxt: 7, nota: 8, fecha: 9, totalPct: 10 };
+  var E = { normal: 0, titulo: 1, cabecera: 2, soles: 3, total: 4, negrita: 5, porcentaje: 6, totalTxt: 7, nota: 8, fecha: 9, totalPct: 10,
+            entrada: 11, decimal: 12, entero: 13, totalDec: 14 };
 
   // Una hoja se arma fila por fila: cada celda es {v: valor, s: estilo, f: fórmula}
-  function nuevaHoja(nombre) { return { nombre: nombre, filas: [], graficos: [], anchos: [32, 15, 15, 15, 16, 14, 10, 14, 34] }; }
+  function nuevaHoja(nombre) { return { nombre: nombre, filas: [], graficos: [], validaciones: [], anchos: [32, 15, 15, 15, 16, 14, 10, 14, 34] }; }
   function poner(hoja, fila, col, celda) {
     hoja.filas[fila] = hoja.filas[fila] || [];
     hoja.filas[fila][col] = celda;
@@ -3468,7 +3719,7 @@
   function hojaXML(hoja, conDibujo) {
     var x = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
       '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">' +
-      '<sheetViews><sheetView workbookViewId="0" showGridLines="0"/></sheetViews><cols>' +
+      '<sheetViews><sheetView workbookViewId="0" showGridLines="0"' + (hoja.congelar ? '><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView>' : '/>') + '</sheetViews><cols>' +
       hoja.anchos.map(function (w, i) { return '<col min="' + (i + 1) + '" max="' + (i + 1) + '" width="' + w + '" customWidth="1"/>'; }).join("") +
       '</cols><sheetData>';
     hoja.filas.forEach(function (fila, r) {
@@ -3477,13 +3728,22 @@
       fila.forEach(function (c, col) {
         if (!c) return;
         var ref = letra(col) + (r + 1), s = c.s ? ' s="' + c.s + '"' : '';
-        if (c.f !== undefined) x += '<c r="' + ref + '"' + s + '><f>' + xml(c.f) + '</f><v>' + (isFinite(c.v) ? c.v : 0) + '</v></c>';
+        if (c.f !== undefined && typeof c.v === "string") x += '<c r="' + ref + '"' + s + ' t="str"><f>' + xml(c.f) + '</f><v>' + xml(c.v) + '</v></c>';
+        else if (c.f !== undefined) x += '<c r="' + ref + '"' + s + '><f>' + xml(c.f) + '</f><v>' + (isFinite(c.v) ? c.v : 0) + '</v></c>';
         else if (typeof c.v === "number") x += '<c r="' + ref + '"' + s + '><v>' + (isFinite(c.v) ? Math.round(c.v * 100) / 100 : 0) + '</v></c>';
         else x += '<c r="' + ref + '"' + s + ' t="inlineStr"><is><t xml:space="preserve">' + xml(c.v) + '</t></is></c>';
       });
       x += '</row>';
     });
-    x += '</sheetData><pageMargins left="0.7" right="0.7" top="0.75" bottom="0.75" header="0.3" footer="0.3"/>';
+    x += '</sheetData>';
+    if (hoja.filtro) x += '<autoFilter ref="' + hoja.filtro + '"/>';
+    if (hoja.validaciones && hoja.validaciones.length) {   // celdas con lista desplegable
+      x += '<dataValidations count="' + hoja.validaciones.length + '">' + hoja.validaciones.map(function (v) {
+        return '<dataValidation type="list" allowBlank="1" showInputMessage="1" showErrorMessage="1" sqref="' + v.ref + '">' +
+               '<formula1>' + xml(v.formula) + '</formula1></dataValidation>';
+      }).join("") + '</dataValidations>';
+    }
+    x += '<pageMargins left="0.7" right="0.7" top="0.75" bottom="0.75" header="0.3" footer="0.3"/>';
     if (conDibujo) x += '<drawing r:id="rId1"/>';
     return x + '</worksheet>';
   }
@@ -3504,11 +3764,11 @@
     return '<c:title><c:tx><c:rich><a:bodyPr/><a:p><a:pPr><a:defRPr sz="1200" b="1"/></a:pPr><a:r><a:rPr lang="es-PE" sz="1200" b="1"/><a:t>' +
            xml(t) + '</a:t></a:r></a:p></c:rich></c:tx><c:overlay val="0"/></c:title><c:autoTitleDeleted val="0"/>';
   }
-  function ejes() {
+  function ejes(min) {
     return '<c:catAx><c:axId val="5001"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="b"/>' +
            '<c:numFmt formatCode="General" sourceLinked="0"/><c:majorTickMark val="none"/><c:minorTickMark val="none"/><c:tickLblPos val="low"/>' +
            '<c:crossAx val="5002"/><c:crosses val="autoZero"/><c:auto val="1"/><c:lblAlgn val="ctr"/><c:lblOffset val="100"/><c:noMultiLvlLbl val="0"/></c:catAx>' +
-           '<c:valAx><c:axId val="5002"/><c:scaling><c:orientation val="minMax"/></c:scaling><c:delete val="0"/><c:axPos val="l"/>' +
+           '<c:valAx><c:axId val="5002"/><c:scaling><c:orientation val="minMax"/>' + (min != null ? '<c:min val="' + min + '"/>' : '') + '</c:scaling><c:delete val="0"/><c:axPos val="l"/>' +
            '<c:majorGridlines><c:spPr><a:ln><a:solidFill><a:srgbClr val="E5E7EB"/></a:solidFill></a:ln></c:spPr></c:majorGridlines>' +
            '<c:numFmt formatCode="#,##0" sourceLinked="0"/><c:majorTickMark val="none"/><c:minorTickMark val="none"/><c:tickLblPos val="nextTo"/>' +
            '<c:crossAx val="5001"/><c:crosses val="autoZero"/><c:crossBetween val="between"/></c:valAx>';
@@ -3533,7 +3793,7 @@
       return envolverGrafico(g.titulo, '<c:barChart><c:barDir val="col"/><c:grouping val="clustered"/><c:varyColors val="0"/>' +
         g.series.map(function (s, i) {
           return serie(s, i, '<c:spPr><a:solidFill><a:srgbClr val="' + s.color + '"/></a:solidFill></c:spPr><c:invertIfNegative val="0"/>');
-        }).join("") + '<c:gapWidth val="60"/><c:axId val="5001"/><c:axId val="5002"/></c:barChart>' + ejes(), "b");
+        }).join("") + '<c:gapWidth val="60"/><c:axId val="5001"/><c:axId val="5002"/></c:barChart>' + ejes(g.min), "b");
     }
     if (g.tipo === "linea") {
       return envolverGrafico(g.titulo, '<c:lineChart><c:grouping val="standard"/><c:varyColors val="0"/>' +
@@ -3541,7 +3801,7 @@
           return serie(s, i, '<c:spPr><a:ln w="31750" cap="rnd"><a:solidFill><a:srgbClr val="' + s.color + '"/></a:solidFill></a:ln></c:spPr>' +
                        '<c:marker><c:symbol val="circle"/><c:size val="4"/><c:spPr><a:solidFill><a:srgbClr val="' + s.color + '"/></a:solidFill></c:spPr></c:marker>',
                        '<c:smooth val="1"/>');
-        }).join("") + '<c:marker val="1"/><c:axId val="5001"/><c:axId val="5002"/></c:lineChart>' + ejes(), g.series.length > 1 ? "b" : null);
+        }).join("") + '<c:marker val="1"/><c:axId val="5001"/><c:axId val="5002"/></c:lineChart>' + ejes(g.min), g.series.length > 1 ? "b" : null);
     }
     // dona
     var colores = ["2563EB", "DC2626", "16A34A", "F97316", "9333EA", "0891B2", "CA8A04", "DB2777", "65A30D", "6B7280", "7C3AED"];
@@ -3555,13 +3815,14 @@
     return envolverGrafico(g.titulo, '<c:doughnutChart><c:varyColors val="1"/>' + serie(s, 0, puntos + etiquetas) +
       '<c:firstSliceAng val="0"/><c:holeSize val="55"/></c:doughnutChart>', "r");
   }
-  function dibujoXML(n) {   // coloca n gráficos uno debajo de otro, a la derecha de las tablas
+  function dibujoXML(n, col) {
+    col = col || 10;   // coloca n gráficos uno debajo de otro, a la derecha de las tablas
     var x = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
       '<xdr:wsDr xmlns:xdr="http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">';
     for (var i = 0; i < n; i++) {
       x += '<xdr:twoCellAnchor editAs="oneCell">' +
-        '<xdr:from><xdr:col>10</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>' + (1 + i * 20) + '</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from>' +
-        '<xdr:to><xdr:col>19</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>' + (19 + i * 20) + '</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:to>' +
+        '<xdr:from><xdr:col>' + col + '</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>' + (1 + i * 20) + '</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:from>' +
+        '<xdr:to><xdr:col>' + (col + 9) + '</xdr:col><xdr:colOff>0</xdr:colOff><xdr:row>' + (19 + i * 20) + '</xdr:row><xdr:rowOff>0</xdr:rowOff></xdr:to>' +
         '<xdr:graphicFrame macro=""><xdr:nvGraphicFramePr><xdr:cNvPr id="' + (i + 2) + '" name="Grafico ' + (i + 1) + '"/><xdr:cNvGraphicFramePr/></xdr:nvGraphicFramePr>' +
         '<xdr:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/></xdr:xfrm><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/chart">' +
         '<c:chart xmlns:c="http://schemas.openxmlformats.org/drawingml/2006/chart" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" r:id="rId' + (i + 1) + '"/>' +
@@ -3572,13 +3833,14 @@
 
   // ---- 4. Llenar una hoja de FLUJO DE CAJA ----
   // pedazos: [{etiqueta, desde, hasta}] · conDetalle: lista de movimientos del periodo
-  function hojaFlujo(nombre, titulo, pedazos, conDetalle) {
+  function hojaFlujo(nombre, titulo, pedazos, conDetalle, arriba) {
     var h = nuevaHoja(nombre);
     var desde = pedazos[0].desde, hasta = pedazos[pedazos.length - 1].hasta;
     var f = 0;
     poner(h, f++, 0, { v: "💰 My Money" + (ajustes.nombre ? " de " + ajustes.nombre : "") + " — Flujo de caja — " + titulo, s: E.titulo });
     poner(h, f++, 0, { v: "Montos en soles (los dólares se convierten a S/ " + tipoCambio + " por $1). Las transferencias entre tus cuentas no cuentan como ingreso ni gasto.", s: E.nota });
     f++;
+    if (arriba) f = arriba(h, f);
 
     // RESUMEN
     var tot = entradasSalidas(desde, hasta);
@@ -3694,6 +3956,297 @@
     });
   }
 
+  // ---- 4b. Hoja "Datos": una fila por cada ingreso o gasto (sirve para filtrar y para la tabla dinámica) ----
+  function fechaSerial(t) {
+    var p = t.split("-").map(Number);
+    return (Date.UTC(p[0], p[1] - 1, p[2]) - Date.UTC(1899, 11, 30)) / 86400000;
+  }
+  function fechaCorta(t) { return t.slice(8, 10) + "/" + t.slice(5, 7) + "/" + t.slice(0, 4); }
+  function filasDatos() {
+    return movimientos.filter(function (m) { return m.tipo === "gasto" || m.tipo === "ingreso"; })
+      .sort(function (a, b) { return a.fecha < b.fecha ? -1 : a.fecha > b.fecha ? 1 : a.id - b.id; })
+      .map(function (m) {
+        var carga = esCarga(m), gal = carga && m.galones > 0 ? Number(m.galones) : 0;
+        return { anio: Number(m.fecha.slice(0, 4)), mes: Number(m.fecha.slice(5, 7)), tipo: m.tipo === "gasto" ? "Gasto" : "Ingreso",
+                 cat: m.categoria || "(Sin categoría)", sub: m.subcategoria || "", monto: enSoles(Number(m.monto) || 0, monedaDe(m.cuenta)),
+                 comb: carga ? "Sí" : "No", litros: gal * LITROS_GAL, gal: gal, fecha: m.fecha, cuenta: m.cuenta || "", nota: m.nota || "" };
+      });
+  }
+  // Nombres de categorías para las listas desplegables
+  function listaCategorias(tipo, datos) {
+    var lista = (tipo === "Gasto" ? categoriasGasto : categoriasIngreso).map(function (c) { return c.nombre; });
+    datos.forEach(function (d) { if (d.tipo === tipo && lista.indexOf(d.cat) === -1) lista.push(d.cat); });
+    return lista;
+  }
+  function hojaDatos(datos) {
+    var h = nuevaHoja("Datos");
+    h.anchos = [8, 6, 10, 22, 20, 13, 13, 10, 10, 12, 18, 30, 3, 24, 24, 24];
+    h.congelar = true;
+    ["Año", "Mes", "Tipo", "Categoría", "Subcategoría", "Monto S/", "Combustible", "Litros", "Galones", "Fecha", "Cuenta", "Nota"]
+      .forEach(function (t, i) { poner(h, 0, i, { v: t, s: E.cabecera }); });
+    datos.forEach(function (d, i) {
+      var r = i + 1;
+      poner(h, r, 0, { v: d.anio });            poner(h, r, 1, { v: d.mes });
+      poner(h, r, 2, { v: d.tipo });            poner(h, r, 3, { v: d.cat });
+      poner(h, r, 4, { v: d.sub });             poner(h, r, 5, { v: d.monto, s: E.soles });
+      poner(h, r, 6, { v: d.comb });
+      poner(h, r, 7, { v: d.litros, s: E.decimal }); poner(h, r, 8, { v: d.gal, s: E.decimal });
+      poner(h, r, 9, { v: fechaSerial(d.fecha), s: E.fecha });
+      poner(h, r, 10, { v: d.cuenta });         poner(h, r, 11, { v: d.nota });
+    });
+    h.filtro = "A1:L" + (datos.length + 1);     // flechitas de filtro en cada columna
+    // Listas para las celdas amarillas de la tabla dinámica (columnas N, O, P)
+    var listas = [listaCategorias("Gasto", datos), listaCategorias("Ingreso", datos),
+                  vehiculos().filter(function (v) { return datos.some(function (d) { return d.comb === "Sí" && d.cat === v; }); })];
+    ["Lista: gastos", "Lista: ingresos", "Lista: combustible"].forEach(function (t, k) { poner(h, 0, 13 + k, { v: t, s: E.cabecera }); });
+    listas.forEach(function (l, k) { ["(Todas)"].concat(l).forEach(function (c, i) { poner(h, i + 1, 13 + k, { v: c }); }); });
+    h.largoListas = listas.map(function (l) { return l.length + 1; });
+    return h;
+  }
+
+  // ---- 4c. TABLA DINÁMICA (arriba de la hoja Acumulado) ----
+  // Eliges Tipo / Categoría / Año en las celdas amarillas y Excel recalcula enero a diciembre.
+  function tablaDinamica(h, f, datos, largos) {
+    var n = Math.max(datos.length, 1) + 1;                       // última fila de Datos
+    function rango(L) { return "Datos!$" + L + "$2:$" + L + "$" + n; }
+    var anios = [];
+    datos.forEach(function (d) { if (anios.indexOf(d.anio) === -1) anios.push(d.anio); });
+    anios.sort();
+    if (!anios.length) anios = [anioActual];
+    var anioDef = anios[anios.length - 1];
+
+    poner(h, f, 0, { v: "📊 TABLA DINÁMICA — elige en las celdas amarillas 👇", s: E.cabecera });
+    for (var c = 1; c <= 6; c++) poner(h, f, c, { v: "", s: E.cabecera });
+    f++;
+    var fT = f;
+    poner(h, f, 0, { v: "Tipo", s: E.negrita });      poner(h, f, 1, { v: "Gasto", s: E.entrada });
+    poner(h, f, 2, { v: "👈 Gasto · Ingreso · Combustible", s: E.nota }); f++;
+    poner(h, f, 0, { v: "Categoría", s: E.negrita }); poner(h, f, 1, { v: "(Todas)", s: E.entrada });
+    poner(h, f, 2, { v: "👈 Ej: Moto, Alimentación… o (Todas)", s: E.nota }); f++;
+    poner(h, f, 0, { v: "Año", s: E.negrita });       poner(h, f, 1, { v: anioDef, s: E.entrada });
+    poner(h, f, 2, { v: "👈 Elige el año", s: E.nota }); f++;
+    var T = "$B$" + (fT + 1), C = "$B$" + (fT + 2), A = "$B$" + (fT + 3);
+    h.validaciones.push(
+      { ref: "B" + (fT + 1), formula: '"Gasto,Ingreso,Combustible"' },
+      { ref: "B" + (fT + 2), formula: "IF(" + T + '="Ingreso",Datos!$O$2:$O$' + (1 + largos[1]) +
+                                      ",IF(" + T + '="Combustible",Datos!$P$2:$P$' + (1 + largos[2]) + ",Datos!$N$2:$N$" + (1 + largos[0]) + "))" },
+      { ref: "B" + (fT + 3), formula: '"' + anios.join(",") + '"' });
+    f++;
+
+    var cab = f;
+    ["Mes", "Monto S/", "% del mes", "% del año", "% acumulado", "Litros", "Galones"].forEach(function (t, i) { poner(h, f, i, { v: t, s: E.cabecera }); });
+    f++;
+    // Criterios de SUMIFS: año + tipo (Combustible cuenta como Gasto)
+    var base = "," + rango("A") + "," + A + "," + rango("C") + ",IF(" + T + '="Ingreso","Ingreso","Gasto")';
+    var filtro = "," + rango("D") + ",IF(" + C + '="(Todas)","*",' + C + ")," + rango("G") + ",IF(" + T + '="Combustible","Sí","*")';
+
+    // Valores ya calculados para lo que viene elegido (Gasto · (Todas) · último año)
+    var mesSel = [], mesBase = [], lit = [], gal = [];
+    for (var m = 1; m <= 12; m++) { mesSel.push(0); mesBase.push(0); lit.push(0); gal.push(0); }
+    datos.forEach(function (d) {
+      if (d.anio !== anioDef || d.tipo !== "Gasto") return;
+      mesSel[d.mes - 1] += d.monto; mesBase[d.mes - 1] += d.monto; lit[d.mes - 1] += d.litros; gal[d.mes - 1] += d.gal;
+    });
+    var total = mesSel.reduce(function (a, b) { return a + b; }, 0);
+    var ini = f, fin = f + 11, fTot = f + 12, acum = 0, etq = [];
+    for (m = 1; m <= 12; m++) {
+      var r = f + 1, nom = meses[m - 1].charAt(0) + meses[m - 1].slice(1).toLowerCase();
+      acum += mesSel[m - 1]; etq.push(nom);
+      poner(h, f, 0, { v: nom });
+      poner(h, f, 1, { f: "SUMIFS(" + rango("F") + base + "," + rango("B") + "," + m + filtro + ")", v: mesSel[m - 1], s: E.soles });
+      poner(h, f, 2, { f: "IFERROR(B" + r + "/SUMIFS(" + rango("F") + base + "," + rango("B") + "," + m + "),0)",
+                       v: mesBase[m - 1] ? mesSel[m - 1] / mesBase[m - 1] : 0, s: E.porcentaje });
+      poner(h, f, 3, { f: "IFERROR(B" + r + "/$B$" + (fTot + 1) + ",0)", v: total ? mesSel[m - 1] / total : 0, s: E.porcentaje });
+      poner(h, f, 4, { f: "IFERROR(SUM($B$" + (ini + 1) + ":B" + r + ")/$B$" + (fTot + 1) + ",0)", v: total ? acum / total : 0, s: E.porcentaje });
+      poner(h, f, 5, { f: "SUMIFS(" + rango("H") + base + "," + rango("B") + "," + m + filtro + ")", v: lit[m - 1], s: E.decimal });
+      poner(h, f, 6, { f: "SUMIFS(" + rango("I") + base + "," + rango("B") + "," + m + filtro + ")", v: gal[m - 1], s: E.decimal });
+      f++;
+    }
+    var R = function (L) { return L + (ini + 1) + ":" + L + (fin + 1); };
+    poner(h, f, 0, { v: "TOTAL", s: E.totalTxt });
+    poner(h, f, 1, { f: "SUM(" + R("B") + ")", v: total, s: E.total });
+    poner(h, f, 2, { f: "IFERROR(B" + (f + 1) + "/SUMIFS(" + rango("F") + base + "),0)", v: total ? 1 : 0, s: E.totalPct });
+    poner(h, f, 3, { f: "IF(B" + (f + 1) + "=0,0,1)", v: total ? 1 : 0, s: E.totalPct });
+    poner(h, f, 4, { f: "IF(B" + (f + 1) + "=0,0,1)", v: total ? 1 : 0, s: E.totalPct });
+    poner(h, f, 5, { f: "SUM(" + R("F") + ")", v: lit.reduce(function (a, b) { return a + b; }, 0), s: E.totalDec });
+    poner(h, f, 6, { f: "SUM(" + R("G") + ")", v: gal.reduce(function (a, b) { return a + b; }, 0), s: E.totalDec });
+    f++;
+    var conMonto = mesSel.filter(function (x) { return x > 0; });
+    poner(h, f, 0, { v: "Promedio por mes (con movimiento)", s: E.nota });
+    poner(h, f, 1, { f: 'IFERROR(AVERAGEIF(' + R("B") + ',">0"),0)', v: conMonto.length ? total / conMonto.length : 0, s: E.soles });
+    f++;
+    poner(h, f++, 0, { v: "% del mes = parte del total de " + "gastos (o ingresos) de ese mes · % del año = parte del total elegido · % acumulado = cuánto llevas sumado hasta ese mes.", s: E.nota });
+    poner(h, f++, 0, { v: "Para ver cada movimiento uno por uno, usa las flechitas de filtro de la hoja «Datos».", s: E.nota });
+    f++;
+
+    h.graficos.push({ tipo: "barras", titulo: "Tabla dinámica: monto por mes", hoja: h,
+      cats: { col: 0, f1: ini, f2: fin, valores: etq },
+      series: [{ nombre: "Monto S/", celdaNombre: { col: 1, fila: cab }, col: 1, f1: ini, f2: fin, valores: mesSel, color: "2563EB" }] });
+    return f;
+  }
+
+  // ---- 4d. Hoja COMBUSTIBLE: consumo, rendimiento y odómetro por vehículo ----
+  function hojaCombustible() {
+    var h = nuevaHoja("Combustible");
+    h.anchos = [14, 12, 13, 11, 11, 11, 11, 12, 10, 9, 9, 12];
+    h.colGraficos = 13;
+    var f = 0;
+    poner(h, f++, 0, { v: "⛽ My Money — Control de combustible", s: E.titulo });
+    poner(h, f++, 0, { v: "1 galón = 3.785 litros. Rendimiento = km entre dos tanques llenos ÷ combustible cargado entre ellos. Montos en S/.", s: E.nota });
+    f++;
+    var todas = movimientos.filter(esCarga);
+    var vs = vehiculos().filter(function (v) { return todas.some(function (m) { return m.categoria === v; }); });
+    if (!vs.length) { poner(h, f, 0, { v: "Aún no registras cargas de combustible (gasto con subcategoría «Combustible»).", s: E.nota }); return h; }
+    var mesHoy = hoyTexto().slice(0, 7);
+    function gasto(m) { return enSoles(Number(m.monto) || 0, monedaDe(m.cuenta)); }
+    function porFecha(a, b) { return a.fecha < b.fecha ? -1 : a.fecha > b.fecha ? 1 : (a.odometro || 0) - (b.odometro || 0) || a.id - b.id; }
+
+    // RESUMEN POR VEHÍCULO
+    ["Vehículo", "Cargas", "Litros", "Galones", "Gasto S/", "Km recorridos", "km/L real", "km/gal real", "km/L manual", "S/ por km"]
+      .forEach(function (t, i) { poner(h, f, i, { v: t, s: E.cabecera }); });
+    f++;
+    vs.forEach(function (v) {
+      var cs = todas.filter(function (m) { return m.categoria === v; });
+      var g = cs.reduce(function (a, m) { return a + (Number(m.galones) || 0); }, 0);
+      var plata_ = cs.reduce(function (a, m) { return a + gasto(m); }, 0);
+      var odos = cs.filter(function (m) { return m.odometro > 0; }).map(function (m) { return m.odometro; });
+      var km = odos.length > 1 ? Math.max.apply(null, odos) - Math.min.apply(null, odos) : 0;
+      var rs = calcularRendimientos(v), sk = 0, sg = 0;
+      rs.forEach(function (x) { sk += x.km; sg += x.gal; });
+      poner(h, f, 0, { v: v, s: E.negrita });
+      poner(h, f, 1, { v: cs.length });
+      poner(h, f, 2, { v: g * LITROS_GAL, s: E.decimal });
+      poner(h, f, 3, { v: g, s: E.decimal });
+      poner(h, f, 4, { v: plata_, s: E.soles });
+      poner(h, f, 5, { v: km, s: E.entero });
+      poner(h, f, 6, { v: sg ? sk / sg / LITROS_GAL : 0, s: E.decimal });
+      poner(h, f, 7, { v: sg ? sk / sg : 0, s: E.decimal });
+      poner(h, f, 8, { v: refMoto(mesHoy, v).kmL || 0, s: E.decimal });
+      poner(h, f, 9, { v: km ? plata_ / km : 0, s: E.soles });
+      f++;
+    });
+    f += 2;
+
+    vs.forEach(function (v) {
+      var cs = todas.filter(function (m) { return m.categoria === v; }).sort(porFecha);
+      var rs = calcularRendimientos(v);
+      poner(h, f, 0, { v: "🏍️ " + v.toUpperCase(), s: E.titulo }); f += 2;
+
+      // 1) CONSUMO POR MES
+      var mesesV = [], m0 = cs[0].fecha.slice(0, 7), m1 = cs[cs.length - 1].fecha.slice(0, 7);
+      for (var t = m0; t <= m1; t = mesSiguiente(t)) mesesV.push(t);
+      ["Mes", "Litros", "Galones", "Gasto S/", "Km recorridos", "km/L (llenos)", "Precio prom./gal"].forEach(function (x, i) { poner(h, f, i, { v: x, s: E.cabecera }); });
+      var cabM = f; f++;
+      var iniM = f, etqM = [], litM = [], galM = [], sumM = [0, 0, 0, 0];
+      var conOdo = cs.filter(function (m) { return m.odometro > 0; });
+      mesesV.forEach(function (t) {
+        var delMes = cs.filter(function (m) { return m.fecha.slice(0, 7) === t; });
+        var g = delMes.reduce(function (a, m) { return a + (Number(m.galones) || 0); }, 0);
+        var p = delMes.reduce(function (a, m) { return a + gasto(m); }, 0);
+        var antes = conOdo.filter(function (m) { return m.fecha.slice(0, 7) < t; }).map(function (m) { return m.odometro; });
+        var enMes = conOdo.filter(function (m) { return m.fecha.slice(0, 7) === t; }).map(function (m) { return m.odometro; });
+        var km = 0;
+        if (enMes.length) km = Math.max.apply(null, enMes) - (antes.length ? Math.max.apply(null, antes) : Math.min.apply(null, enMes));
+        var rk = 0, rg = 0;
+        rs.forEach(function (x) { if (x.m.fecha.slice(0, 7) === t) { rk += x.km; rg += x.gal; } });
+        var etiqueta = meses[Number(t.slice(5, 7)) - 1].charAt(0) + meses[Number(t.slice(5, 7)) - 1].slice(1, 3).toLowerCase() + " " + t.slice(0, 4);
+        poner(h, f, 0, { v: etiqueta });
+        poner(h, f, 1, { v: g * LITROS_GAL, s: E.decimal });
+        poner(h, f, 2, { v: g, s: E.decimal });
+        poner(h, f, 3, { v: p, s: E.soles });
+        poner(h, f, 4, { v: Math.max(km, 0), s: E.entero });
+        poner(h, f, 5, { v: rg ? rk / rg / LITROS_GAL : 0, s: E.decimal });
+        poner(h, f, 6, { v: g ? p / g : 0, s: E.soles });
+        etqM.push(etiqueta); litM.push(g * LITROS_GAL); galM.push(g);
+        sumM[0] += g * LITROS_GAL; sumM[1] += g; sumM[2] += p; sumM[3] += Math.max(km, 0);
+        f++;
+      });
+      var finM = f - 1;
+      poner(h, f, 0, { v: "TOTAL", s: E.totalTxt });
+      ["B", "C", "D", "E"].forEach(function (L, i) {
+        poner(h, f, i + 1, { f: "SUM(" + L + (iniM + 1) + ":" + L + (finM + 1) + ")", v: sumM[i], s: i === 2 ? E.total : E.totalDec });
+      });
+      f += 3;
+      h.graficos.push({ tipo: "barras", titulo: v + ": consumo por mes (litros y galones)", hoja: h,
+        cats: { col: 0, f1: iniM, f2: finM, valores: etqM },
+        series: [{ nombre: "Litros", celdaNombre: { col: 1, fila: cabM }, col: 1, f1: iniM, f2: finM, valores: litM, color: "F97316" },
+                 { nombre: "Galones", celdaNombre: { col: 2, fila: cabM }, col: 2, f1: iniM, f2: finM, valores: galM, color: "2563EB" }] });
+
+      // 2) RENDIMIENTO por tanque lleno
+      ["Fecha", "Km recorridos", "Litros", "Galones", "km/L real", "km/gal real", "km/L manual"].forEach(function (x, i) { poner(h, f, i, { v: x, s: E.cabecera }); });
+      var cabR = f; f++;
+      if (!rs.length) {
+        poner(h, f++, 0, { v: "El rendimiento aparece desde el segundo tanque lleno con odómetro.", s: E.nota });
+      } else {
+        var iniR = f, etqR = [], real = [], man = [], tk = 0, tg = 0;
+        rs.forEach(function (x) {
+          var kmL = x.rend / LITROS_GAL, ref = refMoto(x.m.fecha.slice(0, 7), v).kmL || 0;
+          poner(h, f, 0, { v: fechaCorta(x.m.fecha) });
+          poner(h, f, 1, { v: x.km, s: E.entero });
+          poner(h, f, 2, { v: x.gal * LITROS_GAL, s: E.decimal });
+          poner(h, f, 3, { v: x.gal, s: E.decimal });
+          poner(h, f, 4, { f: "IFERROR(B" + (f + 1) + "/C" + (f + 1) + ",0)", v: kmL, s: E.decimal });
+          poner(h, f, 5, { f: "IFERROR(B" + (f + 1) + "/D" + (f + 1) + ",0)", v: x.rend, s: E.decimal });
+          poner(h, f, 6, { v: ref, s: E.decimal });
+          etqR.push(fechaCorta(x.m.fecha)); real.push(kmL); man.push(ref); tk += x.km; tg += x.gal;
+          f++;
+        });
+        var finR = f - 1;
+        poner(h, f, 0, { v: "TOTAL / PROM.", s: E.totalTxt });
+        poner(h, f, 1, { f: "SUM(B" + (iniR + 1) + ":B" + (finR + 1) + ")", v: tk, s: E.totalDec });
+        poner(h, f, 2, { f: "SUM(C" + (iniR + 1) + ":C" + (finR + 1) + ")", v: tg * LITROS_GAL, s: E.totalDec });
+        poner(h, f, 3, { f: "SUM(D" + (iniR + 1) + ":D" + (finR + 1) + ")", v: tg, s: E.totalDec });
+        poner(h, f, 4, { f: "IFERROR(B" + (f + 1) + "/C" + (f + 1) + ",0)", v: tg ? tk / tg / LITROS_GAL : 0, s: E.totalDec });
+        poner(h, f, 5, { f: "IFERROR(B" + (f + 1) + "/D" + (f + 1) + ",0)", v: tg ? tk / tg : 0, s: E.totalDec });
+        poner(h, f, 6, { f: "AVERAGE(G" + (iniR + 1) + ":G" + (finR + 1) + ")", v: man.reduce(function (a, b) { return a + b; }, 0) / man.length, s: E.totalDec });
+        f++;
+        var series = [{ nombre: "km/L real", celdaNombre: { col: 4, fila: cabR }, col: 4, f1: iniR, f2: finR, valores: real, color: "16A34A" }];
+        if (man.some(function (x) { return x > 0; }))
+          series.push({ nombre: "km/L manual", celdaNombre: { col: 6, fila: cabR }, col: 6, f1: iniR, f2: finR, valores: man, color: "9CA3AF" });
+        h.graficos.push({ tipo: "linea", titulo: v + ": rendimiento (km por litro)", hoja: h,
+          cats: { col: 0, f1: iniR, f2: finR, valores: etqR }, series: series });
+      }
+      f += 2;
+
+      // 3) DETALLE DE CARGAS + ODÓMETRO
+      ["Fecha", "Odómetro", "Km desde anterior", "Litros", "Galones", "Precio/gal", "Precio/L", "Monto S/", "Tanque", "km/L", "km/gal"]
+        .forEach(function (x, i) { poner(h, f, i, { v: x, s: E.cabecera }); });
+      var cabD = f; f++;
+      var iniD = f, etqO = [], odoV = [], prev = 0;
+      cs.forEach(function (m) {
+        var g = Number(m.galones) || 0, p = gasto(m);
+        var r = rs.filter(function (x) { return x.m.id === m.id; })[0];
+        poner(h, f, 0, { v: fechaCorta(m.fecha) });
+        if (m.odometro > 0) poner(h, f, 1, { v: m.odometro, s: E.entero });
+        if (m.odometro > 0 && prev) poner(h, f, 2, { v: m.odometro - prev, s: E.entero });
+        poner(h, f, 3, { v: g * LITROS_GAL, s: E.decimal });
+        poner(h, f, 4, { v: g, s: E.decimal });
+        if (g) { poner(h, f, 5, { v: p / g, s: E.soles }); poner(h, f, 6, { v: p / g / LITROS_GAL, s: E.soles }); }
+        poner(h, f, 7, { v: p, s: E.soles });
+        poner(h, f, 8, { v: fueLleno(m) ? "Lleno" : "Parcial" });
+        if (r) { poner(h, f, 9, { v: r.rend / LITROS_GAL, s: E.decimal }); poner(h, f, 10, { v: r.rend, s: E.decimal }); }
+        if (m.odometro > 0) { prev = m.odometro; etqO.push(fechaCorta(m.fecha)); odoV.push(m.odometro); }
+        f++;
+      });
+      var finD = f - 1;
+      f += 3;
+      // El gráfico del odómetro usa su propia tablita (solo cargas con odómetro, sin huecos)
+      if (odoV.length) {
+        poner(h, f, 0, { v: "Fecha", s: E.cabecera }); poner(h, f, 1, { v: "Odómetro (para el gráfico)", s: E.cabecera });
+        var cabO = f; f++;
+        var iniO = f;
+        etqO.forEach(function (e, i) { poner(h, f, 0, { v: e }); poner(h, f, 1, { v: odoV[i], s: E.entero }); f++; });
+        var minO = Math.min.apply(null, odoV), maxO = Math.max.apply(null, odoV);
+        var paso = Math.pow(10, Math.max(1, Math.floor(Math.log10(Math.max(maxO - minO, 10)))));
+        h.graficos.push({ tipo: "linea", titulo: v + ": evolución del odómetro (km)", hoja: h, min: Math.max(0, Math.floor(minO / paso) * paso),
+          cats: { col: 0, f1: iniO, f2: f - 1, valores: etqO },
+          series: [{ nombre: "Odómetro", celdaNombre: { col: 1, fila: cabO }, col: 1, f1: iniO, f2: f - 1, valores: odoV, color: "7C3AED" }] });
+        f += 3;
+      }
+    });
+    return h;
+  }
+
   // ---- 5. Armar todo el libro y descargarlo ----
   // Arma el archivo Excel y lo devuelve (sin descargarlo todavía)
   async function construirExcel() {
@@ -3713,14 +4266,18 @@
     }
     function nombreMes(x) { return meses[x.mes].charAt(0) + meses[x.mes].slice(1).toLowerCase() + " " + x.anio; }
 
-    // Hoja ACUMULADA: un renglón por mes
+    // Datos planos (para la tabla dinámica y para filtrar)
+    var datos = filasDatos(), hd = hojaDatos(datos);
+
+    // Hoja ACUMULADA: tabla dinámica arriba + un renglón por mes
     hojas.push(hojaFlujo("Acumulado", "Acumulado (desde " + nombreMes(listaMeses[0]) + ")",
-      listaMeses.map(function (x) { return { etiqueta: nombreMes(x), desde: x.texto + "-01", hasta: x.texto + "-31" }; }), false));
+      listaMeses.map(function (x) { return { etiqueta: nombreMes(x), desde: x.texto + "-01", hasta: x.texto + "-31" }; }), false,
+      function (h, f) { return tablaDinamica(h, f, datos, hd.largoListas); }));
 
     // Una hoja por AÑO: un renglón por mes
     var anios = [];
     listaMeses.forEach(function (x) { if (anios.indexOf(x.anio) === -1) anios.push(x.anio); });
-    anios.forEach(function (an) {
+    anios.slice().reverse().forEach(function (an) {      // el año más reciente primero
       var pz = [];
       for (var i = 0; i < 12; i++) {
         var tt = an + "-" + String(i + 1).padStart(2, "0");
@@ -3730,7 +4287,7 @@
     });
 
     // Una hoja por MES: un renglón por día + detalle de movimientos
-    listaMeses.forEach(function (x) {
+    listaMeses.slice().reverse().forEach(function (x) {  // el mes más reciente primero
       var dias = new Date(x.anio, x.mes + 1, 0).getDate(), pz = [];
       for (var d = 1; d <= dias; d++) {
         var f = x.texto + "-" + String(d).padStart(2, "0");
@@ -3739,11 +4296,15 @@
       hojas.push(hojaFlujo(nombreMes(x), nombreMes(x), pz, true));
     });
 
+    // Hoja de COMBUSTIBLE: consumo, rendimiento y odómetro
+    hojas.push(hojaCombustible());
+
     // Hoja con TODOS los movimientos
     var hm = nuevaHoja("Movimientos");
     poner(hm, 0, 0, { v: "💰 My Money — Todos los movimientos", s: E.titulo });
     filasMovimientos(hm, 2, movimientos);
     hojas.push(hm);
+    hojas.push(hd);
 
     // Hoja ESCONDIDA "Respaldo": guarda todos tus datos para poder importarlos en otro celular
     var hr = nuevaHoja("Respaldo");
@@ -3767,7 +4328,7 @@
       archivos.push({ nombre: "xl/worksheets/_rels/sheet" + n + ".xml.rels", texto:
         '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
         '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/drawing" Target="../drawings/drawing' + nDib + '.xml"/></Relationships>' });
-      archivos.push({ nombre: "xl/drawings/drawing" + nDib + ".xml", texto: dibujoXML(h.graficos.length) });
+      archivos.push({ nombre: "xl/drawings/drawing" + nDib + ".xml", texto: dibujoXML(h.graficos.length, h.colGraficos) });
       tipos.push('<Override PartName="/xl/drawings/drawing' + nDib + '.xml" ContentType="application/vnd.openxmlformats-officedocument.drawing+xml"/>');
       var relsDib = [];
       h.graficos.forEach(function (g, k) {
@@ -3797,13 +4358,15 @@
         '<fonts count="5"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font>' +
         '<font><b/><sz val="16"/><color rgb="FF1E3A8A"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>' +
         '<font><i/><sz val="10"/><color rgb="FF6B7280"/><name val="Calibri"/></font></fonts>' +
-        '<fills count="4"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>' +
+        '<fills count="5"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill>' +
         '<fill><patternFill patternType="solid"><fgColor rgb="FF1E3A8A"/><bgColor indexed="64"/></patternFill></fill>' +
-        '<fill><patternFill patternType="solid"><fgColor rgb="FFEEF2FF"/><bgColor indexed="64"/></patternFill></fill></fills>' +
-        '<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border>' +
-        '<border><left/><right/><top style="thin"><color rgb="FF1E3A8A"/></top><bottom/><diagonal/></border></borders>' +
+        '<fill><patternFill patternType="solid"><fgColor rgb="FFEEF2FF"/><bgColor indexed="64"/></patternFill></fill>' +
+        '<fill><patternFill patternType="solid"><fgColor rgb="FFFDE68A"/><bgColor indexed="64"/></patternFill></fill></fills>' +
+        '<borders count="3"><border><left/><right/><top/><bottom/><diagonal/></border>' +
+        '<border><left/><right/><top style="thin"><color rgb="FF1E3A8A"/></top><bottom/><diagonal/></border>' +
+        '<border><left style="medium"><color rgb="FFD97706"/></left><right style="medium"><color rgb="FFD97706"/></right><top style="medium"><color rgb="FFD97706"/></top><bottom style="medium"><color rgb="FFD97706"/></bottom><diagonal/></border></borders>' +
         '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
-        '<cellXfs count="11">' +
+        '<cellXfs count="15">' +
           '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
           '<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
           '<xf numFmtId="0" fontId="3" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/>' +
@@ -3815,6 +4378,10 @@
           '<xf numFmtId="0" fontId="4" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
           '<xf numFmtId="14" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>' +
           '<xf numFmtId="9" fontId="1" fillId="3" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1"/>' +
+          '<xf numFmtId="0" fontId="1" fillId="4" borderId="2" xfId="0" applyFont="1" applyFill="1" applyBorder="1"/>' +
+          '<xf numFmtId="2" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>' +
+          '<xf numFmtId="3" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>' +
+          '<xf numFmtId="2" fontId="1" fillId="3" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1"/>' +
         '</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>' }
     );
 
@@ -3955,7 +4522,7 @@
     document.getElementById("tutorial").classList.remove("abierto");
     cerrarTodo();
     window.scrollTo({ top: 0, behavior: "smooth" });
-    try { localStorage.setItem("mymoney_tutorial_visto", "1"); } catch (e) {}
+    try { localStorage.setItem("mymoney2_tutorial_visto", "1"); } catch (e) {}
   }
   function pasoTutorial(direccion) {
     pasoActual += direccion;
@@ -4034,7 +4601,7 @@
   // La primera vez que alguien abre la app, el tutorial sale solo
   function tutorialPrimeraVez() {
     var visto = null;
-    try { visto = localStorage.getItem("mymoney_tutorial_visto"); } catch (e) {}
+    try { visto = localStorage.getItem("mymoney2_tutorial_visto"); } catch (e) {}
     if (!visto) abrirTutorial();
   }
 
@@ -4554,6 +5121,7 @@
       for (var k in r.ajustes) ajustes[k] = r.ajustes[k];
       ajustes.pin = pinActual;            // el PIN de este celular no se cambia
       if (r.fijos) fijos = r.fijos;
+      quitarSubcuentas();
     } else {
       // Agregar solo lo que no existe todavía
       r.movimientos.forEach(function (m) { if (!movimientos.some(function (x) { return x.id === m.id; })) movimientos.push(m); });
@@ -4569,9 +5137,9 @@
     }
     guardarTodo(); guardarCuentas(); guardarCategorias(); guardarFijos();
     try {
-      localStorage.setItem("mymoney_limite", limitePersonal);
-      localStorage.setItem("mymoney_tc", tipoCambio);
-      localStorage.setItem("mymoney_ajustes", JSON.stringify(ajustes));
+      localStorage.setItem("mymoney2_limite", limitePersonal);
+      localStorage.setItem("mymoney2_tc", tipoCambio);
+      localStorage.setItem("mymoney2_ajustes", JSON.stringify(ajustes));
     } catch (e) {}
     var cuantos = movimientos.length;
     cerrarImportar();
@@ -4595,7 +5163,7 @@
     var n = document.getElementById("inputNombre").value.trim();
     if (!n) { document.getElementById("nombreError").textContent = "Escribe tu nombre 🙂"; return; }
     ajustes.nombre = n;
-    try { localStorage.setItem("mymoney_ajustes", JSON.stringify(ajustes)); } catch (e) {}
+    try { localStorage.setItem("mymoney2_ajustes", JSON.stringify(ajustes)); } catch (e) {}
     document.getElementById("ventanaNombre").classList.remove("abierto");
     mostrarSaludo();
     if (nombrePrimeraVez) tutorialPrimeraVez();   // después del nombre, el tutorial
@@ -4617,8 +5185,8 @@
   // =========================================================
   // Cada fijo: { id, plantilla: {tipo, monto, cuenta, categoria…}, dia, ultimoMes: "2026-11", activo }
   var fijos = [];
-  try { var gf = localStorage.getItem("mymoney_fijos"); if (gf) fijos = JSON.parse(gf); } catch (e) {}
-  function guardarFijos() { try { localStorage.setItem("mymoney_fijos", JSON.stringify(fijos)); } catch (e) {} }
+  try { var gf = localStorage.getItem("mymoney2_fijos"); if (gf) fijos = JSON.parse(gf); } catch (e) {}
+  function guardarFijos() { try { localStorage.setItem("mymoney2_fijos", JSON.stringify(fijos)); } catch (e) {} }
 
   function mesSiguiente(t) {   // "2026-12" → "2027-01"
     var a = Number(t.slice(0, 4)), m = Number(t.slice(5, 7)) + 1;
@@ -4793,6 +5361,579 @@
   }
 
 
+  // =========================================================
+  //  FLUJO DE CAJA POR MONEDA (barras con banderitas)
+  // =========================================================
+  // Ingresos y gastos de un periodo, separados en soles y dólares (cada uno en su moneda).
+  // Los ajustes positivos cuentan como ingreso y los negativos como gasto.
+  function flujoPorMoneda(desde, hasta) {
+    var r = { iPEN: 0, gPEN: 0, iUSD: 0, gUSD: 0 };
+    movimientos.forEach(function (m) {
+      if (m.fecha < desde || m.fecha > hasta) return;
+      var mon = monedaDe(m.cuenta) === "USD" ? "USD" : "PEN";
+      if (m.tipo === "ingreso") r["i" + mon] += m.monto;
+      if (m.tipo === "gasto")   r["g" + mon] += m.monto;
+      if (m.tipo === "ajuste") { if (m.monto >= 0) r["i" + mon] += m.monto; else r["g" + mon] += -m.monto; }
+    });
+    return r;
+  }
+
+  // Banderita dibujada (no emoji, porque en Windows las banderas emoji no se ven)
+  function banderaSVG(pais, x, y, w) {
+    var h = w * 0.66, s = "";
+    if (pais === "PE") {                       // Perú: rojo · blanco · rojo (vertical)
+      s += '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" fill="#ffffff" stroke="#d1d5db" stroke-width="0.3"/>';
+      s += '<rect x="' + x + '" y="' + y + '" width="' + (w / 3) + '" height="' + h + '" fill="#d91023"/>';
+      s += '<rect x="' + (x + w * 2 / 3) + '" y="' + y + '" width="' + (w / 3) + '" height="' + h + '" fill="#d91023"/>';
+    } else {                                   // EE.UU.: franjas rojas y blancas + cuadro azul
+      s += '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" fill="#ffffff" stroke="#d1d5db" stroke-width="0.3"/>';
+      for (var k = 0; k < 7; k += 2) s += '<rect x="' + x + '" y="' + (y + k * h / 7) + '" width="' + w + '" height="' + (h / 7) + '" fill="#b22234"/>';
+      s += '<rect x="' + x + '" y="' + y + '" width="' + (w * 0.45) + '" height="' + (h * 4 / 7) + '" fill="#3c3b6e"/>';
+    }
+    return s;
+  }
+  function banderaHTML(pais) {
+    return '<svg class="bandera" viewBox="0 0 18 12">' + banderaSVG(pais, 0, 0, 18) + '</svg>';
+  }
+
+  // 4 barras por grupo, todas desde la línea base:
+  // gastos $ · ingresos $ · ingresos S/ · gastos S/   (con su banderita en la punta)
+  function graficoFlujoMonedas(grupos) {
+    var W = 320, arriba = 16, abajo = 140, n = grupos.length;
+    var alto = function (g, k) { return k === "gUSD" || k === "iUSD" ? g[k] * tipoCambio : g[k]; };
+    var max = 1;
+    grupos.forEach(function (g) { ["gUSD", "iUSD", "iPEN", "gPEN"].forEach(function (k) { max = Math.max(max, alto(g, k)); }); });
+    var mk = marcasEje(0, max);
+    function y(v) { return abajo - v / mk.max * (abajo - arriba); }
+    var ancho = (W - EJE) / n, barra = Math.min(16, ancho * 0.8 / 4), svg = dibujarEjeY(mk, y, W), toques = "";
+    var orden = [["gUSD", "#dc2626", "US", "Gastos"], ["iUSD", "#16a34a", "US", "Ingresos"], ["iPEN", "#16a34a", "PE", "Ingresos"], ["gPEN", "#dc2626", "PE", "Gastos"]];
+    grupos.forEach(function (g, i) {
+      var x0 = EJE + i * ancho + (ancho - barra * 4) / 2;
+      orden.forEach(function (o, j) {
+        var v = alto(g, o[0]), bx = x0 + j * barra;
+        // Zona para tocar (un poco más ancha que la barra, para que sea fácil con el dedo)
+        var monto = o[2] === "US" ? "$ " + plata(g[o[0]]) + " (≈ S/ " + plata(v) + ")" : "S/ " + plata(g[o[0]]);
+        if (v > 0) toques += zonaToque(bx, barra, arriba, abajo, bx + barra / 2, y(v), v, o[1],
+                     g.etiqueta + (g.sub ? " (" + g.sub + ")" : "") + "|" + o[3] + (o[2] === "US" ? " en dólares" : " en soles") + "|" + monto);
+        if (v <= 0) return;                                   // sin monto: sin barra
+        var by = y(v);
+        svg += '<rect x="' + (bx + 0.4) + '" y="' + by + '" width="' + (barra - 0.8) + '" height="' + (abajo - by) + '" rx="1" fill="' + o[1] + '"' +
+               (o[2] === "US" ? ' opacity="0.75"' : '') + '/>';
+        var fw = Math.max(barra - 1, 4);
+        svg += banderaSVG(o[2], bx + (barra - fw) / 2, by - fw * 0.66 - 1.5, fw);
+      });
+      var cx = EJE + i * ancho + ancho / 2;
+      svg += '<text x="' + cx + '" y="153" font-size="' + (n > 6 ? 7.5 : 9) + '" fill="#6b7280" text-anchor="middle">' + g.etiqueta + '</text>';
+      if (g.sub) svg += '<text x="' + cx + '" y="163" font-size="7.5" fill="#9ca3af" text-anchor="middle">' + g.sub + '</text>';
+    });
+    return svgTocable(W, 168) + svg + toques + '</svg>';
+  }
+
+
+
+  // =========================================================
+  //  EJE Y CON CIFRAS + TOCAR UNA BARRA/PUNTO PARA VER EL MONTO
+  // =========================================================
+  var EJE = 36;   // espacio a la izquierda para las cifras del eje Y
+
+  // 3500 → "3.5k" · 12000 → "12k" · 850 → "850"
+  function cifraCorta(v) {
+    var a = Math.abs(v), t;
+    if (a >= 1e6) t = (a / 1e6).toFixed(1).replace(/\.0$/, "") + "M";
+    else if (a >= 1e4) t = Math.round(a / 1e3) + "k";
+    else if (a >= 1e3) t = (a / 1e3).toFixed(1).replace(/\.0$/, "") + "k";
+    else if (a >= 100) t = String(Math.round(a));
+    else t = String(Math.round(a * 10) / 10);          // números chicos: con 1 decimal (ej. 1.5 galones)
+    return (v < 0 ? "−" : "") + t;
+  }
+
+  // Elige marcas "redondas" para el eje (0, 500, 1000…) entre min y max
+  function marcasEje(min, max) {
+    if (max === min) max = min + 1;
+    var bruto = (max - min) / 4, pot = Math.pow(10, Math.floor(Math.log10(bruto))), f = bruto / pot;
+    var paso = (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * pot;
+    var lo = Math.floor(min / paso) * paso, hi = Math.ceil(max / paso) * paso, lista = [];
+    for (var v = lo; v <= hi + paso / 2; v += paso) lista.push(Math.round(v * 100) / 100);
+    return { min: lo, max: hi, lista: lista };
+  }
+
+  // Si las marcas están muy juntas (ej. odómetro 10,100 · 10,200) se muestran completas, no "10k"
+  function cifraEje(v, paso) {
+    return paso < 1000 && Math.abs(v) >= 1000 ? Math.round(v).toLocaleString("es-PE") : cifraCorta(v);
+  }
+  // Dibuja el eje Y: rayitas suaves de fondo y las cifras a la izquierda
+  function dibujarEjeY(marcas, y, W) {
+    var paso = marcas.lista.length > 1 ? marcas.lista[1] - marcas.lista[0] : 1;
+    var s = '<line x1="' + EJE + '" x2="' + EJE + '" y1="' + y(marcas.max) + '" y2="' + y(marcas.min) + '" stroke="#d1d5db"/>';
+    marcas.lista.forEach(function (v) {
+      s += '<line x1="' + EJE + '" x2="' + W + '" y1="' + y(v) + '" y2="' + y(v) + '" stroke="' + (v === 0 ? "#cbd5e1" : "#eef0f4") + '"' + (v === 0 ? '' : ' stroke-dasharray="2 3"') + '/>';
+      s += '<text x="' + (EJE - 4) + '" y="' + (y(v) + 3) + '" font-size="' + (cifraEje(v, paso).length > 5 ? 7 : 8) + '" fill="#9ca3af" text-anchor="end">' + cifraEje(v, paso) + '</text>';
+    });
+    return s;
+  }
+
+  // Zona invisible que se puede tocar. ys/vs/cs pueden traer varios valores separados por ";"
+  function zonaToque(x, ancho, arriba, abajo, xc, ys, vs, cs, texto) {
+    return '<rect class="toque" x="' + x + '" y="' + arriba + '" width="' + Math.max(ancho, 1) + '" height="' + (abajo - arriba) + '" fill="transparent"' +
+           ' data-x="' + xc + '" data-y="' + ys + '" data-v="' + vs + '" data-c="' + cs + '" data-t="' + texto.replace(/"/g, "&quot;") + '"/>';
+  }
+
+  // Al tocar: línea punteada hasta el eje Y, la cifra en el eje y un globito con los montos
+  function tocarGrafico(ev) {
+    var svg = ev.currentTarget, el = ev.target.closest ? ev.target.closest(".toque") : null;
+    var viejo = svg.querySelector(".marcador");
+    if (viejo) viejo.remove();
+    if (!el || (viejo && viejo.dataset.de === el.dataset.x + el.dataset.t)) return;   // segundo toque = cerrar
+    var W = Number(svg.dataset.w || 320), x = Number(el.dataset.x);
+    var ys = el.dataset.y.split(";").map(Number), vs = el.dataset.v.split(";").map(Number), cs = el.dataset.c.split(";");
+    var g = '';
+    ys.forEach(function (y, i) {
+      g += '<line x1="' + EJE + '" x2="' + x + '" y1="' + y + '" y2="' + y + '" stroke="' + cs[i] + '" stroke-width="1" stroke-dasharray="3 2"/>';
+      g += '<circle cx="' + x + '" cy="' + y + '" r="2.8" fill="' + cs[i] + '" stroke="white" stroke-width="1"/>';
+      g += '<rect x="1" y="' + (y - 6) + '" width="' + (EJE - 3) + '" height="12" rx="3" fill="' + cs[i] + '"/>';
+      var et = Math.abs(vs[i]) >= 1000 && Math.abs(vs[i]) < 100000 ? Math.round(vs[i]).toLocaleString("es-PE") : cifraCorta(vs[i]);
+      g += '<text x="' + (EJE - 4) + '" y="' + (y + 3) + '" font-size="' + (et.length > 5 ? 7 : 8) + '" font-weight="bold" fill="white" text-anchor="end">' + et + '</text>';
+    });
+    // Globito con el detalle
+    var lineas = el.dataset.t.split("|"), ancho = 12 + Math.max.apply(null, lineas.map(function (l) { return l.length; })) * 4.5;
+    var alto = 6 + lineas.length * 11, ymin = Math.min.apply(null, ys);
+    var gx = Math.max(EJE + 2, Math.min(W - ancho - 2, x - ancho / 2));
+    var gy = ymin - alto - 8 >= 2 ? ymin - alto - 8 : Math.min(Math.max.apply(null, ys) + 8, 150 - alto);
+    g += '<rect x="' + gx + '" y="' + gy + '" width="' + ancho + '" height="' + alto + '" rx="5" fill="#111827" opacity="0.92"/>';
+    lineas.forEach(function (l, i) {
+      g += '<text x="' + (gx + 6) + '" y="' + (gy + 13 + i * 11) + '" font-size="8.5" fill="white"' + (i === 0 ? ' font-weight="bold"' : '') + '>' + l + '</text>';
+    });
+    var grupo = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    grupo.setAttribute("class", "marcador");
+    grupo.dataset.de = el.dataset.x + el.dataset.t;
+    grupo.innerHTML = g;
+    svg.appendChild(grupo);
+  }
+  // Abre la etiqueta <svg> de un gráfico tocable
+  function svgTocable(W, H) {
+    return '<svg class="graf tocable" viewBox="0 0 ' + W + ' ' + H + '" data-w="' + W + '" onclick="tocarGrafico(event)">';
+  }
+
+  // ---------- GRÁFICO DE BARRAS O LÍNEA (uno solo) ----------
+  // sinCero = true: la escala no empieza en 0 (útil para el odómetro)
+  // soloArriba = true: las barras negativas también se dibujan hacia ARRIBA (en rojo); nada baja del eje
+  // extra (opcional): { ejeDer: { factor, sufijo } → cifras de otra unidad a la derecha (ej. galones),
+  //                    lineas: ["texto extra para el globito de cada punto", ...] }
+  function grafico(valores, etiquetas, tipo, colorPos, colorNeg, sinCero, prefijo, soloArriba, sufijo, extra) {
+    prefijo = prefijo || ""; sufijo = sufijo || ""; extra = extra || {};
+    var W = extra.ejeDer ? 292 : 320, arriba = extra.ejeDer ? 20 : 10, abajo = 140, n = valores.length;
+    var reales = valores;
+    if (soloArriba) valores = valores.map(function (v) { return Math.abs(v); });
+    var mk = marcasEje(Math.min.apply(null, sinCero ? valores : valores.concat([0])), Math.max.apply(null, sinCero ? valores : valores.concat([0])));
+    function y(v) { return arriba + (mk.max - v) / (mk.max - mk.min) * (abajo - arriba); }
+    var ancho = W - EJE, paso = ancho / n, svg = dibujarEjeY(mk, y, W), toques = "";
+    function xc(i) { return EJE + i * paso + paso / 2; }
+
+    if (tipo === "barras") {
+      valores.forEach(function (v, i) {
+        var y0 = y(Math.max(mk.min, 0)), color = reales[i] < 0 ? colorNeg : colorPos;
+        svg += '<rect x="' + (EJE + i * paso + paso * 0.15) + '" y="' + Math.min(y(v), y0) + '" width="' + (paso * 0.7) +
+               '" height="' + Math.abs(y(v) - y0) + '" rx="2" fill="' + color + '"/>';
+        toques += zonaToque(EJE + i * paso, paso, arriba, abajo, xc(i), y(v), v, color,
+                            etiquetas[i] + "|" + (reales[i] < 0 ? "− " : "") + prefijo + plata(Math.abs(reales[i])) + sufijo +
+                            (extra.lineas && extra.lineas[i] ? "|" + extra.lineas[i] : ""));
+      });
+    } else {
+      var linea = "";
+      valores.forEach(function (v, i) { linea += (i ? " L " : "M ") + xc(i) + " " + y(v); });
+      svg += '<path d="' + linea + ' L ' + xc(n - 1) + ' ' + y(mk.min) + ' L ' + xc(0) + ' ' + y(mk.min) + ' Z" fill="' + colorPos + '" opacity="0.12"/>';
+      svg += '<path d="' + linea + '" fill="none" stroke="' + colorPos + '" stroke-width="2.5" stroke-linejoin="round"/>';
+      valores.forEach(function (v, i) {
+        if (n <= 31) svg += '<circle cx="' + xc(i) + '" cy="' + y(v) + '" r="2.5" fill="' + colorPos + '"/>';
+        toques += zonaToque(EJE + i * paso, paso, arriba, abajo, xc(i), y(v), v, colorPos, etiquetas[i] + "|" + prefijo + plata(v) + sufijo +
+                            (extra.lineas && extra.lineas[i] ? "|" + extra.lineas[i] : ""));
+      });
+    }
+    var cada = Math.ceil(n / 7);
+    etiquetas.forEach(function (e, i) {
+      if (i % cada === 0) svg += '<text x="' + xc(i) + '" y="156" font-size="8.5" fill="#6b7280" text-anchor="middle">' + e + '</text>';
+    });
+    // Eje derecho con la otra unidad (ej. litros a la izquierda, galones a la derecha)
+    if (extra.ejeDer) {
+      svg += '<line x1="' + W + '" x2="' + W + '" y1="' + y(mk.max) + '" y2="' + y(mk.min) + '" stroke="#d1d5db"/>';
+      mk.lista.forEach(function (v) {
+        var w = v * extra.ejeDer.factor;
+        svg += '<text x="' + (W + 3) + '" y="' + (y(v) + 3) + '" font-size="7.5" fill="#0891b2" text-anchor="start">' + (Math.round(w * 10) / 10) + '</text>';
+      });
+      svg += '<text x="' + (W + 3) + '" y="9" font-size="7.5" font-weight="bold" fill="#0891b2">' + extra.ejeDer.sufijo + '</text>';
+      svg += '<text x="' + (EJE - 4) + '" y="9" font-size="7.5" font-weight="bold" fill="#6b7280" text-anchor="end">' + (extra.ejeIzq || "") + '</text>';
+    }
+    return (extra.ejeDer ? '<svg class="graf tocable" viewBox="0 0 320 162" data-w="' + W + '" onclick="tocarGrafico(event)">' : svgTocable(W, 162)) + svg + toques + '</svg>';
+  }
+
+  // ---------- INGRESOS Y GASTOS LADO A LADO (los dos sobre el eje) ----------
+  function graficoDoble(entradas, salidas, etiquetas) {
+    var W = 320, arriba = 10, abajo = 140, n = entradas.length;
+    var mk = marcasEje(0, Math.max.apply(null, entradas.concat(salidas, [1])));
+    function y(v) { return arriba + (mk.max - v) / (mk.max - mk.min) * (abajo - arriba); }
+    var paso = (W - EJE) / n, svg = dibujarEjeY(mk, y, W), toques = "";
+    for (var i = 0; i < n; i++) {
+      var w = paso * 0.38, x1 = EJE + i * paso + paso * 0.1, x2 = x1 + w + paso * 0.04;
+      svg += '<rect x="' + x1 + '" y="' + y(entradas[i]) + '" width="' + w + '" height="' + (abajo - y(entradas[i])) + '" rx="2" fill="#16a34a"/>';
+      svg += '<rect x="' + x2 + '" y="' + y(salidas[i]) + '" width="' + w + '" height="' + (abajo - y(salidas[i])) + '" rx="2" fill="#dc2626"/>';
+      toques += zonaToque(EJE + i * paso, paso / 2, arriba, abajo, x1 + w / 2, y(entradas[i]), entradas[i], "#16a34a", etiquetas[i] + "|Ingresos: S/ " + plata(entradas[i]));
+      toques += zonaToque(EJE + i * paso + paso / 2, paso / 2, arriba, abajo, x2 + w / 2, y(salidas[i]), salidas[i], "#dc2626", etiquetas[i] + "|Gastos: S/ " + plata(salidas[i]));
+    }
+    var cada = Math.ceil(n / 7);
+    etiquetas.forEach(function (e, i) {
+      if (i % cada === 0) svg += '<text x="' + (EJE + i * paso + paso / 2) + '" y="156" font-size="8.5" fill="#6b7280" text-anchor="middle">' + e + '</text>';
+    });
+    return svgTocable(W, 162) + svg + toques + '</svg>';
+  }
+
+
+  // ---------- VARIAS CURVAS ----------
+  // relleno = true: pinta suavecito debajo de cada curva · nombres: para el globito
+  function graficoLineas(series, colores, etiquetas, relleno, nombres, prefijo, sufijo, lineasExtra) {
+    nombres = nombres || [];
+    if (prefijo === undefined) prefijo = "S/ ";
+    sufijo = sufijo || "";
+    var W = 320, arriba = 12, abajo = 140, n = etiquetas.length;
+    var todos = [0]; series.forEach(function (s) { todos = todos.concat(s); });
+    var mk = marcasEje(Math.min.apply(null, todos), Math.max.apply(null, todos));
+    function x(i) { return n > 1 ? EJE + 6 + i / (n - 1) * (W - EJE - 12) : (W + EJE) / 2; }
+    function y(v) { return arriba + (mk.max - v) / (mk.max - mk.min) * (abajo - arriba); }
+    var svg = dibujarEjeY(mk, y, W), toques = "";
+    series.forEach(function (s, k) {
+      var pts = s.map(function (v, i) { return [x(i), y(v)]; });
+      if (!pts.length) return;
+      if (relleno && pts.length > 1)
+        svg += '<path d="' + curvaSuave(pts) + ' L ' + pts[pts.length - 1][0] + ' ' + y(0) + ' L ' + pts[0][0] + ' ' + y(0) + ' Z" fill="' + colores[k] + '" opacity="0.08"/>';
+      svg += '<path d="' + curvaSuave(pts) + '" fill="none" stroke="' + colores[k] + '" stroke-width="2.5" stroke-linecap="round"/>';
+      if (n <= 31) pts.forEach(function (pt) { svg += '<circle cx="' + pt[0] + '" cy="' + pt[1] + '" r="2" fill="' + colores[k] + '"/>'; });
+    });
+    var largo = Math.max.apply(null, series.map(function (s) { return s.length; }));
+    var paso = n > 1 ? (W - EJE - 12) / (n - 1) : W - EJE;
+    for (var i = 0; i < largo; i++) {
+      var ys = [], vs = [], cs = [], txt = [etiquetas[i]];
+      series.forEach(function (s, k) {
+        if (i >= s.length) return;
+        ys.push(y(s[i])); vs.push(s[i]); cs.push(colores[k]);
+        txt.push((nombres[k] ? nombres[k] + ": " : "") + prefijo + plata(s[i]) + sufijo);
+      });
+      if (lineasExtra && lineasExtra[i]) txt.push(lineasExtra[i]);
+      toques += zonaToque(x(i) - paso / 2, paso, arriba, abajo, x(i), ys.join(";"), vs.join(";"), cs.join(";"), txt.join("|"));
+    }
+    var cada = Math.ceil(n / 7);
+    etiquetas.forEach(function (e, i) {
+      if (i % cada === 0) svg += '<text x="' + x(i) + '" y="156" font-size="8.5" fill="#6b7280" text-anchor="middle">' + e + '</text>';
+    });
+    return svgTocable(W, 162) + svg + toques + '</svg>';
+  }
+
+
+  // =========================================================
+  //  SUBCUENTAS (ej. Billetera › Soles / Dólares)
+  // =========================================================
+  // Cada subcuenta es una cuenta normal (con su moneda y su saldo) que además tiene "grupo" y "sub".
+  // Su nombre completo es "Grupo · Sub" (ej. "Billetera · Soles").
+  function nombreSubcuenta(grupo, sub) { return sub ? grupo + " · " + sub : grupo; }
+
+  // Lista desplegable de cuentas agrupada: Billetera → Soles / Dólares …
+  function opcionesCuentas() {
+    var html = "", grupo = null;
+    cuentas.forEach(function (c) {
+      var mon = " (" + simbolo(c.moneda).trim() + ")";
+      if (c.grupo) {
+        if (grupo !== c.grupo) {
+          if (grupo) html += '</optgroup>';
+          html += '<optgroup label="' + c.icono + ' ' + limpio(c.grupo) + '">';
+          grupo = c.grupo;
+        }
+        html += '<option value="' + limpio(c.nombre) + '">' + limpio(c.grupo) + ' › ' + limpio(c.sub) + mon + '</option>';
+      } else {
+        if (grupo) { html += '</optgroup>'; grupo = null; }
+        html += '<option value="' + limpio(c.nombre) + '">' + c.icono + ' ' + limpio(c.nombre) + mon + '</option>';
+      }
+    });
+    if (grupo) html += '</optgroup>';
+    return html;
+  }
+
+  // Deja juntas las subcuentas de un mismo grupo (respetando el orden en que aparecen)
+  function ordenarPorGrupo() {
+    var orden = [];
+    cuentas.forEach(function (c) { var g = c.grupo || c.nombre; if (orden.indexOf(g) === -1) orden.push(g); });
+    cuentas = cuentas.map(function (c, i) { return { c: c, i: i }; })
+      .sort(function (a, b) { return orden.indexOf(a.c.grupo || a.c.nombre) - orden.indexOf(b.c.grupo || b.c.nombre) || a.i - b.i; })
+      .map(function (x) { return x.c; });
+  }
+
+  // Cambia el nombre de una cuenta en todos los movimientos y fijos
+  function renombrarCuentaEnTodo(viejo, nuevo) {
+    movimientos.forEach(function (m) { if (m.cuenta === viejo) m.cuenta = nuevo; if (m.destino === viejo) m.destino = nuevo; });
+    fijos.forEach(function (f) { if (f.plantilla.cuenta === viejo) f.plantilla.cuenta = nuevo; if (f.plantilla.destino === viejo) f.plantilla.destino = nuevo; });
+  }
+
+  // UNA SOLA VEZ: pasa las cuentas antiguas al formato con subcuentas
+  function migrarSubcuentas() {
+    if (ajustes.migSub1) return;
+    var mapa = { "Billetera": ["Billetera", "Soles"], "Dólares": ["Billetera", "Dólares"], "Sip": ["Sip", "Débito"],
+                 "Sip Ahorros": ["Sip", "Ahorros"], "Interbank": ["Interbank", "Ahorros"], "Interbank AFP": ["Interbank", "AFP"] };
+    cuentas.forEach(function (c) {
+      var m = mapa[c.nombre];
+      if (!m || c.grupo) return;
+      var nuevo = nombreSubcuenta(m[0], m[1]);
+      if (buscarCuenta(nuevo)) return;
+      renombrarCuentaEnTodo(c.nombre, nuevo);
+      c.nombre = nuevo; c.grupo = m[0]; c.sub = m[1];
+    });
+    // Caja chica (soles y dólares), justo después de la Billetera
+    if (!cuentas.some(function (c) { return c.grupo === "Caja chica" || c.nombre === "Caja chica"; })) {
+      var pos = 0;
+      cuentas.forEach(function (c, i) { if (c.grupo === "Billetera") pos = i + 1; });
+      cuentas.splice(pos, 0,
+        { nombre: "Caja chica · Soles",   grupo: "Caja chica", sub: "Soles",   icono: "🗃️", moneda: "PEN", color: ["#a16207"] },
+        { nombre: "Caja chica · Dólares", grupo: "Caja chica", sub: "Dólares", icono: "🗃️", moneda: "USD", color: ["#a16207"] });
+    }
+    ordenarPorGrupo();
+    ajustes.migSub1 = true;
+    guardarTodo(); guardarCuentas(); guardarFijos();
+    try { localStorage.setItem("mymoney2_ajustes", JSON.stringify(ajustes)); } catch (e) {}
+  }
+
+
+  // =========================================================
+  //  REPORTES: FILTROS Y MODO COMPARACIÓN
+  // =========================================================
+  var expModo = "gasto";          // "gasto", "ingreso" o "comparar"
+  var expAgrupa = "mes";          // "dia", "mes" o "anio"
+  var expCats = [];               // categorías elegidas (vacío = todas)
+  var expComp = "totales";        // "categorias" o "totales"
+  var expTot = { ingresos: true, gastos: true, saldo: false };
+  var coloresExp = ["#2563eb", "#dc2626", "#16a34a", "#f97316", "#9333ea", "#0891b2", "#ca8a04", "#db2777", "#65a30d", "#6b7280"];
+
+  function expCambiar(campo, valor) {
+    if (campo === "modo") { expModo = valor; expCats = []; }
+    if (campo === "agrupa") expAgrupa = valor;
+    if (campo === "comp") { expComp = valor; expCats = []; }
+    if (campo === "tot") expTot[valor] = !expTot[valor];
+    if (campo === "cat") {
+      if (valor === "__todas") expCats = [];
+      else if (expCats.indexOf(valor) !== -1) expCats = expCats.filter(function (c) { return c !== valor; });
+      else expCats.push(valor);
+    }
+    mostrarReportes();
+  }
+
+  // Periodos: días del mes elegido · meses del año elegido · todos los años
+  function pedazosExp() {
+    var lista = [];
+    if (expAgrupa === "dia") {
+      var dias = new Date(anioActual, mesActual + 1, 0).getDate();
+      for (var d = 1; d <= dias; d++) {
+        var f = mesTexto() + "-" + String(d).padStart(2, "0");
+        lista.push({ etiqueta: String(d), desde: f, hasta: f });
+      }
+    } else if (expAgrupa === "mes") {
+      for (var i = 0; i < 12; i++) {
+        var mm = anioActual + "-" + String(i + 1).padStart(2, "0");
+        lista.push({ etiqueta: meses[i], desde: mm + "-01", hasta: mm + "-31" });
+      }
+    } else {
+      var fechas = movimientos.map(function (m) { return m.fecha; }).sort();
+      var desde = fechas.length ? Number(fechas[0].slice(0, 4)) : new Date().getFullYear();
+      var hasta = Math.max(new Date().getFullYear(), fechas.length ? Number(fechas[fechas.length - 1].slice(0, 4)) : 0);
+      for (var a = desde; a <= hasta; a++) lista.push({ etiqueta: String(a), desde: a + "-01-01", hasta: a + "-12-31" });
+    }
+    return lista;
+  }
+  function nombreAgrupa() {
+    return expAgrupa === "dia" ? "por día · " + meses[mesActual] + " " + anioActual
+         : expAgrupa === "mes" ? "por mes · " + anioActual : "por año";
+  }
+
+  // Suma (en soles) de un tipo de movimiento, opcionalmente solo de ciertas categorías
+  function sumaExp(tipo, desde, hasta, cats) {
+    var t = 0;
+    movimientos.forEach(function (m) {
+      if (m.tipo !== tipo || m.fecha < desde || m.fecha > hasta) return;
+      if (cats && cats.length && cats.indexOf(m.categoria) === -1) return;
+      t += enSoles(m.monto, monedaDe(m.cuenta));
+    });
+    return t;
+  }
+
+  function botonesExp(opciones, actual, campo) {
+    return '<div class="periodos">' + opciones.map(function (o) {
+      return '<button class="' + (actual === o[0] ? "on" : "") + '" onclick="expCambiar(\'' + campo + '\',\'' + o[0] + '\')">' + o[1] + '</button>';
+    }).join("") + '</div>';
+  }
+  function chipsCategorias(tipo, conTodas) {
+    var lista = tipo === "gasto" ? categoriasGasto : categoriasIngreso;
+    return '<div class="chips-sel">' +
+      (conTodas ? '<button class="' + (expCats.length ? "" : "on") + '" onclick="expCambiar(\'cat\',\'__todas\')">Todas</button>' : '') +
+      lista.map(function (c) {
+        var i = expCats.indexOf(c.nombre);
+        var estilo = i !== -1 && expModo === "comparar" ? ' style="background:' + coloresExp[i % coloresExp.length] + ';border-color:' + coloresExp[i % coloresExp.length] + '"' : '';
+        return '<button class="' + (i !== -1 ? "on" : "") + '"' + estilo + ' onclick="expCambiar(\'cat\',\'' + c.nombre.replace(/'/g, "\\'") + '\')">' + c.icono + ' ' + limpio(c.nombre) + '</button>';
+      }).join("") + '</div>';
+  }
+
+  var expFiltrosOcultos = false;
+  function seccionExplorador() {
+    var pz = pedazosExp(), etq = pz.map(function (p) { return p.etiqueta; });
+    var hoyT = hoyTexto(), hastaHoy = pz.filter(function (p) { return p.desde <= hoyT; }).length || 1;
+    var html = '';
+    var ctrl = botonesExp([["gasto", "− Gastos"], ["ingreso", "+ Ingresos"], ["comparar", "⚖️ Comparar"]], expModo, "modo") +
+      botonesExp([["dia", "Día"], ["mes", "Mes"], ["anio", "Año"]], expAgrupa, "agrupa") +
+      '<div class="aviso" style="margin:-4px 0 8px">' + nombreAgrupa() + ' · usa ‹ › arriba para cambiar de mes/año · montos en soles</div>';
+
+    if (expModo === "gasto" || expModo === "ingreso") {
+      var tipo = expModo;
+      ctrl += '<div class="aviso" style="text-align:left;margin-bottom:4px">Elige categorías (puedes marcar varias):</div>' + chipsCategorias(tipo, true);
+      var vals = pz.map(function (p) { return sumaExp(tipo, p.desde, p.hasta, expCats); });
+      var total = vals.reduce(function (a, b) { return a + b; }, 0);
+      var conMov = vals.filter(function (v) { return v > 0; }).length;
+      var maxI = vals.indexOf(Math.max.apply(null, vals));
+      var color = tipo === "gasto" ? "#dc2626" : "#16a34a";
+      html += cajitas([["Total", "S/ " + plata(total), color],
+                       ["Promedio", "S/ " + plata(conMov ? total / conMov : 0)],
+                       ["Mayor", vals[maxI] > 0 ? etq[maxI] : "—"]]) +
+              grafico(vals, etq, "barras", color, color, false, "S/ ") +
+              '<div class="aviso">' + (expCats.length ? expCats.join(" · ") : "Todas las categorías") + ' · el promedio cuenta solo los periodos con movimientos</div>';
+      // Detalle por categoría elegida
+      var lista = (tipo === "gasto" ? categoriasGasto : categoriasIngreso)
+        .filter(function (c) { return !expCats.length || expCats.indexOf(c.nombre) !== -1; })
+        .map(function (c) { return [c.icono + " " + limpio(c.nombre), sumaExp(tipo, pz[0].desde, pz[pz.length - 1].hasta, [c.nombre]), "", accionCategoria(c.nombre, tipo)]; })
+        .filter(function (x) { return x[1] > 0; }).sort(function (a, b) { return b[1] - a[1]; });
+      if (lista.length > 1) html += '<h3 style="margin-top:12px">Detalle</h3>' + barrasRanking(lista, total, color);
+    } else {
+      ctrl += botonesExp([["totales", "Ingresos · Gastos · Saldo"], ["categorias", "Categorías"]], expComp, "comp");
+      if (expComp === "totales") {
+        ctrl += '<div class="chips-sel">' + [["ingresos", "+ Ingresos", "#16a34a"], ["gastos", "− Gastos", "#dc2626"], ["saldo", "🏦 Saldo", "#2563eb"]].map(function (o) {
+          return '<button class="' + (expTot[o[0]] ? "on" : "") + '"' + (expTot[o[0]] ? ' style="background:' + o[2] + ';border-color:' + o[2] + '"' : '') +
+                 ' onclick="expCambiar(\'tot\',\'' + o[0] + '\')">' + o[1] + '</button>';
+        }).join("") + '</div>';
+        var series = [], colores = [], nombres = [], resumen = [];
+        if (expTot.ingresos) { var si = pz.map(function (p) { return sumaExp("ingreso", p.desde, p.hasta); }); series.push(si.slice(0, hastaHoy)); colores.push("#16a34a"); nombres.push("Ingresos"); resumen.push(["Ingresos", "S/ " + plata(si.reduce(function (a, b) { return a + b; }, 0)), "#16a34a"]); }
+        if (expTot.gastos)   { var sg = pz.map(function (p) { return sumaExp("gasto", p.desde, p.hasta); });   series.push(sg.slice(0, hastaHoy)); colores.push("#dc2626"); nombres.push("Gastos");   resumen.push(["Gastos", "S/ " + plata(sg.reduce(function (a, b) { return a + b; }, 0)), "#dc2626"]); }
+        if (expTot.saldo)    { var ss = pz.map(function (p) { return totalEnSoles(p.hasta); });                 series.push(ss.slice(0, hastaHoy)); colores.push("#2563eb"); nombres.push("Saldo");    resumen.push(["Saldo final", "S/ " + plata(ss[hastaHoy - 1]), "#2563eb"]); }
+        if (!series.length) html += '<div class="vacio">Marca al menos uno: ingresos, gastos o saldo.</div>';
+        else html += cajitas(resumen) + graficoLineas(series, colores, etq, false, nombres) +
+                     '<div class="leyenda-mini">' + nombres.map(function (n, i) { return '<span><i style="background:' + colores[i] + '"></i>' + n + '</span>'; }).join("") + '</div>';
+      } else {
+        ctrl += '<div class="aviso" style="text-align:left;margin-bottom:4px">Marca las categorías de gasto que quieres comparar:</div>' + chipsCategorias("gasto", false);
+        if (!expCats.length) html += '<div class="vacio">Marca 2 o más categorías para compararlas.</div>';
+        else {
+          var seriesC = expCats.map(function (c) { return pz.map(function (p) { return sumaExp("gasto", p.desde, p.hasta, [c]); }).slice(0, hastaHoy); });
+          var colC = expCats.map(function (c, i) { return coloresExp[i % coloresExp.length]; });
+          html += graficoLineas(seriesC, colC, etq, false, expCats) +
+                  '<div class="leyenda-mini">' + expCats.map(function (c, i) {
+                    var tot = seriesC[i].reduce(function (a, b) { return a + b; }, 0);
+                    return '<span><i style="background:' + colC[i] + '"></i>' + limpio(c) + ': S/ ' + plata(tot) + '</span>';
+                  }).join("") + '</div>';
+        }
+      }
+    }
+    // Resumen de los filtros (se ve cuando están ocultos)
+    var resumenF = { gasto: "Gastos", ingreso: "Ingresos", comparar: "Comparar" }[expModo] + " · " +
+      { dia: "Día", mes: "Mes", anio: "Año" }[expAgrupa] +
+      (expModo === "comparar" ? " · " + (expComp === "totales" ? "Ingresos/Gastos/Saldo" : "Categorías") : "") +
+      (expCats.length ? " · " + expCats.join(", ") : (expModo !== "comparar" ? " · Todas" : ""));
+    return '<div class="tarjeta"><h3>🔎 Filtros y comparación</h3>' +
+      '<button class="toggle-filtros" onclick="expFiltrosOcultos=!expFiltrosOcultos; mostrarReportes()">' +
+        (expFiltrosOcultos ? '⚙️ Mostrar filtros ▾' : '⚙️ Ocultar filtros ▴') + '</button>' +
+      (expFiltrosOcultos ? '<div class="aviso" style="text-align:left;margin:0 0 8px">' + limpio(resumenF) + '</div>'
+                         : '<div class="filtros-exp">' + ctrl + '</div>') +
+      html + '</div>';
+  }
+
+
+  // =========================================================
+  //  ECONOMÍA MENSUAL: barra de soles y barra de dólares
+  // =========================================================
+  // Lo que te sobró (ingresos − gastos) cada mes, por moneda. Todas las barras van hacia arriba:
+  // azul = ahorraste · rojo = gastaste más de lo que entró.
+  function ahorroPorMoneda(desde, hasta) {
+    var r = { PEN: 0, USD: 0, ingPEN: 0 };
+    movimientos.forEach(function (m) {
+      if (m.fecha < desde || m.fecha > hasta) return;
+      var mon = monedaDe(m.cuenta) === "USD" ? "USD" : "PEN";
+      if (m.tipo === "ingreso") { r[mon] += m.monto; if (mon === "PEN") r.ingPEN += m.monto; }
+      if (m.tipo === "gasto") r[mon] -= m.monto;
+    });
+    return r;
+  }
+  function graficoEconomiaMonedas(grupos) {
+    var W = 320, arriba = 16, abajo = 140, n = grupos.length, max = 1;
+    grupos.forEach(function (g) { max = Math.max(max, Math.abs(g.PEN), Math.abs(g.USD) * tipoCambio); });
+    var mk = marcasEje(0, max);
+    function y(v) { return abajo - v / mk.max * (abajo - arriba); }
+    var ancho = (W - EJE) / n, barra = Math.min(14, ancho * 0.8 / 2), svg = dibujarEjeY(mk, y, W), toques = "";
+    grupos.forEach(function (g, i) {
+      var x0 = EJE + i * ancho + (ancho - barra * 2) / 2;
+      [["USD", "US"], ["PEN", "PE"]].forEach(function (o, j) {
+        var real = g[o[0]], alto = Math.abs(o[0] === "USD" ? real * tipoCambio : real), bx = x0 + j * barra;
+        if (!real) return;
+        var color = real < 0 ? "#dc2626" : "#2563eb", by = y(alto);
+        svg += '<rect x="' + (bx + 0.4) + '" y="' + by + '" width="' + (barra - 0.8) + '" height="' + (abajo - by) + '" rx="1" fill="' + color + '"' + (o[0] === "USD" ? ' opacity="0.7"' : '') + '/>';
+        var fw = Math.max(barra - 1, 4);
+        svg += banderaSVG(o[1], bx + (barra - fw) / 2, by - fw * 0.66 - 1.5, fw);
+        var txt = o[0] === "USD" ? "$ " + plata(Math.abs(real)) + " (≈ S/ " + plata(alto) + ")" : "S/ " + plata(Math.abs(real));
+        toques += zonaToque(bx, barra, arriba, abajo, bx + barra / 2, by, alto, color,
+                            g.etiqueta + "|" + (real < 0 ? "Faltó " : "Ahorro ") + (o[0] === "USD" ? "en dólares" : "en soles") + "|" + (real < 0 ? "− " : "") + txt);
+      });
+      svg += '<text x="' + (EJE + i * ancho + ancho / 2) + '" y="153" font-size="7.5" fill="#6b7280" text-anchor="middle">' + g.etiqueta + '</text>';
+    });
+    return svgTocable(W, 160) + svg + toques + '</svg>';
+  }
+
+
+  // =========================================================
+  //  VOLVER A CUENTAS INDIVIDUALES (sin subcuentas)
+  // =========================================================
+  function quitarSubcuentas() {
+    var mapa = { "Billetera · Soles": "Billetera", "Billetera · Dólares": "Dólares", "Sip · Débito": "Sip",
+                 "Sip · Ahorros": "Sip Ahorros", "Interbank · Ahorros": "Interbank", "Interbank · AFP": "Interbank AFP" };
+    var cambio = false;
+    cuentas = cuentas.filter(function (c) {
+      if (!c.grupo) return true;
+      cambio = true;
+      // La Caja chica creada automáticamente se quita si no tiene movimientos
+      if (c.grupo === "Caja chica" && !movimientos.some(function (m) { return m.cuenta === c.nombre || m.destino === c.nombre; })) return false;
+      var nuevo = mapa[c.nombre] || (c.grupo + " " + c.sub);
+      while (buscarCuenta(nuevo) && buscarCuenta(nuevo) !== c) nuevo += " (2)";
+      renombrarCuentaEnTodo(c.nombre, nuevo);
+      c.nombre = nuevo; delete c.grupo; delete c.sub;
+      return true;
+    });
+    if (cambio) { guardarTodo(); guardarCuentas(); guardarFijos(); }
+  }
+
+
+  // =========================================================
+  //  TARJETAS PLEGABLES (tocar el título para esconder/mostrar)
+  // =========================================================
+  var plegadas = {};
+  try { plegadas = JSON.parse(localStorage.getItem("mymoney2_plegadas") || "{}"); } catch (e) {}
+
+  function hacerPlegables(contenedor) {
+    Array.prototype.forEach.call(contenedor.querySelectorAll(":scope > .tarjeta"), function (t) {
+      var h = t.querySelector(":scope > h3");
+      if (!h) return;
+      var clave = h.textContent.trim();
+      // Todo lo que va después del título se mete en un "cuerpo" que se puede esconder
+      var cuerpo = document.createElement("div"), interior = document.createElement("div");
+      cuerpo.className = "cuerpo-plegable"; interior.className = "interior-plegable";
+      while (h.nextSibling) interior.appendChild(h.nextSibling);
+      cuerpo.appendChild(interior); t.appendChild(cuerpo);
+      t.classList.add("plegable");
+      if (plegadas[clave]) t.classList.add("plegada");
+      h.onclick = function () {
+        t.classList.toggle("plegada");
+        plegadas[clave] = t.classList.contains("plegada");
+        try { localStorage.setItem("mymoney2_plegadas", JSON.stringify(plegadas)); } catch (e) {}
+      };
+    });
+  }
+
+
   // ---- MENSAJES: alertas ⚠️ y motivación 🎉 ----
   // Cada regla revisa algo de tu mes y, si se cumple, agrega un mensaje.
   function mostrarMensajes() {
@@ -4918,6 +6059,7 @@
   }
 
   aplicarAjustes();   // modo oscuro y secciones
+  quitarSubcuentas(); // vuelve a cuentas individuales si había subcuentas
   generarFijos();     // anota solos los movimientos fijos que ya tocaban
   refrescar();        // ¡Encender todo al abrir la app!
   mostrarBloqueo();   // pide el PIN si tienes uno
