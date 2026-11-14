@@ -3842,7 +3842,7 @@
   }
   // Estilos (ver styles.xml más abajo)
   var E = { normal: 0, titulo: 1, cabecera: 2, soles: 3, total: 4, negrita: 5, porcentaje: 6, totalTxt: 7, nota: 8, fecha: 9, totalPct: 10,
-            entrada: 11, decimal: 12, entero: 13, totalDec: 14 };
+            entrada: 11, decimal: 12, entero: 13, totalDec: 14, dolares: 15, totalUsd: 16 };
 
   // Una hoja se arma fila por fila: cada celda es {v: valor, s: estilo, f: fórmula}
   function nuevaHoja(nombre) { return { nombre: nombre, filas: [], graficos: [], validaciones: [], anchos: [32, 15, 15, 15, 16, 14, 10, 14, 34] }; }
@@ -3972,7 +3972,7 @@
     var desde = pedazos[0].desde, hasta = pedazos[pedazos.length - 1].hasta;
     var f = 0;
     poner(h, f++, 0, { v: "💰 My Money" + (ajustes.nombre ? " de " + ajustes.nombre : "") + " — Flujo de caja — " + titulo, s: E.titulo });
-    poner(h, f++, 0, { v: "Montos en soles (los dólares se convierten a S/ " + tipoCambio + " por $1). Las transferencias entre tus cuentas no cuentan como ingreso ni gasto.", s: E.nota });
+    poner(h, f++, 0, { v: "El RESUMEN separa soles y dólares. Lo demás está en soles (los dólares × " + tipoCambio + "). Las transferencias entre tus cuentas no cuentan como ingreso ni gasto.", s: E.nota });
     f++;
     if (arriba) f = arriba(h, f);
 
@@ -3982,22 +3982,58 @@
     var antes = dia0.getFullYear() + "-" + String(dia0.getMonth() + 1).padStart(2, "0") + "-" + String(dia0.getDate()).padStart(2, "0");
     var inicial = desde <= "0000-12-31" ? 0 : totalEnSoles(antes);
     var final = totalEnSoles(hasta);
-    poner(h, f, 0, { v: "RESUMEN", s: E.cabecera }); poner(h, f, 1, { v: "S/", s: E.cabecera }); f++;
-    var fR = f;
-    poner(h, f, 0, { v: "Saldo inicial", s: E.negrita });               poner(h, f++, 1, { v: inicial, s: E.soles });
-    var ajNeto = tot.ajPos - tot.ajNeg, neto = tot.ingresos - tot.gastos + ajNeto;
-    poner(h, f, 0, { v: "+ Ingresos" });                                poner(h, f++, 1, { v: tot.ingresos, s: E.soles });
-    poner(h, f, 0, { v: "− Gastos" });                                  poner(h, f++, 1, { v: tot.gastos, s: E.soles });
-    poner(h, f, 0, { v: "± Ajustes de saldo" });                        poner(h, f++, 1, { v: ajNeto, s: E.soles });
-    poner(h, f, 0, { v: "= Flujo neto", s: E.negrita });                poner(h, f++, 1, { f: "B" + (fR + 2) + "-B" + (fR + 3) + "+B" + (fR + 4), v: neto, s: E.soles });
-    poner(h, f, 0, { v: "± Tipo de cambio y transferencias a cuentas fuera del total" });            poner(h, f++, 1, { v: final - inicial - neto, s: E.soles });
-    poner(h, f, 0, { v: "Saldo final", s: E.totalTxt });                poner(h, f++, 1, { f: "B" + (fR + 1) + "+B" + (fR + 5) + "+B" + (fR + 6), v: final, s: E.total });
-    poner(h, f, 0, { v: "Tasa de ahorro (ingresos − gastos)" });
-    poner(h, f++, 1, { f: "IF(B" + (fR + 2) + "=0,0,(B" + (fR + 2) + "-B" + (fR + 3) + ")/B" + (fR + 2) + ")", v: tot.ingresos ? (tot.ingresos - tot.gastos) / tot.ingresos : 0, s: E.porcentaje });
+    // RESUMEN separado por moneda (soles y dólares no se mezclan)
+    ["RESUMEN", "🇵🇪 Soles", "🇺🇸 Dólares", "Todo en S/"].forEach(function (t, i) { poner(h, f, i, { v: t, s: E.cabecera }); });
     f++;
+    var mon = {};
+    ["PEN", "USD"].forEach(function (mo) {
+      var r = { ini: desde <= "0000-12-31" ? 0 : saldoMoneda(mo, antes), fin: saldoMoneda(mo, hasta), ing: 0, gas: 0, aj: 0 };
+      movimientos.forEach(function (m) {
+        if (m.fecha < desde || m.fecha > hasta || !cuentaEnGraficos(m)) return;
+        if ((monedaDe(m.cuenta) === "USD" ? "USD" : "PEN") !== mo) return;
+        if (m.tipo === "ingreso") r.ing += m.monto;
+        if (m.tipo === "gasto")   r.gas += m.monto;
+        if (m.tipo === "ajuste")  r.aj  += m.monto;
+      });
+      r.otros = r.fin - r.ini - r.ing + r.gas - r.aj;
+      mon[mo] = r;
+    });
+    var fR = f, TC = tipoCambio;
+    function filaRes(txt, estTxt, pen, usd, formula, est) {
+      var r = f + 1;
+      poner(h, f, 0, { v: txt, s: estTxt });
+      if (formula) {
+        poner(h, f, 1, { f: formula("B"), v: pen, s: est || E.soles });
+        poner(h, f, 2, { f: formula("C"), v: usd, s: est === E.total ? E.totalUsd : E.dolares });
+      } else {
+        poner(h, f, 1, { v: pen, s: E.soles });
+        poner(h, f, 2, { v: usd, s: E.dolares });
+      }
+      poner(h, f, 3, { f: "B" + r + "+C" + r + "*" + TC, v: pen + usd * TC, s: est || E.soles });
+      f++;
+    }
+    var P = mon.PEN, U = mon.USD;
+    filaRes("Saldo inicial", E.negrita, P.ini, U.ini);
+    filaRes("+ Ingresos", 0, P.ing, U.ing);
+    filaRes("− Gastos", 0, P.gas, U.gas);
+    filaRes("± Ajustes de saldo", 0, P.aj, U.aj);
+    filaRes("= Flujo neto (ingresos − gastos ± ajustes)", E.negrita, P.ing - P.gas + P.aj, U.ing - U.gas + U.aj,
+      function (L) { return L + (fR + 2) + "-" + L + (fR + 3) + "+" + L + (fR + 4); });
+    filaRes("± Cambios de moneda y transferencias a cuentas fuera del total", 0, P.otros, U.otros);
+    filaRes("Saldo final", E.totalTxt, P.fin, U.fin,
+      function (L) { return L + (fR + 1) + "+" + L + (fR + 5) + "+" + L + (fR + 6); }, E.total);
+    poner(h, f, 0, { v: "Tasa de ahorro (ingresos − gastos)" });
+    ["B", "C", "D"].forEach(function (L, i) {
+      var ing = [P.ing, U.ing, P.ing + U.ing * TC][i], gas = [P.gas, U.gas, P.gas + U.gas * TC][i];
+      poner(h, f, i + 1, { f: "IF(" + L + (fR + 2) + "=0,0,(" + L + (fR + 2) + "-" + L + (fR + 3) + ")/" + L + (fR + 2) + ")", v: ing ? (ing - gas) / ing : 0, s: E.porcentaje });
+    });
+    f++;
+    poner(h, f++, 0, { v: "«Todo en S/» = soles + dólares × " + TC + ". Las tablas y gráficos de abajo están todos en soles.", s: E.nota });
+    f++;
+    var ajNeto = P.aj + U.aj * TC, neto = tot.ingresos - tot.gastos + ajNeto;
 
     // FLUJO POR PERIODO
-    ["Periodo", "Ingresos", "Gastos", "Ajustes", "Flujo neto", "Saldo"].forEach(function (t, i) { poner(h, f, i, { v: t, s: E.cabecera }); });
+    ["Periodo (todo en S/)", "Ingresos", "Gastos", "Ajustes", "Flujo neto", "Saldo"].forEach(function (t, i) { poner(h, f, i, { v: t, s: E.cabecera }); });
     var fCab = f; f++;
     var fIni = f, ing = [], gas = [], sal = [], etq = [];
     pedazos.forEach(function (p) {
@@ -4546,7 +4582,7 @@
         '<sheets>' + hojasLibro.join("") + '</sheets><calcPr calcId="191029" fullCalcOnLoad="1"/></workbook>' },
       { nombre: "xl/_rels/workbook.xml.rels", texto: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' + relsLibro.join("") + '</Relationships>' },
       { nombre: "xl/styles.xml", texto: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
-        '<numFmts count="1"><numFmt numFmtId="164" formatCode="&quot;S/ &quot;#,##0.00;[Red]&quot;S/ -&quot;#,##0.00"/></numFmts>' +
+        '<numFmts count="2"><numFmt numFmtId="164" formatCode="&quot;S/ &quot;#,##0.00;[Red]&quot;S/ -&quot;#,##0.00"/><numFmt numFmtId="165" formatCode="&quot;US$ &quot;#,##0.00;[Red]&quot;US$ -&quot;#,##0.00"/></numFmts>' +
         '<fonts count="5"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font>' +
         '<font><b/><sz val="16"/><color rgb="FF1E3A8A"/><name val="Calibri"/></font><font><b/><sz val="11"/><color rgb="FFFFFFFF"/><name val="Calibri"/></font>' +
         '<font><i/><sz val="10"/><color rgb="FF6B7280"/><name val="Calibri"/></font></fonts>' +
@@ -4558,7 +4594,7 @@
         '<border><left/><right/><top style="thin"><color rgb="FF1E3A8A"/></top><bottom/><diagonal/></border>' +
         '<border><left style="medium"><color rgb="FFD97706"/></left><right style="medium"><color rgb="FFD97706"/></right><top style="medium"><color rgb="FFD97706"/></top><bottom style="medium"><color rgb="FFD97706"/></bottom><diagonal/></border></borders>' +
         '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
-        '<cellXfs count="15">' +
+        '<cellXfs count="17">' +
           '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
           '<xf numFmtId="0" fontId="2" fillId="0" borderId="0" xfId="0" applyFont="1"/>' +
           '<xf numFmtId="0" fontId="3" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/>' +
@@ -4574,6 +4610,8 @@
           '<xf numFmtId="2" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>' +
           '<xf numFmtId="3" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>' +
           '<xf numFmtId="2" fontId="1" fillId="3" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1"/>' +
+          '<xf numFmtId="165" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>' +
+          '<xf numFmtId="165" fontId="1" fillId="3" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1"/>' +
         '</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>' }
     );
 
