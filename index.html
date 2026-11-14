@@ -534,6 +534,8 @@
   .rank .barrita { height: 8px; margin-top: 4px; }
   .msj-importar { position: fixed; left: 50%; top: 40%; transform: translate(-50%, -50%); z-index: 200; background: #16a34a; color: white;
     padding: 18px 22px; border-radius: 16px; font-weight: bold; text-align: center; max-width: 80%; box-shadow: 0 10px 30px rgba(0,0,0,.3); }
+  .vista-moneda { margin: 0 0 8px; }
+  .vista-moneda button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
 </style>
 </head>
 
@@ -2640,10 +2642,11 @@
     // No dibujamos el futuro
     pz = pz.filter(function (p, i) { return i === 0 || (periodoCurvas === "mes" ? p.hasta <= hoyT : p.desde <= hoyT); });
 
-    var ing = [], gas = [], sal = [];
+    var ing = [], gas = [], sal = [], sv = simV();
+    simboloActual = sv;
     pz.forEach(function (p) {
-      var r = entradasSalidas(p.desde, p.hasta);
-      ing.push(r.ingresos); gas.push(r.gastos); sal.push(totalEnSoles(p.hasta));
+      var r = entradasSalidasV(p.desde, p.hasta);
+      ing.push(r.ingresos); gas.push(r.gastos); sal.push(saldoMoneda(vistaMoneda, p.hasta));
     });
 
     // ---- Dibujo (con eje Y y tocable) ----
@@ -2651,7 +2654,7 @@
     var total = periodoCurvas === "mes" ? new Date(anioActual, mesActual + 1, 0).getDate() : 12;
     var etqTodas = [];
     for (var k = 0; k < total; k++) etqTodas.push(periodoCurvas === "mes" ? String(k + 1) : meses[k]);
-    var dibujo = graficoLineas([sal, ing, gas], ["#2563eb", "#16a34a", "#dc2626"], etqTodas, true, ["Saldo", "Ingresos", "Gastos"]);
+    var dibujo = graficoLineas([sal, ing, gas], ["#2563eb", "#16a34a", "#dc2626"], etqTodas, true, ["Saldo", "Ingresos", "Gastos"], sv);
 
     var u = n - 1;
     document.getElementById("curvasGeneral").innerHTML =
@@ -2659,11 +2662,12 @@
         '<button class="' + (periodoCurvas === "mes" ? "on" : "") + '" onclick="elegirPeriodoCurvas(\'mes\')">' + meses[mesActual] + ' ' + anioActual + '</button>' +
         '<button class="' + (periodoCurvas === "anio" ? "on" : "") + '" onclick="elegirPeriodoCurvas(\'anio\')">Año ' + anioActual + '</button>' +
       '</div>' +
-      cajitas([["🟢 Ingresos", "S/ " + plata(periodoCurvas === "mes" ? ing[u] : ing.reduce(function (a, b) { return a + b; }, 0)), "#16a34a"],
-               ["🔴 Gastos",   "S/ " + plata(periodoCurvas === "mes" ? gas[u] : gas.reduce(function (a, b) { return a + b; }, 0)), "#dc2626"],
-               ["🔵 Saldo",    "S/ " + plata(saldoMoneda("PEN", pz[u].hasta)) + '<br><small>$ ' + plata(saldoMoneda("USD", pz[u].hasta)) + '</small>', "#2563eb"]]) +
+      botonesVista() +
+      cajitas([["🟢 Ingresos", sv + plata(periodoCurvas === "mes" ? ing[u] : ing.reduce(function (a, b) { return a + b; }, 0)), "#16a34a"],
+               ["🔴 Gastos",   sv + plata(periodoCurvas === "mes" ? gas[u] : gas.reduce(function (a, b) { return a + b; }, 0)), "#dc2626"],
+               ["🔵 Saldo",    sv + plata(sal[u]), "#2563eb"]]) +
       dibujo +
-      '<div class="aviso">' + (periodoCurvas === "mes" ? "Ingresos y gastos acumulados día a día" : "Ingresos y gastos de cada mes") + ' · La curva azul es tu saldo total pasado a soles (dólares × ' + tipoCambio + ')</div>' +
+      '<div class="aviso">' + (periodoCurvas === "mes" ? "Ingresos y gastos acumulados día a día" : "Ingresos y gastos de cada mes") + ' · Solo cuentas en ' + (vistaMoneda === "USD" ? "dólares" : "soles") + ' (no se mezclan)</div>' +
       cuadreSaldo(pz[0].desde, pz[pz.length - 1].hasta);
 
     // ---- DONAS DE GASTOS E INGRESOS POR CATEGORÍA (tocar = ver sus movimientos) ----
@@ -2672,8 +2676,8 @@
     function donaDe(tipo) {
       var porCat = {}, total = 0;
       movimientos.forEach(function (m) {
-        if (m.tipo !== tipo || m.fecha < rg[0] || m.fecha > rg[1] || !cuentaEnGraficos(m)) return;
-        var v = enSoles(m.monto, monedaDe(m.cuenta));
+        if (m.tipo !== tipo || m.fecha < rg[0] || m.fecha > rg[1] || !cuentaEnGraficos(m) || !esVista(m)) return;
+        var v = Number(m.monto) || 0;
         porCat[m.categoria] = (porCat[m.categoria] || 0) + v;
         total += v;
       });
@@ -2681,12 +2685,13 @@
         var c = buscarCategoria(cat, tipo);
         return [(c ? c.icono + " " : "") + limpio(cat), porCat[cat], accionCategoria(cat, tipo, rg[0], rg[1], nomP)];
       });
-      var cab = '<div class="aviso" style="margin:-4px 0 8px">' + nomP + '</div>';
+      var cab = botonesVista() + '<div class="aviso" style="margin:-4px 0 8px">' + nomP + ' · en ' + (vistaMoneda === "USD" ? "dólares" : "soles") + '</div>';
       if (!lista.length) return cab + '<div class="vacio">No hay ' + (tipo === "gasto" ? "gastos" : "ingresos") + ' en ' + nomP + '.</div>';
       return cab + donaHTML(lista, total) + '<div class="aviso">👆 Toca una categoría para ver sus movimientos con fecha</div>';
     }
     document.getElementById("donaGeneral").innerHTML = donaDe("gasto");
     document.getElementById("donaIngresos").innerHTML = donaDe("ingreso");
+    simboloActual = "S/ ";
   }
 
 
@@ -2695,6 +2700,37 @@
   // =========================================================
   // ¿Esta cuenta se suma al total? (si nunca lo elegiste, sí se suma)
   function sumaAlTotal(c) { return c.enTotal !== false; }
+
+  // ---- VER EN SOLES O EN DÓLARES (nunca se mezclan en los gráficos) ----
+  var vistaMoneda = "PEN";              // "PEN" = soles · "USD" = dólares
+  var simboloActual = "S/ ";            // lo usan las donas y rankings mientras se dibujan
+  function monedaMov(m) { return monedaDe(m.cuenta) === "USD" ? "USD" : "PEN"; }
+  function simV() { return vistaMoneda === "USD" ? "$ " : "S/ "; }
+  function esVista(m) { return monedaMov(m) === vistaMoneda; }
+  function valorV(m) { return esVista(m) ? Number(m.monto) || 0 : 0; }
+  // Como entradasSalidas, pero SOLO de una moneda y sin convertir
+  function entradasSalidasV(desde, hasta, mon) {
+    mon = mon || vistaMoneda;
+    var r = { ingresos: 0, gastos: 0, ajPos: 0, ajNeg: 0 };
+    movimientos.forEach(function (m) {
+      if (m.fecha < desde || m.fecha > hasta || !cuentaEnGraficos(m) || monedaMov(m) !== mon) return;
+      var v = Number(m.monto) || 0;
+      if (m.tipo === "ingreso") r.ingresos += v;
+      if (m.tipo === "gasto")   r.gastos   += v;
+      if (m.tipo === "ajuste") { if (v >= 0) r.ajPos += v; else r.ajNeg += -v; }
+    });
+    return r;
+  }
+  function elegirVista(v) {
+    vistaMoneda = v;
+    mostrarCurvasYDona();
+    if (document.getElementById("pantallaReportes") && document.getElementById("pantallaReportes").classList.contains("abierta")) mostrarReportes();
+  }
+  function botonesVista() {
+    return '<div class="periodos vista-moneda">' +
+      '<button class="' + (vistaMoneda === "PEN" ? "on" : "") + '" onclick="elegirVista(\'PEN\')">' + banderaHTML("PE") + ' Soles</button>' +
+      '<button class="' + (vistaMoneda === "USD" ? "on" : "") + '" onclick="elegirVista(\'USD\')">' + banderaHTML("US") + ' Dólares</button></div>';
+  }
   // ¿Este movimiento cuenta en los gráficos y reportes? (no, si su cuenta no se suma al total: AFP, seguros…)
   function cuentaEnGraficos(m) { var c = buscarCuenta(m.cuenta); return !c || sumaAlTotal(c); }
 
@@ -3341,8 +3377,8 @@
     // 1) DONA: saldo de cada cuenta (en soles) al final del periodo
     var lista = cuentas.filter(function (c) {
       return repCuentas === "todas" || (repCuentas === "suman" ? sumaAlTotal(c) : !sumaAlTotal(c));
-    }).map(function (c) {
-      return [(c.icono ? c.icono + " " : "") + limpio(c.nombre) + (c.moneda === "USD" ? " ($)" : ""), enSoles(saldoDe(c.nombre, corte), c.moneda)];
+    }).filter(function (c) { return (c.moneda === "USD" ? "USD" : "PEN") === vistaMoneda; }).map(function (c) {
+      return [(c.icono ? c.icono + " " : "") + limpio(c.nombre), saldoDe(c.nombre, corte)];
     });
     var negativas = lista.filter(function (x) { return x[1] < 0; });
     var positivas = lista.filter(function (x) { return x[1] > 0.004; }).sort(function (a, b) { return b[1] - a[1]; });
@@ -3350,21 +3386,21 @@
     var html = '<div class="tarjeta"><h3>🏦 Saldo por cuenta</h3>' +
       '<div class="periodos">' + boton("suman", "Suman al total", repCuentas, "elegirRepCuentas") +
         boton("no", "No suman", repCuentas, "elegirRepCuentas") + boton("todas", "Todas", repCuentas, "elegirRepCuentas") + '</div>' +
-      '<div class="aviso" style="margin:-2px 0 8px">Saldo al ' + corte.split("-").reverse().join("/") + ' · los dólares en soles (× ' + tipoCambio + ')</div>' +
+      '<div class="aviso" style="margin:-2px 0 8px">Saldo al ' + corte.split("-").reverse().join("/") + ' · solo cuentas en ' + (vistaMoneda === "USD" ? "dólares" : "soles") + '</div>' +
       (positivas.length ? donaHTML(positivas, total) : '<div class="vacio">No hay cuentas con saldo en este grupo.</div>') +
       (negativas.length ? '<div class="aviso">⚠️ Con saldo negativo (no entran en la dona): ' +
-        negativas.map(function (x) { return x[0] + " S/ " + plata(x[1]); }).join(" · ") + '</div>' : '') +
+        negativas.map(function (x) { return x[0] + " " + simV() + plata(x[1]); }).join(" · ") + '</div>' : '') +
       '</div>';
 
     // 2) EVOLUCIÓN de las cuentas que NO suman
-    var fuera = cuentas.filter(function (c) { return !sumaAlTotal(c); });
+    var fuera = cuentas.filter(function (c) { return !sumaAlTotal(c) && (c.moneda === "USD" ? "USD" : "PEN") === vistaMoneda; });
     html += '<div class="tarjeta"><h3>🔒 Evolución de cuentas que no suman</h3>';
-    if (!fuera.length) return html + '<div class="vacio">Todas tus cuentas suman al total.<br>Para excluir una (AFP, seguros…), ve a ☰ → Cuentas.</div></div>';
+    if (!fuera.length) return html + '<div class="vacio">No tienes cuentas en ' + (vistaMoneda === "USD" ? "dólares" : "soles") + ' que no sumen al total.<br>Para excluir una (AFP, seguros…), ve a ☰ → Cuentas.</div></div>';
     if (repEvo !== "suma") repEvo = "cada";
     var hastaHoy = pz.filter(function (x) { return x.desde <= hoyT; });
     if (!hastaHoy.length) hastaHoy = [pz[0]];
     var etiquetas = pz.map(function (x) { return x.etiqueta; });
-    function serie(c) { return hastaHoy.map(function (x) { return enSoles(saldoDe(c.nombre, x.hasta < hoyT ? x.hasta : hoyT), c.moneda); }); }
+    function serie(c) { return hastaHoy.map(function (x) { return saldoDe(c.nombre, x.hasta < hoyT ? x.hasta : hoyT); }); }
     var series = [], cols = [], nombres = [];
     if (repEvo === "suma") {
       var suma = hastaHoy.map(function () { return 0; });
@@ -3381,8 +3417,8 @@
         boton("suma", "Todas (suma)", repEvo, "elegirRepEvo") + '</div>' +
       graficoLineas(series, cols, etiquetas, series.length === 1, nombres) +
       '<div class="leyenda-mini">' + nombres.map(function (n, i) {
-        return '<span><i style="background:' + cols[i] + '"></i>' + limpio(n) + ': S/ ' + plata(finales[i]) + '</span>'; }).join("") + '</div>' +
-      '<div class="aviso">Saldo de cada ' + (periodoReporte === "mes" ? "día" : "mes") + ' en soles. Estas cuentas no entran en tus ingresos, gastos ni saldo total.</div></div>';
+        return '<span><i style="background:' + cols[i] + '"></i>' + limpio(n) + ': ' + simV() + plata(finales[i]) + '</span>'; }).join("") + '</div>' +
+      '<div class="aviso">Saldo de cada ' + (periodoReporte === "mes" ? "día" : "mes") + ' en ' + (vistaMoneda === "USD" ? "dólares" : "soles") + '. Estas cuentas no entran en tus ingresos, gastos ni saldo total.</div></div>';
     return html;
   }
 
@@ -3432,7 +3468,7 @@
     var max = lista[0][1];
     return lista.map(function (x, i) {
       // x[3] = qué hacer al tocar (ej. ver los movimientos de esa categoría)
-      return '<div class="rank' + (x[3] ? ' clicable' : '') + '"' + (x[3] ? ' onclick="' + x[3] + '"' : '') + '><div class="rank-txt"><span>' + (i + 1) + '. ' + x[0] + (x[3] ? ' <i class="ir">›</i>' : '') + '</span><b>S/ ' + plata(x[1]) +
+      return '<div class="rank' + (x[3] ? ' clicable' : '') + '"' + (x[3] ? ' onclick="' + x[3] + '"' : '') + '><div class="rank-txt"><span>' + (i + 1) + '. ' + x[0] + (x[3] ? ' <i class="ir">›</i>' : '') + '</span><b>' + simboloActual + plata(x[1]) +
              ' <small>(' + Math.round(x[1] / total * 100) + '%)</small></b></div>' +
              '<div class="barrita"><div style="width:' + (x[1] / max * 100) + '%;background:' + color + '"></div></div>' +
              (x[2] || '') + '</div>';
@@ -3444,14 +3480,15 @@
     var pz = pedazosGlobal(p);
     var desde = pz[0].desde, hasta = pz[pz.length - 1].hasta;
     var etiquetas = pz.map(function (x) { return x.etiqueta; });
-    var enRango = movimientos.filter(function (m) { return m.fecha >= desde && m.fecha <= hasta && cuentaEnGraficos(m); });
+    var enRango = movimientos.filter(function (m) { return m.fecha >= desde && m.fecha <= hasta && cuentaEnGraficos(m) && esVista(m); });
     var html = "";
+    simboloActual = simV();
 
     // ---- Selector Mes / Año / Acumulado ----
     var ops = [["mes", "Mes"], ["anio", "Año"], ["todo", "Acumulado"]];
     html += '<div class="tarjeta"><h3>📅 Periodo</h3><div class="periodos">' + ops.map(function (o) {
       return '<button class="' + (p === o[0] ? "on" : "") + '" onclick="elegirPeriodoReporte(\'' + o[0] + '\')">' + o[1] + '</button>';
-    }).join("") + '</div><div class="aviso">' + nombrePeriodoReporte() + ' · montos en soles</div></div>';
+    }).join("") + '</div>' + botonesVista() + '<div class="aviso">' + nombrePeriodoReporte() + ' · ' + (vistaMoneda === "USD" ? "solo cuentas en dólares" : "solo cuentas en soles") + ' (no se mezclan)</div></div>';
 
     // ---- Filtros y modo comparación ----
     html += seccionExplorador();
@@ -3459,18 +3496,18 @@
     // =====================================================
     // 1. ESTADÍSTICAS GENERALES
     // =====================================================
-    var tot = entradasSalidas(desde, hasta);
+    var tot = entradasSalidasV(desde, hasta);
     var ahorro = tot.ingresos - tot.gastos;
     var tasa = tot.ingresos > 0 ? ahorro / tot.ingresos * 100 : 0;
     var gastos = enRango.filter(function (m) { return m.tipo === "gasto"; });
     var ingresos = enRango.filter(function (m) { return m.tipo === "ingreso"; });
     var mayor = gastos.slice().sort(function (a, b) {
-      return enSoles(b.monto, monedaDe(b.cuenta)) - enSoles(a.monto, monedaDe(a.cuenta));
+      return valorV(b) - valorV(a);
     })[0];
 
     var ent = [], sal = [], netos = [];
     pz.forEach(function (x) {
-      var r = entradasSalidas(x.desde, x.hasta);
+      var r = entradasSalidasV(x.desde, x.hasta);
       ent.push(r.ingresos); sal.push(r.gastos); netos.push(r.ingresos - r.gastos);
     });
     var unidad = p === "mes" ? "día" : "mes";
@@ -3478,22 +3515,22 @@
     var iMax = sal.indexOf(Math.max.apply(null, sal));
 
     html += '<div class="tarjeta"><h3>📊 Estadísticas generales</h3>' +
-      cajitas([["Ingresos", "S/ " + plata(tot.ingresos), "#16a34a"],
-               ["Gastos", "S/ " + plata(tot.gastos), "#dc2626"],
-               ["Ahorro", "S/ " + plata(ahorro), ahorro < 0 ? "#dc2626" : "#2563eb"]]) +
+      cajitas([["Ingresos", simV() + plata(tot.ingresos), "#16a34a"],
+               ["Gastos", simV() + plata(tot.gastos), "#dc2626"],
+               ["Ahorro", simV() + plata(ahorro), ahorro < 0 ? "#dc2626" : "#2563eb"]]) +
       '<table class="tabla" style="margin-top:12px">' +
         filaDato("💹 Tasa de ahorro", Math.round(tasa) + "%") +
-        filaDato("⚖️ Ajustes de saldo", (tot.ajPos || tot.ajNeg) ? "+S/ " + plata(tot.ajPos) + " · −S/ " + plata(tot.ajNeg) : "—") +
+        filaDato("⚖️ Ajustes de saldo", (tot.ajPos || tot.ajNeg) ? "+" + simV() + plata(tot.ajPos) + " · −" + simV() + plata(tot.ajNeg) : "—") +
         filaDato("🧾 Movimientos registrados", enRango.length + " (" + ingresos.length + " ingresos · " + gastos.length + " gastos)") +
-        filaDato("📅 Gasto promedio por " + unidad, "S/ " + plata(tot.gastos / pz.length)) +
-        filaDato("🎫 Gasto promedio por compra", gastos.length ? "S/ " + plata(tot.gastos / gastos.length) : "—") +
-        filaDato("🔥 " + (p === "mes" ? "Día" : "Mes") + " con más gasto", sal[iMax] > 0 ? etiquetas[iMax] + (p === "mes" ? " " + meses[mesActual] : "") + " (S/ " + plata(sal[iMax]) + ")" : "—") +
-        filaDato("💸 Gasto más grande", mayor ? limpio(nombreCategoria(mayor)) + "<br>S/ " + plata(enSoles(mayor.monto, monedaDe(mayor.cuenta))) + " · " + mayor.fecha.split("-").reverse().join("/") : "—") +
+        filaDato("📅 Gasto promedio por " + unidad, simV() + plata(tot.gastos / pz.length)) +
+        filaDato("🎫 Gasto promedio por compra", gastos.length ? simV() + plata(tot.gastos / gastos.length) : "—") +
+        filaDato("🔥 " + (p === "mes" ? "Día" : "Mes") + " con más gasto", sal[iMax] > 0 ? etiquetas[iMax] + (p === "mes" ? " " + meses[mesActual] : "") + " (" + simV() + plata(sal[iMax]) + ")" : "—") +
+        filaDato("💸 Gasto más grande", mayor ? limpio(nombreCategoria(mayor)) + "<br>" + simV() + plata(valorV(mayor)) + " · " + mayor.fecha.split("-").reverse().join("/") : "—") +
         filaDato("📆 " + (p === "mes" ? "Días" : "Meses") + " con gastos", conGasto + " de " + pz.length) +
       '</table>' +
       '<h3 style="margin-top:16px">Ingresos vs gastos</h3>' + graficoDoble(ent, sal, etiquetas) +
       '<div class="aviso">🟩 Ingresos · 🟥 Gastos (lado a lado)</div>' +
-      '<h3 style="margin-top:16px">Ahorro por ' + unidad + '</h3>' + grafico(netos, etiquetas, "barras", "#2563eb", "#dc2626", false, "S/ ", true) +
+      '<h3 style="margin-top:16px">Ahorro por ' + unidad + '</h3>' + grafico(netos, etiquetas, "barras", "#2563eb", "#dc2626", false, simV(), true) +
       '<div class="aviso">🟦 Ahorraste · 🟥 Gastaste más de lo que entró (la barra roja muestra cuánto faltó)</div></div>';
 
     // Las curvas no bajan a 0 en los días/meses que aún no llegan
@@ -3510,7 +3547,7 @@
     // =====================================================
     var porCat = {}, porSub = {}, porAmb = {}, porTipo = {}, porIng = {};
     gastos.forEach(function (m) {
-      var v = enSoles(m.monto, monedaDe(m.cuenta));
+      var v = valorV(m);
       porCat[m.categoria] = (porCat[m.categoria] || 0) + v;
       if (m.subcategoria) {
         porSub[m.categoria] = porSub[m.categoria] || {};
@@ -3520,7 +3557,7 @@
       porTipo[tipoDe(m)]  = (porTipo[tipoDe(m)]  || 0) + v;
     });
     ingresos.forEach(function (m) {
-      porIng[m.categoria] = (porIng[m.categoria] || 0) + enSoles(m.monto, monedaDe(m.cuenta));
+      porIng[m.categoria] = (porIng[m.categoria] || 0) + valorV(m);
     });
     function ordenar(obj) {
       return Object.keys(obj).map(function (k) { return [k, obj[k]]; }).sort(function (a, b) { return b[1] - a[1]; });
@@ -3532,7 +3569,7 @@
     var listaCat = ordenar(porCat).map(function (x) {
       var subs = porSub[x[0]] ? ordenar(porSub[x[0]]) : [];
       var detalle = subs.length ? '<div class="subs-rep">' + subs.map(function (s) {
-        return '<span>' + limpio(s[0]) + ': S/ ' + plata(s[1]) + '</span>';
+        return '<span>' + limpio(s[0]) + ': ' + simV() + plata(s[1]) + '</span>';
       }).join("") + '</div>' : '';
       return [conIcono(x[0], "gasto"), x[1], detalle, accionCategoria(x[0], "gasto", desde, hasta, nombrePeriodoReporte())];
     });
@@ -3562,9 +3599,9 @@
     if (listaVeh.indexOf(combCat) === -1) combCat = listaVeh[0];
     var cargas = enRango.filter(function (m) { return esCarga(m) && m.categoria === combCat; });
     var galonesTot = 0, gastoComb = 0;
-    cargas.forEach(function (m) { galonesTot += m.galones || 0; gastoComb += enSoles(m.monto, monedaDe(m.cuenta)); });
+    cargas.forEach(function (m) { galonesTot += m.galones || 0; gastoComb += valorV(m); });
     var conGal = cargas.filter(function (m) { return m.galones > 0; });
-    var gastoConGal = 0; conGal.forEach(function (m) { gastoConGal += enSoles(m.monto, monedaDe(m.cuenta)); });
+    var gastoConGal = 0; conGal.forEach(function (m) { gastoConGal += valorV(m); });
 
     // Km recorridos: desde el último odómetro ANTES del periodo (o la primera lectura del periodo)
     var lecturas = movimientos.filter(function (m) { return m.odometro > 0 && m.categoria === combCat; })
@@ -3589,7 +3626,7 @@
     pz.forEach(function (x) {
       var g = 0, s = 0;
       cargas.forEach(function (m) {
-        if (m.fecha >= x.desde && m.fecha <= x.hasta) { g += m.galones || 0; s += enSoles(m.monto, monedaDe(m.cuenta)); }
+        if (m.fecha >= x.desde && m.fecha <= x.hasta) { g += m.galones || 0; s += valorV(m); }
       });
       lecturas.forEach(function (m) { if (m.fecha >= x.desde && m.fecha <= x.hasta && (ultimoOdo === null || m.odometro > ultimoOdo)) ultimoOdo = m.odometro; });
       galPorPz.push(g); gasPorPz.push(s); odoPorPz.push(ultimoOdo);
@@ -3616,11 +3653,11 @@
       html += '<div class="vacio">No hay cargas de combustible de ' + limpio(combCat) + ' en este periodo.<br>Regístralas como ' + limpio(combCat) + ' › Combustible.</div>';
     } else {
       var ref = refMoto(mesTexto()), rendL = rend / LITROS_GAL;
-      html += cajitas([["Gasto", "S/ " + plata(gastoComb), "#dc2626"],
+      html += cajitas([["Gasto", simV() + plata(gastoComb), "#dc2626"],
                        ["Cantidad", (galonesTot * LITROS_GAL).toFixed(1) + " L<br><small>" + galonesTot.toFixed(2) + " gal</small>"],
                        ["Cargas", String(cargas.length)]]) +
         '<table class="tabla" style="margin-top:12px">' +
-          filaDato("💲 Precio promedio", conGal.length && galonesTot ? "S/ " + plata(gastoConGal / galonesTot) + "/gal<br>S/ " + plata(gastoConGal / galonesTot / LITROS_GAL) + "/L" : "—") +
+          filaDato("💲 Precio promedio", conGal.length && galonesTot ? simV() + plata(gastoConGal / galonesTot) + "/gal<br>" + simV() + plata(gastoConGal / galonesTot / LITROS_GAL) + "/L" : "—") +
           filaDato("🛣️ Km recorridos", km ? km.toLocaleString("es-PE") + " km" : "—") +
           filaDato("🚀 Rendimiento real", rend ? "<b>" + rendL.toFixed(1) + " km/L</b><br>" + rend.toFixed(1) + " km/gal" : "—") +
           filaDato("📘 Según manual", ref.kmL ? ref.kmL + " km/L<br>" + (ref.kmL * LITROS_GAL).toFixed(1) + " km/gal" : "—") +
@@ -3630,7 +3667,7 @@
             ? (rend ? "Real ≈ " + Math.round(rendL * ref.tanqueL).toLocaleString("es-PE") + " km" : "") + (rend && ref.kmL ? "<br>" : "") +
               (ref.kmL ? "Manual ≈ " + Math.round(ref.kmL * ref.tanqueL).toLocaleString("es-PE") + " km" : "")
             : "—") +
-          filaDato("🪙 Costo por km", km && gastoComb ? "S/ " + (gastoComb / km).toFixed(2) : "—") +
+          filaDato("🪙 Costo por km", km && gastoComb ? simV() + (gastoComb / km).toFixed(2) : "—") +
           filaDato("🧭 Último odómetro", lecturas.length ? lecturas[lecturas.length - 1].odometro.toLocaleString("es-PE") + " km" : "—") +
         '</table>' +
         '<h3 style="margin-top:16px">⛽ Consumo (litros y galones por ' + unidad + ')</h3>' +
@@ -3638,8 +3675,8 @@
                 { ejeIzq: "L", ejeDer: { factor: 1 / LITROS_GAL, sufijo: "gal" },
                   lineas: galPorPz.map(function (g) { return g.toFixed(3) + " galones"; }) }) +
         '<div class="aviso">Izquierda: litros · derecha (celeste): galones</div>' +
-        '<h3 style="margin-top:16px">💸 Gasto en combustible (S/ por ' + unidad + ')</h3>' +
-        grafico(gasPorPz, etiquetas, "barras", "#f97316", "#f97316", false, "S/ ", false, "",
+        '<h3 style="margin-top:16px">💸 Gasto en combustible (' + simV() + 'por ' + unidad + ')</h3>' +
+        grafico(gasPorPz, etiquetas, "barras", "#f97316", "#f97316", false, simV(), false, "",
                 { lineas: galPorPz.map(function (g) { return g ? (g * LITROS_GAL).toFixed(2) + " L · " + g.toFixed(3) + " gal" : ""; }) });
       // Gráfico de rendimiento: un punto por cada tanque lleno, con la línea del manual
       html += '<h3 style="margin-top:16px">🚀 Rendimiento (km por litro)</h3>';
@@ -3674,6 +3711,7 @@
     html += '</div>';
 
     document.getElementById("contenidoReportes").innerHTML = html;
+    simboloActual = "S/ ";
     hacerPlegables(document.getElementById("contenidoReportes"));
   }
 
@@ -3695,11 +3733,11 @@
     });
     return '<div class="dona"><svg viewBox="0 0 180 180">' + aros +
              '<text x="90" y="84" text-anchor="middle" font-size="11" fill="#6b7280">Total</text>' +
-             '<text x="90" y="104" text-anchor="middle" font-size="17" font-weight="bold" fill="#1d2433">S/ ' + Math.round(total).toLocaleString("es-PE") + '</text>' +
+             '<text x="90" y="104" text-anchor="middle" font-size="17" font-weight="bold" fill="#1d2433">' + simboloActual + Math.round(total).toLocaleString("es-PE") + '</text>' +
            '</svg></div>' +
            '<div class="leyenda">' + lista.map(function (x, i) {
              return '<div' + (x[2] ? ' class="clicable" onclick="' + x[2] + '"' : '') + '><span class="punto" style="background:' + colores[i % colores.length] + '"></span>' +
-                    '<span class="cat">' + x[0] + '</span><b>S/ ' + plata(x[1]) + '</b>' +
+                    '<span class="cat">' + x[0] + '</span><b>' + simboloActual + plata(x[1]) + '</b>' +
                     '<small>' + Math.round(x[1] / total * 100) + '%</small></div>';
            }).join("") + '</div>';
   }
@@ -5847,7 +5885,7 @@
   // relleno = true: pinta suavecito debajo de cada curva · nombres: para el globito
   function graficoLineas(series, colores, etiquetas, relleno, nombres, prefijo, sufijo, lineasExtra) {
     nombres = nombres || [];
-    if (prefijo === undefined) prefijo = "S/ ";
+    if (prefijo === undefined) prefijo = simboloActual;
     sufijo = sufijo || "";
     var W = 320, arriba = 12, abajo = 140, n = etiquetas.length;
     var todos = [0]; series.forEach(function (s) { todos = todos.concat(s); });
@@ -6008,9 +6046,9 @@
   function sumaExp(tipo, desde, hasta, cats) {
     var t = 0;
     movimientos.forEach(function (m) {
-      if (m.tipo !== tipo || m.fecha < desde || m.fecha > hasta) return;
+      if (m.tipo !== tipo || m.fecha < desde || m.fecha > hasta || !cuentaEnGraficos(m)) return;
       if (cats && cats.length && cats.indexOf(m.categoria) === -1) return;
-      t += enSoles(m.monto, monedaDe(m.cuenta));
+      t += valorV(m);
     });
     return t;
   }
@@ -6038,7 +6076,7 @@
     var html = '';
     var ctrl = botonesExp([["gasto", "− Gastos"], ["ingreso", "+ Ingresos"], ["comparar", "⚖️ Comparar"]], expModo, "modo") +
       botonesExp([["dia", "Día"], ["mes", "Mes"], ["anio", "Año"]], expAgrupa, "agrupa") +
-      '<div class="aviso" style="margin:-4px 0 8px">' + nombreAgrupa() + ' · usa ‹ › arriba para cambiar de mes/año · montos en soles</div>';
+      '<div class="aviso" style="margin:-4px 0 8px">' + nombreAgrupa() + ' · usa ‹ › arriba para cambiar de mes/año · montos en ' + (vistaMoneda === "USD" ? "dólares" : "soles") + '</div>';
 
     if (expModo === "gasto" || expModo === "ingreso") {
       var tipo = expModo;
@@ -6048,10 +6086,10 @@
       var conMov = vals.filter(function (v) { return v > 0; }).length;
       var maxI = vals.indexOf(Math.max.apply(null, vals));
       var color = tipo === "gasto" ? "#dc2626" : "#16a34a";
-      html += cajitas([["Total", "S/ " + plata(total), color],
-                       ["Promedio", "S/ " + plata(conMov ? total / conMov : 0)],
+      html += cajitas([["Total", simV() + plata(total), color],
+                       ["Promedio", simV() + plata(conMov ? total / conMov : 0)],
                        ["Mayor", vals[maxI] > 0 ? etq[maxI] : "—"]]) +
-              grafico(vals, etq, "barras", color, color, false, "S/ ") +
+              grafico(vals, etq, "barras", color, color, false, simV()) +
               '<div class="aviso">' + (expCats.length ? expCats.join(" · ") : "Todas las categorías") + ' · el promedio cuenta solo los periodos con movimientos</div>';
       // Detalle por categoría elegida
       var lista = (tipo === "gasto" ? categoriasGasto : categoriasIngreso)
@@ -6067,9 +6105,9 @@
                  ' onclick="expCambiar(\'tot\',\'' + o[0] + '\')">' + o[1] + '</button>';
         }).join("") + '</div>';
         var series = [], colores = [], nombres = [], resumen = [];
-        if (expTot.ingresos) { var si = pz.map(function (p) { return sumaExp("ingreso", p.desde, p.hasta); }); series.push(si.slice(0, hastaHoy)); colores.push("#16a34a"); nombres.push("Ingresos"); resumen.push(["Ingresos", "S/ " + plata(si.reduce(function (a, b) { return a + b; }, 0)), "#16a34a"]); }
-        if (expTot.gastos)   { var sg = pz.map(function (p) { return sumaExp("gasto", p.desde, p.hasta); });   series.push(sg.slice(0, hastaHoy)); colores.push("#dc2626"); nombres.push("Gastos");   resumen.push(["Gastos", "S/ " + plata(sg.reduce(function (a, b) { return a + b; }, 0)), "#dc2626"]); }
-        if (expTot.saldo)    { var ss = pz.map(function (p) { return totalEnSoles(p.hasta); });                 series.push(ss.slice(0, hastaHoy)); colores.push("#2563eb"); nombres.push("Saldo");    resumen.push(["Saldo final", "S/ " + plata(ss[hastaHoy - 1]), "#2563eb"]); }
+        if (expTot.ingresos) { var si = pz.map(function (p) { return sumaExp("ingreso", p.desde, p.hasta); }); series.push(si.slice(0, hastaHoy)); colores.push("#16a34a"); nombres.push("Ingresos"); resumen.push(["Ingresos", simV() + plata(si.reduce(function (a, b) { return a + b; }, 0)), "#16a34a"]); }
+        if (expTot.gastos)   { var sg = pz.map(function (p) { return sumaExp("gasto", p.desde, p.hasta); });   series.push(sg.slice(0, hastaHoy)); colores.push("#dc2626"); nombres.push("Gastos");   resumen.push(["Gastos", simV() + plata(sg.reduce(function (a, b) { return a + b; }, 0)), "#dc2626"]); }
+        if (expTot.saldo)    { var ss = pz.map(function (p) { return saldoMoneda(vistaMoneda, p.hasta); });                 series.push(ss.slice(0, hastaHoy)); colores.push("#2563eb"); nombres.push("Saldo");    resumen.push(["Saldo final", simV() + plata(ss[hastaHoy - 1]), "#2563eb"]); }
         if (!series.length) html += '<div class="vacio">Marca al menos uno: ingresos, gastos o saldo.</div>';
         else html += cajitas(resumen) + graficoLineas(series, colores, etq, false, nombres) +
                      '<div class="leyenda-mini">' + nombres.map(function (n, i) { return '<span><i style="background:' + colores[i] + '"></i>' + n + '</span>'; }).join("") + '</div>';
@@ -6200,7 +6238,7 @@
     var diaHoy = esMesActual ? hoy.getDate() : dias;
     var avanceMes = diaHoy / dias;                       // ej: 0.5 = vamos a mitad de mes
 
-    var r = entradasSalidas(mesTexto() + "-01", mesTexto() + "-31");
+    var r = entradasSalidasV(mesTexto() + "-01", mesTexto() + "-31", "PEN");
     var hayDatos = r.ingresos > 0 || r.gastos > 0;
 
     if (!hayDatos) {
@@ -6237,7 +6275,7 @@
       for (var a = 1; a <= 3; a++) {
         var fm = new Date(anioActual, mesActual - a, 1);
         var t = fm.getFullYear() + "-" + String(fm.getMonth() + 1).padStart(2, "0");
-        var g = entradasSalidas(t + "-01", t + "-31").gastos;
+        var g = entradasSalidasV(t + "-01", t + "-31", "PEN").gastos;
         if (g > 0) { suma += g; cuantos++; }
       }
       if (cuantos > 0 && diaHoy >= 10) {
