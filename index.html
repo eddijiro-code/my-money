@@ -1573,12 +1573,14 @@
   function mostrarCuentas() {
     var html = "", totalPEN = 0, totalUSD = 0, grupoHecho = {};
     function fila(c, i, esSub) {
-      var saldo = saldoDe(c.nombre);
+      var saldo = saldoDe(c.nombre, hoyTexto());                 // saldo de HOY
+      var futuro = saldoDe(c.nombre) - saldo;                    // movimientos con fecha que aún no llega
       var texto = c.moneda === "USD" ? "Dólares" : "Soles";
+      if (Math.abs(futuro) >= 0.005) texto += ' · <span style="color:#ca8a04">📅 ' + (futuro > 0 ? '+' : '−') + simbolo(c.moneda) + plata(Math.abs(futuro)) + ' con fecha futura</span>';
       return '<div class="cuenta' + (esSub ? ' sub' : '') + (sumaAlTotal(c) ? '' : ' apagada') + '" onclick="abrirCuenta(' + i + ')">' +
                (esSub ? '<span class="rama">└</span>' : '<div class="ico" style="' + fondo(c.color) + '">' + c.icono + '</div>') +
                '<div class="nombre">' + limpio(esSub ? c.sub : c.nombre) + '<small>' + texto + (sumaAlTotal(c) ? '' : ' · no suma al total') + '</small></div>' +
-               '<b style="color:' + (saldo < 0 ? '#dc2626' : '#1d2433') + '">' + simbolo(c.moneda) + plata(saldo) + '</b>' +
+               '<b style="color:' + (saldo <= -0.005 ? '#dc2626' : '#1d2433') + '">' + simbolo(c.moneda) + plata(saldo) + '</b>' +
                '<span class="flechita">›</span>' +
              '</div>';
     }
@@ -1601,7 +1603,7 @@
         html += fila(c, i, false);
       }
       if (!sumaAlTotal(c)) return;          // esta cuenta no se suma
-      var saldo = saldoDe(c.nombre);
+      var saldo = saldoDe(c.nombre, hoyTexto());
       if (c.moneda === "USD") totalUSD += saldo; else totalPEN += saldo;
     });
     document.getElementById("listaCuentas").innerHTML = html;
